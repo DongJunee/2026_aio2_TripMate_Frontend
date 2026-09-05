@@ -1,0 +1,12 @@
+[project]
+name = "tripmate-frontend"
+version = "0.1.0"
+description = "TripMate Streamlit frontend"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28.0",
+    # 일정 카드를 열 때만 지도 iframe을 만드는 popover.open 기능을 사용한다.
+    "streamlit>=1.63.0",
+    "tzdata>=2024.1",
+]
