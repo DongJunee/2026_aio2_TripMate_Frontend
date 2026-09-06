@@ -3,7 +3,7 @@ import os
 from datetime import date, datetime, time, timedelta, timezone
 from html import escape
 from urllib.parse import quote, urlparse
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -17,6 +17,23 @@ from common import (
     auth_headers,
     stream_answer,
 )
+
+TRAVEL_PARTY_LABELS = {
+    "unspecified": "아직 정하지 않았어요",
+    "solo": "혼자",
+    "couple": "커플",
+    "friends": "친구와",
+    "family": "가족과",
+    "family_with_children": "아이 동반 가족",
+    "with_parents": "부모님과",
+    "senior_couple": "시니어 부부",
+    "other": "기타",
+}
+
+INTENSITY_GUIDE = (
+    "1 아주 여유롭게 · 2 여유롭게 · 3 보통 · 4 알차게 · 5 아주 알차게"
+)
+BUDGET_GUIDE = "1 최대한 절약 · 2 절약 · 3 보통 · 4 여유 있게 · 5 넉넉하게"
 
 # 자동로그인기능이라 추후에 빼야함
 import time as time_module
@@ -36,7 +53,7 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-        
+
         /* .block-container { max-width: 1320px; padding-top: 2rem; padding-bottom: 3rem; } */
         .brand { color: #315cce; font-size: 2rem; font-weight: 800; letter-spacing: -0.08rem; }
         .sidebar-brand { display: flex; align-items: center; gap: .65rem; font-size: 1.3rem; font-weight: 800; letter-spacing: -.04rem; }
@@ -60,6 +77,22 @@ st.markdown(
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button > div > span {
             justify-content: flex-start !important;
             width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+        }
+        /* 여행 이름은 한 줄로 유지하고 사이드바 너비를 넘는 부분만 ...으로 줄인다. */
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button p {
+            width: 100% !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+            white-space: nowrap !important;
+            text-overflow: ellipsis !important;
         }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="secondary"]:hover { background: rgba(49, 51, 63, .06) !important; border-color: transparent !important; }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="primary"] { background: #e5f2ff !important; border-color: #d2e8ff !important; border-left: 4px solid #5479db; color: #2872d8 !important; }
@@ -67,10 +100,30 @@ st.markdown(
         /* 테두리 북마크는 고정되지 않음을, 파란 채움 북마크는 현재 고정 상태를
            뜻한다. Streamlit의 회색 스위치를 대신한다. */
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_pin_"] button {
+            position: relative;
             min-width: 2rem !important;
             min-height: 2rem !important;
             padding: 0 !important;
             border-radius: .55rem !important;
+        }
+        /* 아이콘 폰트의 FILL 지원 여부에 의존하지 않고 같은 북마크 도형을
+           직접 그린다. 원래 라벨은 숨겨도 버튼 크기와 접근성 이름은 유지한다. */
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_pin_"] button > * {
+            opacity: 0 !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_pin_"] button::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 1.25rem;
+            height: 1.25rem;
+            pointer-events: none;
+            background-color: currentColor;
+            --pin-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M7 3h10a2 2 0 0 1 2 2v16l-7-3-7 3V5a2 2 0 0 1 2-2Zm0 2v12.97l5-2.14 5 2.14V5Z'/%3E%3C/svg%3E");
+            -webkit-mask: var(--pin-shape) center / contain no-repeat;
+            mask: var(--pin-shape) center / contain no-repeat;
         }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_pin_"] button[kind="secondary"] {
             background: transparent !important;
@@ -82,9 +135,21 @@ st.markdown(
             color: #5479db !important;
         }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_pin_"] button[kind="primary"] {
-            background: #3169e8 !important;
-            border-color: #3169e8 !important;
-            color: #ffffff !important;
+            /* primary는 고정 상태를 구분하는 표식으로만 사용한다. 버튼 바탕은
+               그대로 두고 채워진 bookmark 아이콘에만 파란색을 적용한다. */
+            background: transparent !important;
+            border-color: transparent !important;
+            color: #3169e8 !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_pin_"] button[kind="primary"]::after {
+            /* 바깥 윤곽은 같고, 고정되면 내부의 빈 부분만 없앤다. */
+            --pin-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 3h10a2 2 0 0 1 2 2v16l-7-3-7 3V5a2 2 0 0 1 2-2Z'/%3E%3C/svg%3E");
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_pin_"] button[kind="primary"]:hover {
+            background: #eef3fb !important;
+            border-color: transparent !important;
+            color: #3169e8 !important;
         }
         /* 각 행의 핀은 왼쪽에 별도 열을 차지하지 않고 전체 너비 여행 버튼 위에
            겹쳐 표시된다. */
@@ -246,7 +311,7 @@ st.markdown(
         }
         /* 삭제 버튼도 일정 카드의 가운데 높이에 맞춘다. */
         [class*="st-key-itinerary_delete_"] {
-          margin-top: 1.25rem !important;
+          margin-top: 0 !important;
           text-align: center !important;
         }
         .empty-card { padding: 2.2rem; text-align: center; border: 1px dashed #c8d4eb; border-radius: 18px; background: white; }
@@ -390,24 +455,28 @@ def sign_out(notice: str | None = None) -> None:
 
 
 def travel_timezone(timezone_name: object) -> object:
-    """Windows에 IANA tzdata 패키지가 없어도 여행 시간대를 반환한다.
+    """여행지의 IANA 시간대를 반환하며 서머타임 규칙까지 적용한다.
 
     일반적인 프로젝트 동기화는 ``tzdata``를 설치하므로 완전한 IANA 시간대 규칙을
-    사용한다. 대체 값은 흔한 서울·도쿄 실습 흐름을 바로 쓸 수 있게 하는 최후의
-    고정 오프셋 수단일 뿐이다.
+    사용한다. 패키지가 없을 때는 서머타임이 없는 지원 지역만 고정 시차를 쓰고,
+    그 밖의 지역을 임의로 서울 시간이나 겨울 시간으로 바꾸지 않는다.
     """
 
     name = str(timezone_name or "Asia/Seoul").strip() or "Asia/Seoul"
     try:
         return ZoneInfo(name)
-    except Exception:
-        offset_hours = {
+    except ZoneInfoNotFoundError as error:
+        fixed_offsets = {
+            "UTC": 0,
             "Asia/Seoul": 9,
             "Asia/Tokyo": 9,
-            "Europe/Paris": 1,
-            "America/New_York": -5,
-        }.get(name, 9)
-        return timezone(timedelta(hours=offset_hours), name=name)
+            "Pacific/Honolulu": -10,
+        }
+        if name not in fixed_offsets:
+            raise ValueError(
+                "여행지 시간대 정보를 불러오지 못했습니다. tzdata 설치와 여행 시간대를 확인하세요."
+            ) from error
+        return timezone(timedelta(hours=fixed_offsets[name]), name=name)
 
 def formatted_dates(trip: dict) -> str:
     """날짜가 선택 사항인 여행의 읽기 쉬운 기간 라벨을 반환한다."""
@@ -466,19 +535,64 @@ def sidebar_profile() -> tuple[str, str]:
     st.session_state.user_name = display_name
     return display_name, email
 
+# def render_login() -> None:
+#     """비로그인 카드를 그리고 현재 인증 화면을 선택해 표시한다."""
+#     if st.session_state.notice:
+#         st.warning(st.session_state.notice)
+
+#     _, card_column, _ = st.columns([1, 1.25, 1])
+#     with card_column:
+#         st.markdown('<div class="brand">TripMate</div>', unsafe_allow_html=True)
+#         if st.session_state.auth_mode == "password_reset":
+#             render_password_reset()
+#         else:
+#             render_sign_in_or_up()
+#         st.markdown("</div>", unsafe_allow_html=True)
+
 def render_login() -> None:
-    """비로그인 카드를 그리고 현재 인증 화면을 선택해 표시한다."""
+    """비로그인 화면을 왼쪽 이미지 + 오른쪽 로그인 영역으로 표시한다."""
+
     if st.session_state.notice:
         st.warning(st.session_state.notice)
 
-    _, card_column, _ = st.columns([1, 1.25, 1])
-    with card_column:
-        st.markdown('<div class="brand">TripMate</div>', unsafe_allow_html=True)
-        if st.session_state.auth_mode == "password_reset":
-            render_password_reset()
-        else:
-            render_sign_in_or_up()
-        st.markdown("</div>", unsafe_allow_html=True)
+    # 왼쪽 이미지 40% / 오른쪽 로그인 영역 60%
+    left_column, right_column = st.columns(
+        [2, 3],
+        gap=None,
+        vertical_alignment="top",
+    )
+
+    # 왼쪽 이미지
+    with left_column:
+        image_path = os.path.join(
+            os.path.dirname(__file__),
+            "assets",
+            "login_image.png",
+        )
+
+        st.image(
+            image_path,
+            use_container_width=True,
+        )
+
+    # 오른쪽 로그인
+    with right_column:
+
+        # 로그인 폼의 최대 너비를 줄이기 위한 내부 컬럼
+        _, login_column, _ = st.columns(
+            [0.8, 2, 0.8]
+        )
+
+        with login_column:
+            st.markdown(
+                '<div class="brand">만나서 반가워요</div>',
+                unsafe_allow_html=True,
+            )
+
+            if st.session_state.auth_mode == "password_reset":
+                render_password_reset()
+            else:
+                render_sign_in_or_up()
 
 def render_sign_in_or_up() -> None:
     """공용 로그인·회원가입 양식을 그리고 입력한 인증 정보를 제출한다."""
@@ -583,18 +697,98 @@ def render_password_reset() -> None:
         st.session_state.auth_mode = "login"
         st.rerun()
 
+def render_travel_preference_sliders(
+    key_prefix: str, intensity: int = 3, budget: int = 3
+) -> tuple[int, int]:
+    """여행 강도와 상대적인 경비 수준을 1~5단계로 선택한다."""
+
+    intensity_column, budget_column = st.columns(2)
+    with intensity_column:
+        selected_intensity = st.slider(
+            "여행 강도",
+            min_value=1,
+            max_value=5,
+            value=intensity,
+            step=1,
+            key=f"{key_prefix}_travel_intensity",
+            help=(
+                "일반 날짜에는 관광·활동을 강도와 같은 개수로 배치하고 점심·저녁을 추가해요. "
+                "1단계는 호텔 휴식 2회, 2단계는 호텔 휴식 1회를 포함해요. "
+                "마지막 날은 현지 18시 출국 가정을 우선하여 일정을 줄여요. "
+                "관광·식당은 선택한 도시 안에서 추천하며, 체크인은 숙소 확인이 필요해요."
+            ),
+        )
+        st.caption(INTENSITY_GUIDE)
+    with budget_column:
+        selected_budget = st.slider(
+            "여행 경비 수준",
+            min_value=1,
+            max_value=5,
+            value=budget,
+            step=1,
+            key=f"{key_prefix}_budget_level",
+            help="실제 총예산 금액이 아닌, 장소와 식당을 추천할 때 참고할 소비 수준이에요.",
+        )
+        st.caption(BUDGET_GUIDE)
+
+    # 양식 안의 슬라이더는 제출 전에는 재실행되지 않으므로, 선택값에 따라 바뀌는
+    # 미리보기 대신 모든 단계에 적용되는 일정 수 규칙을 항상 같은 안내로 보여 준다.
+    st.caption(
+        "일반 날짜 관광·활동: 1~5단계 각각 1·2·3·4·5개 + 점심·저녁. "
+        "호텔 휴식은 1단계 2회, 2단계 1회가 추가돼요. "
+        "1~2단계는 오전에 여유 시간을 두어요. "
+        "새 일정은 선택한 도시 안에서 추천하고, 마지막 날은 현지 18시 출국 기준으로 줄여요."
+    )
+    return selected_intensity, selected_budget
+
+
+def open_create_trip_form() -> None:
+    """새 여행 화면에 새로 진입할 때만 이전 입력을 비우고 화면을 연다."""
+
+    if not st.session_state.get("show_create_trip", False):
+        # 첫 여행 양식과 사이드바로 연 양식은 서로 다른 키를 사용한다. 위젯을
+        # 그리기 전의 진입 시점에만 비워야 생성 처리·실패·일반 재실행 중 값이 유지된다.
+        for form_key in ("create_trip", "first_trip"):
+            for field in (
+                "title", "destination", "dates", "travel_party", "travel_intensity", "budget_level"
+            ):
+                st.session_state.pop(f"{form_key}_{field}", None)
+    st.session_state.show_create_trip = True
+
+
 def render_create_trip_form(form_key: str) -> None:
     """여행과 첫 AI 일정 초안을 만드는 양식을 그리고 제출한다."""
-    with st.form(form_key, clear_on_submit=True):
-        title = st.text_input("여행 이름", placeholder="예: 봄날의 도쿄 여행")
-        destination = st.text_input("여행지", placeholder="예: 도쿄, 일본")
+    # 제출 직후에는 입력을 초기화하지 않고 API 완료 후에만 대시보드로 이동한다.
+    with st.form(form_key, clear_on_submit=False):
+        title = st.text_input(
+            "여행 이름", placeholder="예: 봄날의 도쿄 여행", key=f"{form_key}_title"
+        )
+        destination = st.text_input(
+            "여행지", placeholder="예: 도쿄, 일본", key=f"{form_key}_destination"
+        )
         today = date.today()
         selected_dates = st.date_input(
             "여행 기간",
             value=(today, today + timedelta(days=3)),
             format="YYYY-MM-DD",
+            key=f"{form_key}_dates",
         )
-        timezone = st.selectbox("여행지 시간대", ["Asia/Seoul", "Asia/Tokyo", "Europe/Paris", "America/New_York"])
+        travel_party = st.selectbox(
+            "여행 인원 구성",
+            options=list(TRAVEL_PARTY_LABELS),
+            format_func=TRAVEL_PARTY_LABELS.get,
+            key=f"{form_key}_travel_party",
+        )
+        travel_intensity, budget_level = render_travel_preference_sliders(form_key)
+        st.caption("일정은 매일 여행지 현지 시간 오전 9시부터 시작해요.")
+        st.caption(
+            "마지막 날은 13시까지 관광·점심 → 13~15시 공항 이동 예비 시간 → "
+            "15~18시 출국 수속 준비로 계획해요. 근교 도시 관광은 포함하지 않아요."
+        )
+        st.caption(
+            "18시 출국은 기본 가정이에요. 공항·항공편은 아직 정해지지 않았고, "
+            "이동 예비 2시간은 실제 경로를 계산한 시간이 아니므로 항공편에 맞춰 확인해 주세요."
+        )
         submitted = st.form_submit_button("새 여행 만들기", use_container_width=True, type="primary")
 
     if not submitted:
@@ -614,12 +808,18 @@ def render_create_trip_form(form_key: str) -> None:
             created = api(
                 "POST",
                 "/me/trips",
+                # 강도가 높은 여러 날의 일정은 실제 장소 검색도 많아 생성 요청만
+                # 일반 화면 조회보다 오래 기다린다.
+                timeout=180,
                 json={
                     "title": title.strip(),
                     "destination": destination.strip(),
-                    "timezone": timezone,
+                    # 현지 시간대는 백엔드가 여행지를 기준으로 결정한다.
                     "start_date": selected_dates[0].isoformat(),
                     "end_date": selected_dates[1].isoformat(),
+                    "travel_party": travel_party,
+                    "travel_intensity": travel_intensity,
+                    "budget_level": budget_level,
                 },
                 headers=auth_headers(),
             )
@@ -631,7 +831,7 @@ def render_create_trip_form(form_key: str) -> None:
     st.session_state.show_create_trip = False
     request_main_scroll_to_top()
     count = int(created.get("initial_itinerary_count") or 0)
-    st.success(f"새 여행과 Google 장소 기반 AI 일정 {count}개를 만들었어요.")
+    st.success(f"새 여행과 식사·활동·휴식을 포함한 일정 {count}개를 만들었어요.")
     st.rerun()
 
 def render_sidebar_trip(trip: dict) -> None:
@@ -656,7 +856,8 @@ def render_sidebar_trip(trip: dict) -> None:
             request_main_scroll_to_top()
             st.rerun()
 
-        pin_label = ":material/bookmark:" if is_pinned else ":material/bookmark_border:"
+        # 실제 표시는 위의 북마크 SVG가 담당하고, 이 라벨은 버튼 크기를 유지한다.
+        pin_label = ":material/bookmark:"
         if st.button(
             pin_label,
             key=f"sidebar_trip_pin_{trip_id}",
@@ -712,8 +913,9 @@ def render_sidebar(trips: list[dict]) -> None:
             )
             st.markdown("<div style='height:.85rem'></div>", unsafe_allow_html=True)
             if st.button("＋ 새 여행 만들기", use_container_width=True, type="primary"):
-                st.session_state.show_create_trip = True
-                st.rerun()
+                open_create_trip_form()
+                # 버튼 클릭 자체가 재실행을 일으킨다. 여기서 다시 중단하면 아직
+                # 그리지 않은 양식 위젯 상태가 정리될 수 있어 같은 실행에서 이어 그린다.
 
             # st.markdown("<div class='sidebar-section-label'>나의 여행</div>", unsafe_allow_html=True)
             # CSS는 Streamlit의 초기 높이와 관계없이 이 영역만 스크롤되게 하고,
@@ -777,13 +979,29 @@ def render_sidebar(trips: list[dict]) -> None:
                         sign_out()
 
 
-def item_time_text(item: dict) -> str:
-    """간결한 표시에 맞게 일정 항목의 시작·종료 시각을 형식화한다."""
+def item_time_text(item: dict, timezone_name: object) -> str:
+    """DB의 UTC 시각을 해당 여행지의 현지 날짜·시각으로 바꾸어 표시한다."""
     start, end = item.get("start_at"), item.get("end_at")
     if not start:
         return "시간 미정"
-    start_text = str(start).replace("T", " ")[:16]
-    end_text = str(end).replace("T", " ")[:16] if end else ""
+    try:
+        trip_timezone = travel_timezone(timezone_name)
+    except ValueError:
+        return "여행지 시간대 확인 필요"
+
+    def local_time_text(value: object) -> str:
+        """시차가 없는 기존 시각은 여행지 현지 시각으로 해석한다."""
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        # tzinfo가 없는 값에 astimezone을 바로 쓰면 실행 서버의 시간대가 섞인다.
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=trip_timezone)
+        return parsed.astimezone(trip_timezone).strftime("%Y-%m-%d %H:%M")
+
+    try:
+        start_text = local_time_text(start)
+        end_text = local_time_text(end) if end else ""
+    except (TypeError, ValueError):
+        return "시간 형식 확인 필요"
     return f"{start_text} – {end_text}" if end_text else start_text
 
 
@@ -921,13 +1139,23 @@ def render_cached_google_place_info(item: dict) -> None:
         st.caption("Google 지도 링크 정보가 없습니다.")
 
 
-def render_itinerary_item_card(item: dict) -> None:
+def render_itinerary_item_card(item: dict, timezone_name: object) -> None:
     """장소 연결 여부와 관계없이 기존 일정 카드 모양을 일정하게 그린다."""
 
+    item_type = str(item.get("item_type") or "place")
+    type_label = {"hotel": "숙소", "note": "안내"}.get(item_type, item_type)
+    notes = str(item.get("notes") or "").strip()
+    # 숙소 미정·체크인 확인 같은 안내도 카드에 표시하되 외부 텍스트를 HTML로
+    # 실행하지 않는다. 실제 장소를 정하기 전에는 지도 정보 버튼이 생기지 않는다.
+    notes_html = (
+        f'<div class="item-meta">{escape(notes).replace(chr(10), "<br>")}</div>'
+        if notes else ""
+    )
     st.markdown(
         f'''<div class="item-card">
             <b>{escape(str(item.get('title') or '일정'))}</b>
-            <div class="item-meta">{escape(str(item.get('item_type') or 'place'))} · {escape(item_time_text(item))}</div>
+            <div class="item-meta">{escape(type_label)} · {escape(item_time_text(item, timezone_name))}</div>
+            {notes_html}
         </div>''',
         unsafe_allow_html=True,
     )
@@ -1307,12 +1535,12 @@ def render_day(trip: dict, day: dict) -> None:
     if not items:
         st.info("아직 일정이 없습니다. 아래에서 직접 추가해 보세요.")
     for item in items:
-        main_col, action_col = st.columns([9, 1])
+        main_col, action_col = st.columns([9, 1], vertical_alignment="center")
         with main_col:
             if isinstance(item.get("place"), dict):
                 # 위치 버튼은 별도 열을 차지하지 않고 카드 안쪽에 겹쳐 보인다.
                 with st.container(key=f"itinerary_item_row_{item['id']}", border=False):
-                    render_itinerary_item_card(item)
+                    render_itinerary_item_card(item, trip.get("timezone"))
                     with st.container(
                         key=f"itinerary_place_info_{item['id']}", border=False
                     ):
@@ -1327,7 +1555,7 @@ def render_day(trip: dict, day: dict) -> None:
                             with place_popover:
                                 render_cached_google_place_info(item)
             else:
-                render_itinerary_item_card(item)
+                render_itinerary_item_card(item, trip.get("timezone"))
         with action_col:
             with st.container(key=f"itinerary_delete_{item['id']}", border=False):
                 if st.button("삭제", key=f"delete_{item['id']}"):
@@ -1389,6 +1617,44 @@ def render_trip_dates_editor(trip: dict) -> None:
         st.error(str(error))
         return
     st.rerun()
+
+def render_trip_preferences_editor(trip: dict) -> None:
+    """저장된 동행 구성을 표시하고 강도와 경비 수준만 변경하여 저장한다."""
+
+    trip_id = str(trip["id"])
+    party_label = TRAVEL_PARTY_LABELS.get(trip.get("travel_party"), "아직 정하지 않았어요")
+    with st.container(border=True):
+        st.markdown("#### 여행 설정")
+        st.caption(f"여행 인원 구성 · {party_label}")
+        if st.session_state.pop(f"trip_preferences_saved_{trip_id}", False):
+            st.success("여행 설정을 저장했어요.")
+        with st.form(f"trip_preferences_form_{trip_id}"):
+            intensity, budget = render_travel_preference_sliders(
+                f"trip_preferences_{trip_id}",
+                intensity=int(trip.get("travel_intensity") or 3),
+                budget=int(trip.get("budget_level") or 3),
+            )
+            st.caption(
+                "설정을 저장해도 기존 일정은 자동으로 변경되지 않아요. "
+                "바뀐 조건은 이후 AI 채팅의 추천에 반영돼요."
+            )
+            submitted = st.form_submit_button("여행 설정 저장", type="primary")
+    if not submitted:
+        return
+
+    try:
+        api(
+            "PATCH",
+            f"/trips/{trip_id}",
+            json={"travel_intensity": intensity, "budget_level": budget},
+            headers=auth_headers(),
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+    st.session_state[f"trip_preferences_saved_{trip_id}"] = True
+    st.rerun()
+
 
 def render_chat(trip: dict) -> None:
     """여행의 채팅 기록을 표시하고 여행 도우미에게 새 질문을 보낸다."""
@@ -1470,6 +1736,7 @@ def render_dashboard(trip_id: str) -> None:
                 unsafe_allow_html=True,
             )
 
+    render_trip_preferences_editor(trip)
     st.markdown("<div style='height:1.2rem'></div>", unsafe_allow_html=True)
     if not days:
         st.info("여행 기간을 정하면 DAY별 일정표가 자동으로 만들어집니다.")
@@ -1497,6 +1764,8 @@ def render_signed_in() -> None:
         return
 
     if not trips:
+        # st.markdown('<div class="brand">새 여행 추가</div>', unsafe_allow_html=True)
+        # st.caption("여행 기간을 정하면 DAY별 AI 일정 초안이 자동으로 생성됩니다.")
         st.markdown('<div class="empty-card"><div class="brand">첫 여행을 만들어 보세요.</div><p>여행지와 기간을 정하면 일차별 AI 일정 초안이 준비됩니다.</p></div>', unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         render_create_trip_form("first_trip")

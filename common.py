@@ -96,8 +96,9 @@ def stream_answer(
 
 def api(method: str, path: str, **kwargs):
     """API 요청을 보내고 전송·HTTP 실패를 화면용 오류로 바꾼다."""
+    request_timeout = kwargs.pop("timeout", HTTP_TIMEOUT)
     try:
-        response = httpx.request(method, f"{BACKEND_URL}{path}", timeout=HTTP_TIMEOUT, **kwargs)
+        response = httpx.request(method, f"{BACKEND_URL}{path}", timeout=request_timeout, **kwargs)
     except httpx.ConnectError as error:
         raise ApiError("백엔드 서버에 연결할 수 없습니다. backend 서버가 실행 중인지 확인하세요.") from error
     except httpx.TimeoutException as error:
