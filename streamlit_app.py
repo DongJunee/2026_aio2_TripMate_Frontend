@@ -95,7 +95,7 @@ st.markdown(
             text-overflow: ellipsis !important;
         }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="secondary"]:hover { background: rgba(49, 51, 63, .06) !important; border-color: transparent !important; }
-        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="primary"] { background: #e5f2ff !important; border-color: #d2e8ff !important; border-left: 4px solid #5479db; color: #2872d8 !important; }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="primary"] { background: #e5f2ff !important; border-color: #d2e8ff !important; border-left: 8px solid #3169e8 !important; color: #2872d8 !important; }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="primary"] p { width: 100%; color: #2872d8 !important; font-weight: 700; text-align: left !important; }
         /* 테두리 북마크는 고정되지 않음을, 파란 채움 북마크는 현재 고정 상태를
            뜻한다. Streamlit의 회색 스위치를 대신한다. */
@@ -166,19 +166,19 @@ st.markdown(
         }
         /* Streamlit 바깥 사이드바가 두 번째 스크롤 영역이 되지 않게 한다.
            고정 높이를 가진 ``sidebar-trip-list``만 스크롤할 수 있다. */
-        /* 기본 Streamlit 사이드바 너비는 약 336px이다. 235px은 여행 이름을
+        /* 기본 Streamlit 사이드바 너비는 약 336px이다. 280px은 여행 이름을
            읽기 좋게 유지하면서 그 너비의 약 70%에 해당한다. */
         [data-testid="stSidebar"] {
-            width: 235px !important;
-            min-width: 235px !important;
-            max-width: 235px !important;
-            flex: 0 0 235px !important;
+            width: 280px !important;
+            min-width: 280px !important;
+            max-width: 280px !important;
+            flex: 0 0 280px !important;
             overflow: hidden;
         }
         [data-testid="stSidebar"] > div:first-child {
-            width: 235px !important;
-            min-width: 235px !important;
-            max-width: 235px !important;
+            width: 280px !important;
+            min-width: 280px !important;
+            max-width: 280px !important;
         }
         /* 상단 도구 모음과 사이드바 접기·펼치기 제어를 숨겨 Streamlit 페이지가
            앱처럼 보이게 한다. */
@@ -317,6 +317,98 @@ st.markdown(
         .empty-card { padding: 2.2rem; text-align: center; border: 1px dashed #c8d4eb; border-radius: 18px; background: white; }
         .login-wrap { max-width: 470px; margin: 8vh auto; }
         .login-card { padding: 2.7rem 2.25rem; border-radius: 24px; background: white; border: 1px solid #e3e9f6; box-shadow: 0 18px 45px rgba(37, 64, 120, .08); }
+        /* 여행이 선택된 화면은 1920×1080에서 페이지 자체가 아니라 일정 목록만
+           스크롤되도록 한 화면 높이에 맞춘다. 로그인·새 여행 화면에는 적용하지 않는다. */
+        [data-testid="stMainBlockContainer"]:has(.st-key-trip_dashboard_shell) {
+          height: 100dvh !important;
+          max-width: none !important;
+          padding-top: 15px !important;
+          padding-right: 80px !important;
+          padding-bottom: 15px !important;
+          padding-left: 80px !important;
+          overflow: hidden !important;
+        }
+        .st-key-trip_dashboard_shell { height: calc(100dvh - 16px); overflow: hidden; }
+        .st-key-trip_dashboard_shell > div,
+        .st-key-trip_dashboard_shell [data-testid="stHorizontalBlock"] { min-height: 0; }
+        /* Windows 화면 배율이나 브라우저 줌에 따라 CSS 픽셀 높이가 달라져도
+           실제 화면에서 일정·지도·채팅이 비슷한 비율을 차지하게 한다. */
+        /* 일정 목록의 실제 높이와 스크롤은 render_compact_schedule()의
+           st.container(height=...) 한 곳에서만 정한다. */
+        /* 일정 카드와 이동 안내를 각각 Streamlit 요소로 그려도 기본 1rem 간격이
+           두 번 생기지 않도록 이 스크롤 영역 안에서만 세로 간격을 줄인다. */
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_schedule_"][data-testid="stVerticalBlock"],
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_schedule_"] > [data-testid="stVerticalBlock"] {
+          gap: 20px; !important;
+          row-gap: 20px; !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_schedule_"] [data-testid="stHorizontalBlock"] {
+          gap: .45rem !important;
+        }
+        /* 지도 높이 */
+        .st-key-trip_dashboard_shell iframe[title="streamlit_components.v1.components.html"] {
+          height: 35dvh !important;
+          min-height: 165px !important;
+          max-height: 400px !important;
+        }
+        /* 오른쪽 채팅 높이 */
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_chat_"] {
+          height: 100dvh !important;
+          min-height: 430px !important;
+          max-height: 900px !important;
+          overflow-y: auto !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_"] button,
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_previous_"] button,
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_next_"] button {
+          height: clamp(32px, 4.5dvh, 42px) !important;
+          min-height: 0 !important;
+          padding-top: .2rem !important;
+          padding-bottom: .2rem !important;
+        }
+        .dashboard-panel { height: 100%; border: 1px solid #e1e7f0; border-radius: 16px; background: var(--secondary-background-color); }
+        .dashboard-date-summary { display:flex; align-items:center; justify-content:space-between; gap:.75rem; height:clamp(36px, 5.5dvh, 52px); box-sizing:border-box; padding:.4rem .9rem; border:1px solid #e2e8f2; border-radius:12px; margin:.25rem 0 .4rem; }
+        .dashboard-date-title { font-size:.98rem; font-weight:800; }
+        .dashboard-badges { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.35rem; }
+        .dashboard-badge { padding:.22rem .55rem; border-radius:999px; background:#edf3ff; color:#315fca; font-size:.7rem; font-weight:700; white-space:nowrap; }
+        /* 일정 한 줄 전체를 하나의 카드로 감싼다. 정보·삭제 버튼도 카드 안쪽에
+           두고, 오른쪽 끝과 버튼 사이에는 20px의 여백을 남긴다. */
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"] {
+          padding: .3rem 10px .3rem .8rem !important;
+          border: 1px solid #dfe6f2;
+          border-radius: 12px;
+          background: var(--secondary-background-color);
+        }
+        /* 일정 내용은 위의 큰 카드 안에 들어가므로 별도 카드 테두리를 만들지 않는다. */
+        .compact-item { padding:.25rem 0; border:0; border-radius:0; background:transparent; }
+        .compact-item-time { color:#5276d8; font-size:.72rem; font-weight:800; }
+        .compact-item-title { margin:.12rem 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.9rem; font-weight:800; }
+        .compact-item-meta { color:#748198; font-size:.69rem; }
+        /* 일정 카드 오른쪽 기능 버튼은 칼럼 비율과 관계없이 동일한 아이콘 크기를 쓴다. */
+        .st-key-trip_dashboard_shell [class*="st-key-compact_move_"] button,
+        .st-key-trip_dashboard_shell [class*="st-key-compact_time_"] button,
+        .st-key-trip_dashboard_shell [class*="st-key-compact_place_"] button,
+        .st-key-trip_dashboard_shell [class*="st-key-compact_delete_"] button {
+          width: 30px !important;
+          min-width: 30px !important;
+          height: 30px !important;
+          min-height: 30px !important;
+          padding: 0 !important;
+        }
+        .route-leg { margin:.05rem 0 .05rem 1rem; color:#687790; font-size:.7rem; }
+        .route-leg::before { content:"↓"; margin-right:.35rem; color:#4d78e5; }
+        .dashboard-section-label { margin:.35rem 0 .25rem; font-size:.8rem; font-weight:800; }
+        .route-summary { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.5rem; padding:.6rem .75rem; border:1px solid #e1e7f0; border-radius:12px; }
+        .route-summary span { display:block; color:#748198; font-size:.65rem; }
+        .route-summary b { font-size:.82rem; }
+        .trip-chat-title { margin:0; font-size:1.1rem; font-weight:850; }
+        .trip-chip-row { display:flex; flex-wrap:wrap; gap:.35rem; margin:.55rem 0 .7rem; }
+        .trip-chip { padding:.25rem .55rem; border-radius:999px; background:#eef3ff; color:#315fca; font-size:.68rem; font-weight:700; }
+        .itinerary-change-status { margin:.15rem 0 .65rem; padding:.65rem .75rem; border:1px solid #d9e6ff; border-radius:12px; background:#f3f7ff; }
+        .itinerary-change-status-title { color:#315fca; font-size:.74rem; font-weight:800; }
+        .itinerary-change-status-message { margin-top:.16rem; font-size:.8rem; font-weight:700; }
+        .itinerary-change-status-detail { margin-top:.1rem; color:#687790; font-size:.7rem; }
+        .welcome-message { padding:.85rem 1rem; border-radius:14px; background:#f1f5ff; color:#243652; font-size:.82rem; line-height:1.55; }
         @media (max-width: 800px) {
           .login-wrap { margin: 4vh auto; }
           .login-card { padding: 2rem 1.4rem; }
@@ -343,6 +435,12 @@ def initialize_session() -> None:
         # 백엔드가 일반 일정 데이터에 저장한다.
         "place_search_results": {},
         "visible_day_maps": {},
+        # 채팅에서 장소 추천을 요청했을 때, 현재 세션에서만 보여 줄 추천 카드다.
+        # 실제로 선택한 장소만 itinerary_items에 저장한다.
+        "chat_place_recommendations": {},
+        # 여행별로 선택한 DAY와 4개씩 보이는 날짜 창의 시작 위치를 유지한다.
+        "dashboard_selected_days": {},
+        "dashboard_day_windows": {},
     }
     for key, value in defaults.items():
         st.session_state.setdefault(key, value)
@@ -450,6 +548,7 @@ def sign_out(notice: str | None = None) -> None:
     st.session_state.show_create_trip = False
     st.session_state.place_search_results = {}
     st.session_state.visible_day_maps = {}
+    st.session_state.chat_place_recommendations = {}
     st.session_state.notice = notice
     st.rerun()
 
@@ -789,7 +888,7 @@ def render_create_trip_form(form_key: str) -> None:
             "18시 출국은 기본 가정이에요. 공항·항공편은 아직 정해지지 않았고, "
             "이동 예비 2시간은 실제 경로를 계산한 시간이 아니므로 항공편에 맞춰 확인해 주세요."
         )
-        submitted = st.form_submit_button("새 여행 만들기", use_container_width=True, type="primary")
+        submitted = st.form_submit_button("여행 만들기", use_container_width=True, type="primary")
 
     if not submitted:
         return
@@ -1222,6 +1321,11 @@ def render_interactive_google_map(
     component_data = {
         "markers": markers,
         "encodedPolyline": str(route.get("encoded_polyline") or ""),
+        "routeSegments": [
+            str(segment.get("encoded_polyline") or "")
+            for segment in map_data.get("route_segments") or []
+            if segment.get("encoded_polyline")
+        ],
     }
     # JSON은 script 요소 안에 들어간다. 저장된 장소 제목이 script를 닫거나 마크업을
     # 주입할 수 없도록 HTML에서 의미 있는 문자를 이스케이프한다.
@@ -1329,6 +1433,23 @@ def render_interactive_google_map(
                 }} catch (error) {{
                   console.warn("TripMate route polyline could not be drawn.", error);
                 }}
+              }}
+
+              if (tripmateData.routeSegments?.length && google.maps.geometry?.encoding) {{
+                tripmateData.routeSegments.forEach((encoded) => {{
+                  try {{
+                    new google.maps.Polyline({{
+                      path: google.maps.geometry.encoding.decodePath(encoded),
+                      geodesic: true,
+                      strokeColor: "#3169e8",
+                      strokeOpacity: 0.9,
+                      strokeWeight: 5,
+                      map,
+                    }});
+                  }} catch (error) {{
+                    console.warn("TripMate route segment could not be drawn.", error);
+                  }}
+                }});
               }}
 
               if (tripmateData.markers.length === 1) {{
@@ -1656,6 +1777,568 @@ def render_trip_preferences_editor(trip: dict) -> None:
     st.rerun()
 
 
+def _dashboard_selected_day(trip: dict, days: list[dict]) -> dict:
+    """여행별 DAY 선택값을 확인하고 4개짜리 날짜 탐색 범위 안에 유지한다."""
+
+    trip_id = str(trip["id"])
+    selected_by_trip = st.session_state.dashboard_selected_days
+    selected_index = min(max(int(selected_by_trip.get(trip_id, 0)), 0), len(days) - 1)
+    window_by_trip = st.session_state.dashboard_day_windows
+    window_start = min(max(int(window_by_trip.get(trip_id, 0)), 0), max(0, len(days) - 4))
+
+    # 여행 일수에 따라 버튼이 생겼다 사라지지 않도록 화살표 자리는 항상 유지한다.
+    # 이동할 날짜가 없는 경우에는 숨기는 대신 비활성화한다.
+    columns = st.columns([.45, 1, 1, 1, 1, .45])
+    with columns[0]:
+        if st.button("‹", key=f"dashboard_day_previous_{trip_id}", disabled=window_start == 0,
+                     use_container_width=True):
+            window_by_trip[trip_id] = window_start - 1
+            st.rerun()
+    day_columns = columns[1:5]
+
+    visible = days[window_start : window_start + 4]
+    weekdays = "월화수목금토일"
+    for column, day in zip(day_columns, visible):
+        index = days.index(day)
+        try:
+            value = date.fromisoformat(str(day["travel_date"]))
+            label = f"{day['day_number']}일 {value.month}.{value.day}({weekdays[value.weekday()]})"
+        except (KeyError, TypeError, ValueError):
+            label = f"DAY {day.get('day_number', index + 1)}"
+        with column:
+            if st.button(label, key=f"dashboard_day_{trip_id}_{day['id']}",
+                         type="primary" if index == selected_index else "secondary",
+                         use_container_width=True):
+                selected_by_trip[trip_id] = index
+                st.rerun()
+
+    with columns[5]:
+        if st.button("›", key=f"dashboard_day_next_{trip_id}",
+                     disabled=window_start + 4 >= len(days), use_container_width=True):
+            window_by_trip[trip_id] = window_start + 1
+            st.rerun()
+    return days[selected_index]
+
+
+def _local_datetime(value: object, timezone_name: object) -> datetime | None:
+    """저장된 시각을 여행지 현지 datetime으로 바꾼다."""
+
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        zone = travel_timezone(timezone_name)
+        return (parsed.replace(tzinfo=zone) if parsed.tzinfo is None else parsed.astimezone(zone))
+    except (TypeError, ValueError):
+        return None
+
+
+def _round_up_quarter(value: datetime) -> datetime:
+    """도착 시각을 다음 15분 단위로 올려 자연스러운 일정 시작 시각을 만든다."""
+
+    value = value.replace(second=0, microsecond=0)
+    remainder = value.minute % 15
+    return value if remainder == 0 else value + timedelta(minutes=15 - remainder)
+
+
+def _adjusted_schedule(items: list[dict], legs: list[dict], timezone_name: object) -> list[tuple[dict, datetime | None, datetime | None, dict | None]]:
+    """실제 이동시간을 반영하되 기존 시작 시각보다 이르게 당기지 않는다."""
+
+    ordered = sorted(items, key=lambda item: (item.get("start_at") is None, str(item.get("start_at") or ""), int(item.get("sort_order") or 0)))
+    leg_by_destination = {str(leg.get("to_itinerary_item_id")): leg for leg in legs}
+    calculated_ends: dict[str, datetime] = {}
+    result = []
+    for item in ordered:
+        start = _local_datetime(item.get("start_at"), timezone_name)
+        end = _local_datetime(item.get("end_at"), timezone_name)
+        duration = (end - start) if start and end else timedelta(minutes=int(item.get("estimated_stay_minutes") or 0))
+        leg = leg_by_destination.get(str(item.get("id")))
+        # 직접 시간 변경한 일정은 사용자가 정한 시각을 우선한다. 이동 시간이 길어도
+        # 화면에서 임의로 늦추지 않고, 충돌 여부는 사용자가 확인·조정할 수 있게 한다.
+        if start and not item.get("is_fixed") and leg and leg.get("status") == "ok":
+            previous_end = calculated_ends.get(str(leg.get("from_itinerary_item_id")))
+            if previous_end:
+                arrival = _round_up_quarter(previous_end + timedelta(seconds=float(leg.get("duration_seconds") or 0)))
+                start = max(start, arrival)
+                end = start + duration
+        if end:
+            calculated_ends[str(item.get("id"))] = end
+        result.append((item, start, end, leg))
+    return result
+
+
+def _travel_leg_text(leg: dict | None) -> str | None:
+    """자동 선택한 이동 수단과 실제 소요시간을 일정 사이 한 줄로 표시한다."""
+
+    if not leg:
+        return None
+    if leg.get("status") != "ok":
+        return "이동 경로 확인 안 됨 · 총 시간에서 제외"
+    labels = {"walk": "도보", "transit": "대중교통", "drive": "자동차", "bicycle": "자전거"}
+    minutes = max(1, round(float(leg.get("duration_seconds") or 0) / 60))
+    return f"{labels.get(leg.get('travel_mode'), '이동')} {minutes}분"
+
+
+def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
+    """선택 DAY의 일정만 고정 높이 스크롤 영역에 그린다."""
+
+    items = day.get("items") or []
+    # CSS가 로드되기 전에도 너무 작게 보이지 않도록 기본 높이도 함께 맞춘다.
+    with st.container(height=300, key=f"dashboard_schedule_{day['id']}", border=False):
+        if not items:
+            st.info("아직 일정이 없습니다.")
+            return
+        schedule_rows = _adjusted_schedule(
+            items, route_plan.get("legs") or [], trip.get("timezone")
+        )
+        for index, (item, start, end, leg) in enumerate(schedule_rows):
+            if leg_text := _travel_leg_text(leg):
+                st.markdown(f'<div class="route-leg">{escape(leg_text)}</div>', unsafe_allow_html=True)
+            place = item.get("place") if isinstance(item.get("place"), dict) else {}
+            rating = _place_rating_text(place) if place else "장소 정보 없음"
+            time_text = f"{start:%H:%M}–{end:%H:%M}" if start and end else "시간 미정"
+            stay = item.get("estimated_stay_minutes")
+            stay_text = f" · 체류 {int(stay)}분" if isinstance(stay, (int, float)) else ""
+            # 일정 내용과 기능 버튼을 한 카드 안의 두 영역으로 배치한다. 버튼 수가
+            # 늘어나도 actions 영역 안에서만 확장되게 해 일정 내용 폭을 안정적으로 둔다.
+            with st.container(key=f"dashboard_item_row_{item['id']}", border=False):
+                main, actions = st.columns(
+                    [7.5, 2.5],
+                    vertical_alignment="center",
+                    gap="small",
+                )
+                with main:
+                    st.markdown(
+                        f'<div class="compact-item"><div class="compact-item-time">{escape(time_text)}</div>'
+                        f'<div class="compact-item-title">{escape(str(item.get("title") or "일정"))}</div>'
+                        f'<div class="compact-item-meta">{escape(rating + stay_text)}</div></div>',
+                        unsafe_allow_html=True,
+                    )
+                with actions:
+                    previous, next_item, time_edit, info, remove = st.columns(
+                        5,
+                        gap="small",
+                        vertical_alignment="center",
+                    )
+                    with previous:
+                        if st.button(
+                            "↑",
+                            key=f"compact_move_previous_{item['id']}",
+                            help="이전 시간 칸의 장소와 교환",
+                            disabled=index == 0,
+                        ):
+                            try:
+                                api(
+                                    "POST",
+                                    f"/trips/{trip['id']}/itinerary-items/{item['id']}/swap-place",
+                                    json={"direction": "previous"},
+                                    headers=auth_headers(),
+                                )
+                            except ApiError as error:
+                                st.error(str(error))
+                            else:
+                                st.rerun()
+                    with next_item:
+                        if st.button(
+                            "↓",
+                            key=f"compact_move_next_{item['id']}",
+                            help="다음 시간 칸의 장소와 교환",
+                            disabled=index == len(schedule_rows) - 1,
+                        ):
+                            try:
+                                api(
+                                    "POST",
+                                    f"/trips/{trip['id']}/itinerary-items/{item['id']}/swap-place",
+                                    json={"direction": "next"},
+                                    headers=auth_headers(),
+                                )
+                            except ApiError as error:
+                                st.error(str(error))
+                            else:
+                                st.rerun()
+                    with time_edit:
+                        # 값이 없는 기존 일정도 오전 9시부터 직접 시간을 정할 수 있다.
+                        start_value = (
+                            start.replace(tzinfo=None).time() if start else time(9, 0)
+                        )
+                        end_value = (
+                            end.replace(tzinfo=None).time() if end else time(10, 0)
+                        )
+                        with st.popover(
+                            "◷",
+                            key=f"compact_time_{item['id']}",
+                            help="시작·종료 시간 변경",
+                        ):
+                            changed_start = st.time_input(
+                                "시작 시간",
+                                value=start_value,
+                                key=f"compact_time_start_{item['id']}",
+                            )
+                            changed_end = st.time_input(
+                                "종료 시간",
+                                value=end_value,
+                                key=f"compact_time_end_{item['id']}",
+                            )
+                            if st.button(
+                                "시간 변경하기",
+                                key=f"compact_time_submit_{item['id']}",
+                                use_container_width=True,
+                            ):
+                                if changed_end <= changed_start:
+                                    st.error("종료 시간은 시작 시간보다 늦어야 합니다.")
+                                else:
+                                    try:
+                                        api(
+                                            "POST",
+                                            f"/trips/{trip['id']}/itinerary-items/{item['id']}/time",
+                                            json={
+                                                "start_time": changed_start.isoformat(),
+                                                "end_time": changed_end.isoformat(),
+                                            },
+                                            headers=auth_headers(),
+                                        )
+                                    except ApiError as error:
+                                        st.error(str(error))
+                                    else:
+                                        st.rerun()
+                    with info:
+                        if place:
+                            with st.popover("ⓘ", key=f"compact_place_{item['id']}", help="장소 정보"):
+                                render_cached_google_place_info(item)
+                    with remove:
+                        if st.button("×", key=f"compact_delete_{item['id']}", help="일정 삭제"):
+                            try:
+                                api("DELETE", f"/trips/{trip['id']}/itinerary-items/{item['id']}", headers=auth_headers())
+                            except ApiError as error:
+                                st.error(str(error))
+                            else:
+                                st.rerun()
+
+
+def _recommendation_query_from_message(message: str) -> str:
+    """추천 요청 문장에서 Google Places 검색에 적합한 장소·종류 검색어를 만든다."""
+
+    query = message.strip()
+    for phrase in (
+        "추천해 주세요",
+        "추천해주세요",
+        "추천 해주세요",
+        "추천해줘",
+        "추천 해줘",
+        "추천 부탁해",
+        "추천 부탁드려요",
+        "추천",
+    ):
+        query = query.replace(phrase, " ")
+    return " ".join(query.split()) or message.strip()
+
+
+def _looks_like_place_recommendation(message: str) -> bool:
+    """장소 추천 카드가 필요한 채팅 요청인지 가볍게 판별한다."""
+
+    return "추천" in message and bool(_recommendation_query_from_message(message))
+
+
+def _recommendation_default_time(day: dict, trip: dict) -> time:
+    """현재 DAY의 마지막 일정 뒤 30분을 추천 장소의 기본 시작 시각으로 잡는다."""
+
+    trip_timezone = travel_timezone(trip.get("timezone"))
+    latest_end: datetime | None = None
+    for item in day.get("items") or []:
+        value = item.get("end_at")
+        if not value:
+            continue
+        try:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=trip_timezone)
+            parsed = parsed.astimezone(trip_timezone)
+        except (TypeError, ValueError):
+            continue
+        latest_end = max(latest_end, parsed) if latest_end else parsed
+    if latest_end is None:
+        return time(10, 0)
+    suggested = latest_end + timedelta(minutes=30)
+    # 15분 단위로 올려 사람이 읽기 좋은 시간으로 표시한다.
+    rounded_minute = ((suggested.minute + 14) // 15) * 15
+    if rounded_minute == 60:
+        suggested += timedelta(hours=1)
+        rounded_minute = 0
+    return suggested.replace(minute=rounded_minute, second=0, microsecond=0).time()
+
+
+def _add_chat_recommendation_to_day(
+    trip: dict, day: dict, place: dict, start_time: time
+) -> None:
+    """추천 카드에서 고른 검증된 Google 장소를 현재 열어 둔 DAY에 추가한다."""
+
+    google_place_id = str(place.get("google_place_id") or "").strip()
+    if not google_place_id:
+        st.error("장소 식별자를 찾지 못했습니다. 다시 추천을 받아 주세요.")
+        return
+    try:
+        travel_date = date.fromisoformat(str(day["travel_date"]))
+        starts_at = datetime.combine(travel_date, start_time).replace(
+            tzinfo=travel_timezone(trip.get("timezone"))
+        )
+        api(
+            "POST",
+            f"/trips/{trip['id']}/days/{day['id']}/google-places",
+            json={
+                "google_place_id": google_place_id,
+                "start_at": starts_at.isoformat(),
+                "estimated_stay_minutes": 60,
+                "travel_mode": "walk",
+            },
+            headers=auth_headers(),
+        )
+    except (ApiError, ValueError) as error:
+        st.error(str(error))
+        return
+    st.session_state.chat_place_recommendations.pop(str(trip["id"]), None)
+    st.success(f"{place.get('display_name') or '선택한 장소'}을 DAY {day['day_number']} 일정에 추가했어요.")
+    st.rerun()
+
+
+def _render_recommendation_place_option(
+    trip: dict,
+    day: dict,
+    place: dict,
+    *,
+    key_prefix: str,
+    start_time: time,
+) -> None:
+    """추천 카드 안의 Google 장소 한 개와 일정 추가 버튼을 그린다."""
+
+    place_id = str(place.get("google_place_id") or "").strip()
+    if not place_id:
+        return
+    with st.container(border=True):
+        st.markdown(f"**{escape(str(place.get('display_name') or '이름 없는 장소'))}**")
+        st.caption(
+            f"{place.get('formatted_address') or '주소 정보 없음'} · {_place_rating_text(place)}"
+        )
+        if st.button(
+            "이 일정에 추가",
+            key=f"{key_prefix}_add_{place_id}",
+            use_container_width=True,
+        ):
+            _add_chat_recommendation_to_day(trip, day, place, start_time)
+
+
+def render_chat_place_recommendation_card(trip: dict, day: dict) -> None:
+    """채팅 추천 요청의 Google 장소 2개와 직접 검색 선택지 하나를 표시한다."""
+
+    state = st.session_state.chat_place_recommendations.get(str(trip["id"]))
+    if not isinstance(state, dict):
+        return
+
+    query = str(state.get("query") or "").strip()
+    if not query:
+        return
+    if "recommendations" not in state and not state.get("load_error"):
+        try:
+            with st.spinner("Google Places에서 추천 장소를 찾고 있어요..."):
+                search = api(
+                    "GET",
+                    f"/trips/{trip['id']}/days/{day['id']}/places/search",
+                    params={"query": query, "max_results": 2},
+                    headers=auth_headers(),
+                )
+        except ApiError as error:
+            state["load_error"] = str(error)
+        else:
+            state["recommendations"] = search.get("places") or []
+        st.session_state.chat_place_recommendations[str(trip["id"])] = state
+
+    with st.container(key=f"chat_place_recommendation_{trip['id']}", border=True):
+        st.markdown("#### AI 장소 추천")
+        st.caption(
+            f"‘{query}’ 기준 Google Places 후보예요. 선택한 장소는 현재 열린 DAY {day['day_number']}에 추가됩니다."
+        )
+        selected_time = st.time_input(
+            "일정 시작 시각",
+            value=_recommendation_default_time(day, trip),
+            key=f"chat_recommendation_time_{trip['id']}",
+        )
+        if state.get("load_error"):
+            st.warning(str(state["load_error"]))
+        else:
+            recommendations = state.get("recommendations") or []
+            if recommendations:
+                recommendation_columns = st.columns(2)
+                for column, place in zip(recommendation_columns, recommendations[:2]):
+                    with column:
+                        _render_recommendation_place_option(
+                            trip,
+                            day,
+                            place,
+                            key_prefix=f"chat_recommendation_{trip['id']}",
+                            start_time=selected_time,
+                        )
+            else:
+                st.info("추천 장소를 찾지 못했습니다. 아래에서 장소를 직접 검색해 보세요.")
+
+        st.divider()
+        st.caption("원하는 장소가 있으면 Google Places에서 직접 한 곳을 찾아 추가할 수 있어요.")
+        search_column, button_column = st.columns([4, 1])
+        with search_column:
+            direct_query = st.text_input(
+                "직접 장소 검색",
+                placeholder="예: 난바 조용한 카페",
+                key=f"chat_recommendation_search_{trip['id']}",
+                label_visibility="collapsed",
+            )
+        with button_column:
+            searched = st.button(
+                "검색",
+                key=f"chat_recommendation_search_button_{trip['id']}",
+                use_container_width=True,
+            )
+        if searched:
+            if not direct_query.strip():
+                st.warning("찾고 싶은 장소나 종류를 입력하세요.")
+            else:
+                try:
+                    with st.spinner("Google 장소를 찾고 있어요..."):
+                        direct_search = api(
+                            "GET",
+                            f"/trips/{trip['id']}/days/{day['id']}/places/search",
+                            params={"query": direct_query.strip(), "max_results": 1},
+                            headers=auth_headers(),
+                        )
+                except ApiError as error:
+                    st.error(str(error))
+                else:
+                    state["direct_place"] = (direct_search.get("places") or [None])[0]
+                    st.session_state.chat_place_recommendations[str(trip["id"])] = state
+                    st.rerun()
+        if direct_place := state.get("direct_place"):
+            st.caption("직접 검색 결과")
+            _render_recommendation_place_option(
+                trip,
+                day,
+                direct_place,
+                key_prefix=f"chat_direct_place_{trip['id']}",
+                start_time=selected_time,
+            )
+
+
+def render_itinerary_change_card(trip: dict, change: dict) -> None:
+    """채팅 타임라인 안에 일정 변경 상태와 가능한 되돌리기 버튼을 그린다."""
+
+    status_col, undo_col = st.columns([5, 1], vertical_alignment="center", gap="small")
+    with status_col:
+        st.markdown(
+            '<div class="itinerary-change-status">'
+            '<div class="itinerary-change-status-title">일정 변경 상태</div>'
+            f'<div class="itinerary-change-status-message">{escape(str(change.get("message") or "일정이 변경되었습니다."))}</div>'
+            f'<div class="itinerary-change-status-detail">{escape(str(change.get("detail") or ""))}</div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+    with undo_col:
+        if change.get("can_undo") and st.button(
+            "되돌리기",
+            key=f"undo_itinerary_change_{change['id']}",
+            use_container_width=True,
+        ):
+            try:
+                api(
+                    "POST",
+                    f"/trips/{trip['id']}/itinerary-changes/{change['id']}/undo",
+                    headers=auth_headers(),
+                )
+            except ApiError as error:
+                st.error(str(error))
+            else:
+                st.rerun()
+
+
+def render_dashboard_chat(trip: dict, days: list[dict], selected_day: dict) -> None:
+    """여행 요약과 첫 안내를 포함한 오른쪽 채팅 패널을 그린다."""
+
+    day_count = len(days)
+    nights = max(0, day_count - 1)
+    party = TRAVEL_PARTY_LABELS.get(trip.get("travel_party"), "구성 미정")
+    purpose_value = trip.get("travel_purpose") or "맞춤 여행"
+    purpose = ", ".join(map(str, purpose_value)) if isinstance(purpose_value, list) else str(purpose_value)
+    destination = str(trip.get("destination") or "여행지")
+    st.markdown(f'<div class="trip-chat-title">{escape(str(trip.get("title") or "나의 여행"))}</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="trip-chip-row">'
+        f'<span class="trip-chip">{escape(destination)}</span>'
+        f'<span class="trip-chip">{nights}박 {day_count}일</span>'
+        f'<span class="trip-chip">{escape(party)}</span>'
+        f'<span class="trip-chip">{escape(purpose)}</span></div>',
+        unsafe_allow_html=True,
+    )
+    try:
+        messages = api("GET", f"/trips/{trip['id']}/messages", headers=auth_headers())
+    except ApiError as error:
+        st.error(str(error))
+        return
+    try:
+        # 변경 기록은 assistant 메시지로 저장하지 않고, 생성 시각만 기준으로 채팅
+        # 메시지 사이에 카드 형태로 섞는다. 그래서 Gemini 토큰을 쓰지 않는다.
+        changes = api(
+            "GET",
+            f"/trips/{trip['id']}/itinerary-changes",
+            headers=auth_headers(),
+        )
+    except ApiError:
+        # SQL 마이그레이션 전에도 기존 대화는 정상적으로 열리게 한다.
+        changes = []
+
+    timeline: list[tuple[str, int, str, dict]] = []
+    for index, message in enumerate(messages):
+        if message.get("role") != "system":
+            timeline.append((str(message.get("created_at") or ""), index, "message", message))
+    message_count = len(timeline)
+    for index, change in enumerate(changes):
+        timeline.append((str(change.get("created_at") or ""), message_count + index, "change", change))
+    timeline.sort(key=lambda event: (event[0], event[1]))
+
+    chat_box = st.container(height=700, key=f"dashboard_chat_{trip['id']}")
+    with chat_box:
+        if not messages:
+            username = str(st.session_state.user_name or "여행자")
+            st.markdown(
+                f'<div class="welcome-message">안녕하세요! {escape(username)}님! '
+                f'{escape(destination)} {nights}박 {day_count}일 ({escape(formatted_dates(trip))}) 맞춤 코스가 준비되었습니다. 🎉<br><br>'
+                '아래 추천 일정을 살펴보시고 추가하고 싶은 가보고 싶은 곳이나, 제외하고 싶은 곳이 있다면 언제든 채팅으로 알려주세요!</div>',
+                unsafe_allow_html=True,
+            )
+        for _, _, event_type, event in timeline:
+            if event_type == "change":
+                render_itinerary_change_card(trip, event)
+            else:
+                with st.chat_message(event["role"]):
+                    st.write(event["content"])
+        # 장소 추천 카드는 일반 채팅 메시지 다음에 보여 주되, 선택 시점에는 지금
+        # 열어 둔 DAY를 사용한다. 그래서 날짜 탭을 바꾼 뒤 추가하면 그 DAY에 저장된다.
+        render_chat_place_recommendation_card(trip, selected_day)
+    prompt = st.chat_input("메시지를 입력하세요", key=f"dashboard_chat_input_{trip['id']}")
+    if not prompt:
+        return
+    if _looks_like_place_recommendation(prompt):
+        st.session_state.chat_place_recommendations[str(trip["id"])] = {
+            "query": _recommendation_query_from_message(prompt),
+        }
+    with chat_box:
+        with st.chat_message("user"):
+            st.write(prompt)
+        with st.chat_message("assistant"):
+            try:
+                st.write_stream(stream_answer(f"/trips/{trip['id']}/chat", {"content": prompt}, headers=auth_headers()))
+            except SessionExpired:
+                raise
+            except ApiError as error:
+                st.error(str(error))
+                return
+    st.rerun()
+
+
 def render_chat(trip: dict) -> None:
     """여행의 채팅 기록을 표시하고 여행 도우미에게 새 질문을 보낸다."""
     st.divider()
@@ -1706,47 +2389,75 @@ def render_chat(trip: dict) -> None:
         st.rerun()
 
 def render_dashboard(trip_id: str) -> None:
-    """선택한 여행의 요약·일정·채팅 영역을 불러와 그린다."""
+    """선택 여행을 일정·지도 왼쪽과 채팅 오른쪽의 고정 화면으로 그린다."""
     dashboard = api("GET", f"/trips/{trip_id}/dashboard", headers=auth_headers())
     trip, days = dashboard["trip"], dashboard["days"]
-    item_count = sum(len(day.get("items", [])) for day in days)
-
-    st.markdown(
-        f'''<div class="hero">
-            <div class="eyebrow" style="color:#cbd9ff">MY TRAVEL</div>
-            <h1>{escape(trip['title'])}</h1>
-            <p>{escape(trip.get('destination') or '여행지 미정')} · {escape(formatted_dates(trip))}</p>
-        </div>''',
-        unsafe_allow_html=True,
-    )
-
-    stat_columns = st.columns(3)
-    with stat_columns[0]:
-        with st.container(border=True):
-            render_trip_dates_editor(trip)
-
-    stats = [
-        ("여행 일차", f"{len(days)}일"),
-        ("등록한 일정", f"{item_count}개"),
-    ]
-    for column, (label, value) in zip(stat_columns[1:], stats):
-        with column:
-            st.markdown(
-                f'<div class="stat"><div class="stat-label">{escape(label)}</div><div class="stat-value">{escape(value)}</div></div>',
-                unsafe_allow_html=True,
-            )
-
-    render_trip_preferences_editor(trip)
-    st.markdown("<div style='height:1.2rem'></div>", unsafe_allow_html=True)
     if not days:
         st.info("여행 기간을 정하면 DAY별 일정표가 자동으로 만들어집니다.")
-    else:
-        tabs = st.tabs([f"DAY {day['day_number']}" for day in days])
-        for tab, day in zip(tabs, days):
-            with tab:
-                render_day(trip, day)
+        return
 
-    render_chat(trip)
+    with st.container(key="trip_dashboard_shell", border=False):
+        left, right = st.columns([1.4, 1], gap="large", vertical_alignment="top")
+        with left:
+            selected_day = _dashboard_selected_day(trip, days)
+            try:
+                route_plan = api(
+                    "GET",
+                    f"/trips/{trip['id']}/days/{selected_day['id']}/route-plan",
+                    headers=auth_headers(),
+                    timeout=90,
+                )
+            except ApiError as error:
+                route_plan = {"markers": [], "legs": [], "route_segments": [], "route_error": str(error)}
+
+            try:
+                selected_date = date.fromisoformat(str(selected_day["travel_date"]))
+                date_label = f"{selected_date.month}.{selected_date.day} ({'월화수목금토일'[selected_date.weekday()]})"
+            except (KeyError, TypeError, ValueError):
+                date_label = f"DAY {selected_day.get('day_number', '')}"
+            weather = route_plan.get("weather") or {"label": "예보 확인 안 됨"}
+            weather_text = str(weather.get("label") or "예보 확인 안 됨")
+            if weather.get("status") == "ok" and weather.get("min_celsius") is not None:
+                weather_text += f" {float(weather['min_celsius']):.0f}–{float(weather['max_celsius']):.0f}℃"
+                if weather.get("precipitation_percent") is not None:
+                    weather_text += f" · 비 {float(weather['precipitation_percent']):.0f}%"
+            st.markdown(
+                f'<div class="dashboard-date-summary"><div class="dashboard-date-title">{escape(date_label)}</div>'
+                '<div class="dashboard-badges">'
+                f'<span class="dashboard-badge">날씨 {escape(weather_text)}</span>'
+                f'<span class="dashboard-badge">여행 강도 {int(trip.get("travel_intensity") or 3)}/5</span>'
+                f'<span class="dashboard-badge">여행 경비 {int(trip.get("budget_level") or 3)}/5</span>'
+                '</div></div>',
+                unsafe_allow_html=True,
+            )
+            st.markdown('<div class="dashboard-section-label">오늘의 일정</div>', unsafe_allow_html=True)
+            render_compact_schedule(trip, selected_day, route_plan)
+            st.markdown('<div class="dashboard-section-label">동선 지도</div>', unsafe_allow_html=True)
+            if route_plan.get("markers"):
+                render_interactive_google_map(
+                    route_plan,
+                    height=280,
+                    missing_key_message="frontend의 GOOGLE_MAPS_API_KEY를 설정하면 지도가 표시됩니다.",
+                )
+            else:
+                st.info(route_plan.get("route_error") or "지도에 표시할 장소 좌표가 없습니다.")
+
+            total_seconds = float(route_plan.get("total_duration_seconds") or 0)
+            total_distance = float(route_plan.get("total_distance_meters") or 0) / 1000
+            unknown = int(route_plan.get("unknown_leg_count") or 0)
+            summary_mode = "자동 선택"
+            if unknown:
+                summary_mode += f" · {unknown}구간 확인 안 됨"
+            st.markdown(
+                '<div class="route-summary">'
+                f'<div><span>총 이동</span><b>{escape(_route_duration_text(total_seconds)) if total_seconds else "0분"}</b></div>'
+                f'<div><span>거리</span><b>{total_distance:.1f}km</b></div>'
+                f'<div><span>수단</span><b>{escape(summary_mode)}</b></div>'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+        with right:
+            render_dashboard_chat(trip, days, selected_day)
 
 def render_signed_in() -> None:
     """현재 사용자의 여행을 불러오고 알맞은 로그인 상태 화면을 그린다."""
@@ -1758,7 +2469,7 @@ def render_signed_in() -> None:
     render_sidebar(trips)
 
     if st.session_state.show_create_trip:
-        st.markdown('<div class="brand">새 여행 추가</div>', unsafe_allow_html=True)
+        st.markdown('<div class="brand">여행 추가</div>', unsafe_allow_html=True)
         st.caption("여행 기간을 정하면 DAY별 AI 일정 초안이 자동으로 생성됩니다.")
         render_create_trip_form("create_trip")
         return
