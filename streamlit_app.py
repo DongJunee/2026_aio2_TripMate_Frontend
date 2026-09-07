@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from datetime import date, datetime, time, timedelta, timezone
 from html import escape
 from urllib.parse import quote, urlparse
@@ -339,8 +340,8 @@ st.markdown(
            두 번 생기지 않도록 이 스크롤 영역 안에서만 세로 간격을 줄인다. */
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_schedule_"][data-testid="stVerticalBlock"],
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_schedule_"] > [data-testid="stVerticalBlock"] {
-          gap: 20px; !important;
-          row-gap: 20px; !important;
+          gap: 10px !important;
+          row-gap: 5px !important;
         }
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_schedule_"] [data-testid="stHorizontalBlock"] {
           gap: .45rem !important;
@@ -375,6 +376,7 @@ st.markdown(
            두고, 오른쪽 끝과 버튼 사이에는 20px의 여백을 남긴다. */
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"] {
           padding: 0 10px 0 0 !important;
+          margin: .15rem 0 !important;
           border: 1px solid #dfe6f2;
           border-radius: 12px;
           background: var(--secondary-background-color);
@@ -429,8 +431,21 @@ st.markdown(
           min-height: 30px !important;
           padding: 0 !important;
         }
-        .route-leg { margin:.05rem 0 .05rem 1rem; color:#687790; font-size:.85rem; font-weight:650; }
-        .route-leg::before { content:"↓"; margin-right:.35rem; color:#4d78e5; }
+        /* 카드 사이 이동 안내는 독립된 높이 안에서 세로 중앙에 정렬한다. 양쪽
+           카드의 동일한 margin까지 포함하면, 안내 문구가 두 카드 간격 정중앙에 놓인다. */
+        .route-leg {
+          display:flex;
+          align-items:center;
+          box-sizing:border-box;
+          height:1.6rem;
+          margin:0;
+          padding-left:1rem;
+          color:#687790;
+          font-size:.85rem;
+          font-weight:650;
+          transform: translateY(-8px);
+        }
+        .route-leg::before { content:"↓"; margin-right:.35rem; color:#4d78e5;}
         .dashboard-section-label { margin:.35rem 0 .25rem; font-size:.8rem; font-weight:800; }
         .route-summary { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.5rem; padding:.6rem .75rem; border:1px solid #e1e7f0; border-radius:12px; }
         .route-summary span { display:block; color:#748198; font-size:.65rem; }
@@ -472,6 +487,9 @@ def initialize_session() -> None:
         # 채팅에서 장소 추천을 요청했을 때, 현재 세션에서만 보여 줄 추천 카드다.
         # 실제로 선택한 장소만 itinerary_items에 저장한다.
         "chat_place_recommendations": {},
+        # 채팅으로 말한 숙소 후보만 현재 화면에 잠시 보관한다. 확정한 숙소는
+        # 백엔드 trips.accommodation_place_id에 실제 Google 장소로 저장한다.
+        "chat_accommodation_candidates": {},
         # 여행별로 선택한 DAY와 4개씩 보이는 날짜 창의 시작 위치를 유지한다.
         "dashboard_selected_days": {},
         "dashboard_day_windows": {},
@@ -583,6 +601,7 @@ def sign_out(notice: str | None = None) -> None:
     st.session_state.place_search_results = {}
     st.session_state.visible_day_maps = {}
     st.session_state.chat_place_recommendations = {}
+    st.session_state.chat_accommodation_candidates = {}
     st.session_state.notice = notice
     st.rerun()
 
@@ -1940,8 +1959,14 @@ def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
             items, route_plan.get("legs") or [], trip.get("timezone")
         )
         for index, (item, start, end, leg) in enumerate(schedule_rows):
-            if leg_text := _travel_leg_text(leg):
-                st.markdown(f'<div class="route-leg">{escape(leg_text)}</div>', unsafe_allow_html=True)
+            # 첫 일정 앞에는 이동 구간이 없다. 그 다음부터는 Routes 결과가 아직
+            # 없어도 화살표 영역을 유지해 일정 카드의 흐름이 끊겨 보이지 않게 한다.
+            if index > 0:
+                leg_text = _travel_leg_text(leg) or ""
+                st.markdown(
+                    f'<div class="route-leg">{escape(leg_text)}</div>',
+                    unsafe_allow_html=True,
+                )
             place = item.get("place") if isinstance(item.get("place"), dict) else {}
             time_text = (
                 f"{_extended_day_time(start, day.get('travel_date'))}–"
@@ -2376,6 +2401,179 @@ def render_chat_place_recommendation_card(trip: dict, day: dict) -> None:
             )
 
 
+def _accommodation_query_from_message(message: str) -> str | None:
+    """'숙소는 아파치 호텔이야' 같은 확정 문장에서 숙소 검색어를 꺼낸다.
+
+    '숙소 근처 카페 추천'처럼 숙소를 기준점으로만 언급한 일반 장소 추천은 기존
+    추천 카드로 처리해야 하므로, 숙소 확정 어미가 있을 때만 이 함수를 통과한다.
+    """
+
+    match = re.search(
+        r"(?:내|우리)?\s*(?:숙소|호텔)\s*(?:는|은|이|가)?\s*"
+        r"(?P<query>.+?)\s*(?:이야|예요|이에요|입니다|으로\s*할게|로\s*할게|"
+        r"으로\s*정할게|로\s*정할게)[.!?\s]*$",
+        message.strip(),
+    )
+    if not match:
+        return None
+    query = match.group("query").strip(" \"'“”‘’.,!?")
+    if not query or any(word in query for word in ("근처", "주변", "추천", "어때")):
+        return None
+    return query
+
+
+def _save_chat_accommodation(trip: dict, place: dict) -> bool:
+    """사용자가 선택했거나 단일 후보인 Google 장소를 여행 숙소로 확정한다."""
+
+    google_place_id = str(place.get("google_place_id") or "").strip()
+    if not google_place_id:
+        st.error("숙소 장소 식별자를 찾지 못했습니다. 다시 검색해 주세요.")
+        return False
+    try:
+        api(
+            "POST",
+            f"/trips/{trip['id']}/accommodation",
+            json={"google_place_id": google_place_id},
+            headers=auth_headers(),
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return False
+    return True
+
+
+def _render_accommodation_place_option(
+    trip: dict,
+    place: dict,
+    *,
+    key_prefix: str,
+) -> None:
+    """숙소 확인 카드 안의 후보 한 개와 확정 버튼을 그린다."""
+
+    place_id = str(place.get("google_place_id") or "").strip()
+    if not place_id:
+        return
+    with st.container(border=True):
+        st.markdown(f"**{escape(str(place.get('display_name') or '이름 없는 장소'))}**")
+        st.caption(
+            f"{place.get('formatted_address') or '주소 정보 없음'} · {_place_rating_text(place)}"
+        )
+        if st.button("이 숙소로 설정", key=f"{key_prefix}_{place_id}", use_container_width=True):
+            if _save_chat_accommodation(trip, place):
+                state = st.session_state.chat_accommodation_candidates.get(str(trip["id"]), {})
+                state["saved_place"] = place
+                st.session_state.chat_accommodation_candidates[str(trip["id"])] = state
+                st.rerun()
+
+
+def render_chat_accommodation_card(trip: dict) -> None:
+    """채팅으로 말한 숙소의 단일 자동 저장 또는 두 후보 확인 카드를 그린다."""
+
+    state = st.session_state.chat_accommodation_candidates.get(str(trip["id"]))
+    if not isinstance(state, dict):
+        return
+    query = str(state.get("query") or "").strip()
+    if not query:
+        return
+
+    if "candidates" not in state and not state.get("load_error"):
+        try:
+            with st.spinner("Google Places에서 숙소를 찾고 있어요..."):
+                search = api(
+                    "GET",
+                    f"/trips/{trip['id']}/accommodation/places/search",
+                    params={"query": query, "max_results": 3},
+                    headers=auth_headers(),
+                )
+        except ApiError as error:
+            state["load_error"] = str(error)
+        else:
+            state["candidates"] = search.get("places") or []
+        st.session_state.chat_accommodation_candidates[str(trip["id"])] = state
+
+    candidates = state.get("candidates") or []
+    # 유일한 Google 후보는 사용자가 다시 고를 필요 없이 바로 숙소로 저장한다.
+    # 요청이 실패한 경우에는 attempted 표시를 남겨 Streamlit 재실행마다 반복 저장하지
+    # 않고 오류 문구를 보여 준다.
+    if len(candidates) == 1 and not state.get("auto_save_attempted"):
+        state["auto_save_attempted"] = True
+        st.session_state.chat_accommodation_candidates[str(trip["id"])] = state
+        if _save_chat_accommodation(trip, candidates[0]):
+            state["saved_place"] = candidates[0]
+            st.session_state.chat_accommodation_candidates[str(trip["id"])] = state
+            st.rerun()
+
+    with st.container(key=f"chat_accommodation_{trip['id']}", border=True):
+        st.markdown("#### 숙소 확인")
+        if saved_place := state.get("saved_place"):
+            st.success(f"‘{saved_place.get('display_name') or query}’을(를) 이 여행의 숙소로 설정했어요.")
+            return
+        if state.get("load_error"):
+            st.warning(str(state["load_error"]))
+            return
+        if not candidates:
+            st.info("일치하는 숙소를 찾지 못했습니다. 아래에서 이름을 직접 검색해 주세요.")
+        elif len(candidates) == 1:
+            # 자동 저장 요청이 실패한 경우에만 이 안내가 보인다.
+            st.warning("숙소 자동 설정에 실패했습니다. 아래에서 다시 검색해 주세요.")
+        else:
+            st.caption(f"‘{query}’ 검색 결과가 여러 개예요. 여기가 맞나요?")
+            candidate_columns = st.columns(2)
+            for column, place in zip(candidate_columns, candidates[:2]):
+                with column:
+                    _render_accommodation_place_option(
+                        trip,
+                        place,
+                        key_prefix=f"chat_accommodation_candidate_{trip['id']}",
+                    )
+
+        st.divider()
+        st.caption("원하는 숙소가 없으면 Google Places에서 직접 찾아 설정할 수 있어요.")
+        search_col, button_col = st.columns([4, 1])
+        with search_col:
+            direct_query = st.text_input(
+                "숙소 직접 검색",
+                placeholder="예: 오사카 아파치 호텔",
+                key=f"chat_accommodation_search_{trip['id']}",
+                label_visibility="collapsed",
+            )
+        with button_col:
+            searched = st.button(
+                "검색",
+                key=f"chat_accommodation_search_button_{trip['id']}",
+                use_container_width=True,
+            )
+        if searched:
+            if not direct_query.strip():
+                st.warning("찾고 싶은 숙소 이름을 입력하세요.")
+            else:
+                try:
+                    with st.spinner("Google Places에서 숙소를 찾고 있어요..."):
+                        direct_search = api(
+                            "GET",
+                            f"/trips/{trip['id']}/accommodation/places/search",
+                            params={"query": direct_query.strip(), "max_results": 3},
+                            headers=auth_headers(),
+                        )
+                except ApiError as error:
+                    st.error(str(error))
+                else:
+                    state["direct_places"] = direct_search.get("places") or []
+                    st.session_state.chat_accommodation_candidates[str(trip["id"])] = state
+                    st.rerun()
+        direct_places = state.get("direct_places") or []
+        if direct_places:
+            st.caption("직접 검색 결과")
+            direct_columns = st.columns(2)
+            for column, place in zip(direct_columns, direct_places[:2]):
+                with column:
+                    _render_accommodation_place_option(
+                        trip,
+                        place,
+                        key_prefix=f"chat_accommodation_direct_{trip['id']}",
+                    )
+
+
 def render_itinerary_change_card(trip: dict, change: dict) -> None:
     """채팅 타임라인 안에 일정 변경 상태와 가능한 되돌리기 버튼을 그린다."""
 
@@ -2467,12 +2665,19 @@ def render_dashboard_chat(trip: dict, days: list[dict], selected_day: dict) -> N
             else:
                 with st.chat_message(event["role"]):
                     st.write(event["content"])
+        # 숙소 후보는 일정 DAY에 추가하는 장소 추천과 달리 여행 전체에 연결된다.
+        # 따라서 선택한 날짜 탭과 무관하게 채팅 타임라인 아래에 보인다.
+        render_chat_accommodation_card(trip)
         # 장소 추천 카드는 일반 채팅 메시지 다음에 보여 주되, 선택 시점에는 지금
         # 열어 둔 DAY를 사용한다. 그래서 날짜 탭을 바꾼 뒤 추가하면 그 DAY에 저장된다.
         render_chat_place_recommendation_card(trip, selected_day)
     prompt = st.chat_input("메시지를 입력하세요", key=f"dashboard_chat_input_{trip['id']}")
     if not prompt:
         return
+    if accommodation_query := _accommodation_query_from_message(prompt):
+        st.session_state.chat_accommodation_candidates[str(trip["id"])] = {
+            "query": accommodation_query,
+        }
     if _looks_like_place_recommendation(prompt):
         st.session_state.chat_place_recommendations[str(trip["id"])] = (
             _recommendation_request_from_message(prompt, selected_day)
