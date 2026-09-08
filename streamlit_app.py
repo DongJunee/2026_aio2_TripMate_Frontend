@@ -1432,7 +1432,7 @@ def render_sidebar(trips: list[dict]) -> None:
                         st.caption("일반 사용자")
                         st.caption(f"Mate · {MATE_TYPE_LABELS[mate_type]}")
 
-                     if st.button(
+                    if st.button(
                         "⚙ Mate 설정",
                         key="profile_settings_placeholder",
                         use_container_width=True,
