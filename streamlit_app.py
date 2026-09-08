@@ -9,6 +9,10 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import streamlit as st
 import streamlit.components.v1 as components
 
+# 백엔드 TripCreate.must_visit 의 max_length=5 와 같은 값이다.
+# 화면에서 먼저 막지 않으면 사용자가 6번째를 고른 뒤 여행 만들기에서 422 를 받는다 — 고르는 순간에 알려 주는 편이 낫다.
+MAX_MUST_VISIT = 5
+
 from common import (
     GOOGLE_MAPS_API_KEY,
     ApiError,
@@ -536,6 +540,15 @@ def initialize_session() -> None:
         # 여행별로 선택한 DAY와 4개씩 보이는 날짜 창의 시작 위치를 유지한다.
         "dashboard_selected_days": {},
         "dashboard_day_windows": {},
+                # [변경 사유] 여행 만들기 화면에서 고른 여행지와 '가고 싶은 장소'다.
+        # 여행이 아직 없어 백엔드에 저장할 곳이 없으므로, POST /me/trips 에
+        # 실을 때까지만 화면이 들고 있는다.
+        # [변경 사유] 검색 결과를 None(아직 검색 안 함)과 [](결과 없음)로
+        # 구분한다. 둘을 같은 []로 두면 화면을 열자마자 "찾지 못했어요"가 뜬다.
+        "create_trip_destination": None,
+        "create_trip_destination_results": None,
+        "create_trip_must_visit": [],
+        "create_trip_place_results": None,
     }
     for key, value in defaults.items():
         st.session_state.setdefault(key, value)
@@ -966,19 +979,230 @@ def open_create_trip_form() -> None:
             for field in (
                 "title", "destination", "dates", "travel_party", "travel_intensity", "budget_level"
             ):
-                st.session_state.pop(f"{form_key}_{field}", None)
+                st.session_state.pop(f"{form_key}_{field}", None)        # [변경 사유] 위 for 문은 위젯 키(create_trip_title 등)만 지운다.
+        # 고른 여행지와 장소는 위젯이 아니라 우리가 만든 세션 값이라 따로 지워야
+        # 한다. 안 지우면 이전에 만들다 만 여행의 선택이 새 양식에 남는다.
+    st.session_state.create_trip_destination = None
+    st.session_state.create_trip_destination_results = None
+    st.session_state.create_trip_must_visit = []
+    st.session_state.create_trip_place_results = None
     st.session_state.show_create_trip = True
 
 
+def _city_name(city: dict) -> str:
+    """화면에 보여 줄 도시 이름 한 개.
+
+    [변경 사유] 백엔드가 label("도쿄")과 destination("도쿄도, 일본")을 나눠 준다.
+    보내는 값은 Google 표기여야 생성 단계에서 도시를 다시 찾을 수 있고, 읽는 값은
+    사람이 쓰는 이름이어야 고르기 쉽다. label 이 없는 응답도 그대로 동작하도록
+    Google 이름으로 물러선다.
+    """
+    return str(city.get("label") or city.get("display_name") or "").strip()
+
+
+def _city_caption(city: dict) -> str:
+    """도시 이름에 나라를 붙인 한 줄. 같은 이름의 도시를 나라로 가른다."""
+    name = _city_name(city)
+    country = str(city.get("country") or "").strip()
+    return f"{name}, {country}" if country else name
+
+
+def render_destination_picker(form_key: str) -> None:
+    """여행지를 검색해서 고르게 한다.
+
+    [변경 사유] st.form 밖에 둔다. 양식 안의 위젯은 제출 전까지 재실행을
+    일으키지 않아 검색 결과를 그릴 수 없고, 양식은 제출 버튼도 하나만 허용한다.
+
+    [변경 사유] 자유 입력을 받지 않는다. 백엔드는 도시 범위를 하나로 좁히지
+    못하면 여행 생성을 거절하는데, 그 판정이 Gemini 호출 뒤에 일어난다.
+    여기서 확인된 도시만 고르게 하면 생성 시간을 다 기다린 뒤 422 를 받는 일이 없다.
+    """
+
+    picked = st.session_state.create_trip_destination
+    if picked:
+        chip_column, clear_column = st.columns([4, 1])
+        with chip_column:
+            st.success(f"여행지 · {_city_caption(picked)}")
+        with clear_column:
+            if st.button("변경", key=f"{form_key}_destination_clear", use_container_width=True):
+                st.session_state.create_trip_destination = None
+                st.session_state.create_trip_destination_results = None
+                # [변경 사유] 여행지를 바꾸면 그 지역에서 고른 장소는 뜻을 잃는다.
+                # 남겨 두면 도쿄 여행에 오사카 장소가 딸려 가고, 백엔드는 도시
+                # 밖 장소를 거절하므로 사용자는 이유 없이 빠진 일정을 보게 된다.
+                st.session_state.create_trip_must_visit = []
+                st.session_state.create_trip_place_results = None
+                st.rerun()
+        return
+
+    search_column, button_column = st.columns([4, 1])
+    with search_column:
+        query = st.text_input(
+            "여행지",
+            placeholder="예: 도쿄",
+            key=f"{form_key}_destination_query",
+            label_visibility="collapsed",
+        )
+    with button_column:
+        searched = st.button(
+            "검색", key=f"{form_key}_destination_search", use_container_width=True
+        )
+
+    if searched:
+        # [변경 사유] 서버도 min_length=2 다. 여기서 먼저 막아 한 글자마다
+        # 유료 Places 호출이 나가지 않게 한다.
+        if len(query.strip()) < 2:
+            st.warning("도시 이름을 두 글자 이상 입력하세요.")
+        else:
+            try:
+                with st.spinner("도시를 찾고 있어요..."):
+                    found = api(
+                        "GET",
+                        "/destinations/search",
+                        params={"query": query.strip()},
+                        headers=auth_headers(),
+                    )
+            except ApiError as error:
+                st.error(str(error))
+            else:
+                st.session_state.create_trip_destination_results = found.get("destinations") or []
+                st.rerun()
+
+    results = st.session_state.create_trip_destination_results
+    if results is None:
+        return
+    if not results:
+        st.info("도시를 찾지 못했어요. 나라나 넓은 지역 대신 도시 이름을 입력해 보세요.")
+        return
+
+    st.caption("여행할 도시를 고르세요. 한 곳만 선택할 수 있어요.")
+    for city in results:
+        # [변경 사유] 보여 주는 것은 label 이고 보내는 것은 destination 이다.
+        # 나라를 함께 붙이는 이유는 같은 이름의 도시가 여러 나라에 있을 때
+        # 무엇을 고르는지 알 수 없기 때문이다.
+        if st.button(
+            _city_caption(city),
+            key=f"{form_key}_destination_pick_{city['google_place_id']}",
+            use_container_width=True,
+        ):
+            st.session_state.create_trip_destination = city
+            st.session_state.create_trip_destination_results = None
+            st.rerun()
+
+
+def render_must_visit_picker(form_key: str) -> None:
+    """고른 여행지 안에서만 '가고 싶은 장소'를 찾아 최대 5곳까지 담는다.
+
+    [변경 사유] 여행지를 고르기 전에는 검색창을 잠근다. 지역 없이 '스타벅스'를
+    찾으면 전 세계 결과가 나오고, 그중 무엇을 담아도 이 여행의 일정에 쓸 수 없다.
+    백엔드도 destination 을 필수로 받지만, 화면에서 막아야 이유를 설명할 수 있다.
+
+    [변경 사유] 검색은 선택 사항이다. 아무것도 담지 않아도 여행은 만들어진다 —
+    여기서 막으면 장소를 아직 모르는 사용자가 여행을 시작할 수 없다.
+    """
+
+    picked_city = st.session_state.create_trip_destination
+    if not picked_city:
+        st.caption("여행지를 먼저 고르면 그 지역에서 찾아드려요.")
+        return
+
+    chosen = st.session_state.create_trip_must_visit
+    if len(chosen) >= MAX_MUST_VISIT:
+        st.caption(f"가고 싶은 장소는 {MAX_MUST_VISIT}곳까지 담을 수 있어요.")
+    else:
+        search_column, button_column = st.columns([4, 1])
+        with search_column:
+            query = st.text_input(
+                "가고 싶은 장소",
+                placeholder=f"{_city_name(picked_city)}에서 가고 싶은 곳",
+                key=f"{form_key}_must_visit_query",
+                label_visibility="collapsed",
+            )
+        with button_column:
+            searched = st.button(
+                "검색", key=f"{form_key}_must_visit_search", use_container_width=True
+            )
+        if searched:
+            if not query.strip():
+                st.warning("찾고 싶은 장소 이름을 입력하세요.")
+            else:
+                try:
+                    with st.spinner("Google Places에서 장소를 찾고 있어요..."):
+                        found = api(
+                            "GET",
+                            "/destinations/places/search",
+                            params={
+                                # [변경 사유] 검색 화면이 만든 문자열을 그대로 보낸다.
+                                # 화면이 이름과 나라를 다시 조합하면 백엔드가 도시를
+                                # 다시 못 찾을 수 있다.
+                                "destination": picked_city["destination"],
+                                "query": query.strip(),
+                                "max_results": 5,
+                            },
+                            headers=auth_headers(),
+                        )
+                except ApiError as error:
+                    st.error(str(error))
+                else:
+                    st.session_state.create_trip_place_results = found.get("places") or []
+                    st.rerun()
+
+    results = st.session_state.create_trip_place_results
+    if results is not None and not results:
+        st.caption("찾지 못했어요. 장소는 여행을 만든 뒤 대화에서 말해 주셔도 돼요.")
+
+    picked_ids = {place["google_place_id"] for place in chosen}
+    for place in results or []:
+        place_id = str(place.get("google_place_id") or "").strip()
+        if not place_id or place_id in picked_ids:
+            continue
+        with st.container(border=True):
+            # [변경 사유] 이름만 쓰면 '스타벅스' 다섯 줄이 나란히 서서 어느
+            # 지점인지 알 수 없다. 백엔드가 주소와 평점을 이미 주고 있다.
+            st.markdown(f"**{escape(str(place.get('display_name') or '이름 없는 장소'))}**")
+            st.caption(
+                f"{place.get('formatted_address') or '주소 정보 없음'} · {_place_rating_text(place)}"
+            )
+            if len(chosen) < MAX_MUST_VISIT and st.button(
+                "담기", key=f"{form_key}_must_visit_add_{place_id}", use_container_width=True
+            ):
+                # [변경 사유] google_place_id 를 함께 담는다. 이름만 보내면
+                # 같은 이름의 다른 지점이 잡힐 수 있다.
+                chosen.append({
+                    "name": place.get("display_name") or "",
+                    "google_place_id": place_id,
+                })
+                st.session_state.create_trip_place_results = None
+                st.rerun()
+
+    for index, place in enumerate(chosen):
+        name_column, drop_column = st.columns([4, 1])
+        with name_column:
+            st.markdown(f"· {escape(str(place['name']))}")
+        with drop_column:
+            if st.button(
+                "빼기", key=f"{form_key}_must_visit_drop_{index}", use_container_width=True
+            ):
+                st.session_state.create_trip_must_visit = [
+                    item for position, item in enumerate(chosen) if position != index
+                ]
+                st.rerun()
+
 def render_create_trip_form(form_key: str) -> None:
     """여행과 첫 AI 일정 초안을 만드는 양식을 그리고 제출한다."""
+    # [변경 사유] 검색은 st.form 밖에서만 동작한다. 양식 안의 위젯은 제출 전까지
+    # 재실행을 일으키지 않아 검색 결과를 그릴 수 없고, 양식은 제출 버튼도 하나만
+    # 허용한다. 순서도 의미가 있다 — 장소 검색은 여행지가 정해져야 열린다.
+    st.markdown("##### 어디로 가시나요")
+    render_destination_picker(form_key)
+    st.markdown("##### 가고 싶은 장소 (선택)")
+    render_must_visit_picker(form_key)
+    st.divider()
+
     # 제출 직후에는 입력을 초기화하지 않고 API 완료 후에만 대시보드로 이동한다.
     with st.form(form_key, clear_on_submit=False):
         title = st.text_input(
             "여행 이름", placeholder="예: 봄날의 도쿄 여행", key=f"{form_key}_title"
-        )
-        destination = st.text_input(
-            "여행지", placeholder="예: 도쿄, 일본", key=f"{form_key}_destination"
         )
         today = date.today()
         selected_dates = st.date_input(
@@ -1004,11 +1228,12 @@ def render_create_trip_form(form_key: str) -> None:
             "이동 예비 2시간은 실제 경로를 계산한 시간이 아니므로 항공편에 맞춰 확인해 주세요."
         )
         submitted = st.form_submit_button("여행 만들기", use_container_width=True, type="primary")
-
     if not submitted:
         return
-    if not title.strip() or not destination.strip():
-        st.error("여행 이름과 여행지를 입력하세요.")
+    # [변경 사유] destination 변수가 없어졌다. 고른 도시는 세션에 있다.
+    picked_city = st.session_state.create_trip_destination
+    if not title.strip() or not picked_city:
+        st.error("여행 이름을 입력하고 여행지를 골라 주세요.")
         return
     if not isinstance(selected_dates, tuple) or len(selected_dates) != 2:
         st.error("시작일과 종료일을 모두 선택하세요.")
@@ -1027,13 +1252,18 @@ def render_create_trip_form(form_key: str) -> None:
                 timeout=180,
                 json={
                     "title": title.strip(),
-                    "destination": destination.strip(),
+                    # [변경 사유] 검색 결과가 준 문자열을 그대로 보낸다.
+                    # 백엔드가 이 표기로 도시를 다시 찾으므로 화면에서 가공하지 않는다.
+                    "destination": picked_city["destination"],
                     # 현지 시간대는 백엔드가 여행지를 기준으로 결정한다.
                     "start_date": selected_dates[0].isoformat(),
                     "end_date": selected_dates[1].isoformat(),
                     "travel_party": travel_party,
                     "travel_intensity": travel_intensity,
                     "budget_level": budget_level,
+                    # [변경 사유] 비어 있어도 그대로 보낸다. 백엔드는
+                    # default_factory=list 라 빈 배열을 정상으로 받는다.
+                    "must_visit": st.session_state.create_trip_must_visit,
                 },
                 headers=auth_headers(),
             )
@@ -1043,6 +1273,12 @@ def render_create_trip_form(form_key: str) -> None:
 
     st.session_state.selected_trip_id = created["trip"]["id"]
     st.session_state.show_create_trip = False
+    # [변경 사유] 위젯이 아닌 세션 값이라 show_create_trip 을 내려도 남는다.
+    # 안 지우면 다음에 여행을 만들 때 지난번 선택이 그대로 보인다.
+    st.session_state.create_trip_destination = None
+    st.session_state.create_trip_destination_results = None
+    st.session_state.create_trip_must_visit = []
+    st.session_state.create_trip_place_results = None
     request_main_scroll_to_top()
     count = int(created.get("initial_itinerary_count") or 0)
     st.success(f"새 여행과 식사·활동·휴식을 포함한 일정 {count}개를 만들었어요.")
