@@ -1432,7 +1432,7 @@ def render_sidebar(trips: list[dict]) -> None:
                         st.caption("일반 사용자")
                         st.caption(f"Mate · {MATE_TYPE_LABELS[mate_type]}")
 
-                    if st.button(
+                     if st.button(
                         "⚙ Mate 설정",
                         key="profile_settings_placeholder",
                         use_container_width=True,
@@ -3873,3 +3873,4 @@ except ApiError as error:
 # 채팅 입력칸까지 화면을 모두 그린 뒤에 실행해야, 마지막 입력칸의 자동 포커스가
 # 로그인·여행 전환 직후 화면을 다시 아래로 내리는 일을 막을 수 있다.
 scroll_main_to_top_if_requested()
+
