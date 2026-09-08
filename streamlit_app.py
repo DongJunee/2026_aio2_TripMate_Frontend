@@ -67,6 +67,174 @@ st.markdown(
         .sidebar-avatar { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 50%; background: #e5edff; color: #3169e8; font-weight: 800; }
         .sidebar-profile-name { font-size: .88rem; font-weight: 800; line-height: 1.2; }
         .sidebar-profile-email { margin-top: .12rem; font-size: .72rem; opacity: .62; }
+        /* 하단 프로필은 팝오버를 열지 않아도 계정 카드처럼 보이게 한다. */
+        [data-testid="stSidebar"] .st-key-sidebar-profile {
+            margin-top: auto !important;
+            border-top: 1px solid rgba(112, 128, 157, .28);
+        }
+        [data-testid="stSidebar"] .st-key-sidebar-profile [data-testid="stPopoverButton"] {
+            position: relative;
+            width: 100% !important;
+            min-height: 3.8rem !important;
+            padding: .45rem .5rem .45rem 3.35rem !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+        }
+        [data-testid="stSidebar"] .st-key-sidebar-profile [data-testid="stPopoverButton"]:hover,
+        [data-testid="stSidebar"] .st-key-sidebar-profile [data-testid="stPopoverButton"]:focus-visible {
+            background: rgba(49, 51, 63, .06) !important;
+            border: 0 !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stSidebar"] .st-key-sidebar-profile [data-testid="stPopoverButton"]::before {
+            content: var(--sidebar-profile-initial, "여");
+            position: absolute;
+            top: 50%;
+            left: .5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.35rem;
+            height: 2.35rem;
+            transform: translateY(-50%);
+            border-radius: 50%;
+            background: #e5edff;
+            color: #3169e8;
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+        [data-testid="stSidebar"] .st-key-sidebar-profile [data-testid="stPopoverButton"] p {
+            width: 100% !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+            color: inherit !important;
+            font-size: .95rem !important;
+            font-weight: 800 !important;
+            line-height: 1.2 !important;
+            text-align: left !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+        [data-testid="stSidebar"] .st-key-sidebar-profile [data-testid="stPopoverButton"] p::after {
+            content: var(--sidebar-profile-email, "");
+            display: block;
+            margin-top: .12rem;
+            overflow: hidden;
+            color: inherit;
+            font-size: .78rem;
+            font-weight: 500;
+            line-height: 1.2;
+            opacity: .62;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        /* 팝오버 기본 화살표는 카드 안에서 보이지 않게 한다. */
+        [data-testid="stSidebar"] .st-key-sidebar-profile [data-testid="stPopoverButton"] > div > div:last-child {
+            display: none !important;
+        }
+        /* 여행 이름 버튼 오른쪽에 더보기 메뉴가 들어갈 공간을 확보한다. */
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button {
+            padding-right: 3rem !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_row_"] {
+            position: relative;
+            min-height: 2.5rem;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_actions_"] {
+            position: absolute !important;
+            top: 50%;
+            right: .35rem;
+            z-index: 3;
+            width: 2.25rem !important;
+            height: 2.25rem !important;
+            transform: translateY(-50%);
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_actions_"] [data-testid="stPopoverButton"] {
+            width: 2.25rem !important;
+            min-width: 2.25rem !important;
+            height: 2.25rem !important;
+            min-height: 2.25rem !important;
+            padding: 0 !important;
+            border: 1px solid transparent !important;
+            border-radius: .65rem !important;
+            background: transparent !important;
+            color: #42516a !important;
+            box-shadow: none !important;
+            justify-content: center !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_actions_"] [data-testid="stPopoverButton"]:hover {
+            background: rgba(49, 51, 63, .06) !important;
+            border-color: transparent !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_actions_"] [data-testid="stPopoverButton"] p {
+            margin: 0 !important;
+            color: inherit !important;
+            font-size: 1.15rem !important;
+            font-weight: 800 !important;
+            line-height: 1 !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_actions_"] [data-testid="stPopoverButton"] > div > div:last-child {
+            display: none !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_action_title_"] {
+            padding: .15rem .25rem .55rem;
+            color: #9aa7ba;
+            font-size: .82rem;
+            font-weight: 700;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_rename_"] button,
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_delete_"] button {
+            justify-content: flex-start !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            font-weight: 750 !important;
+            text-align: left !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_delete_"] button {
+            color: #c53b35 !important;
+            background: #fff2f1 !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_delete_"] button:hover {
+            background: #ffe5e3 !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_title_edit_"] {
+            margin-right: 3rem !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_title_edit_"] input {
+            height: 2.5rem !important;
+            min-height: 2.5rem !important;
+            padding: .35rem .65rem !important;
+            border: 1px solid #b8c9e5 !important;
+            border-radius: .55rem !important;
+            font-weight: 700 !important;
+        }
+        /* 이름을 입력하는 동안에는 고정 아이콘을 잠시 숨긴다. */
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_row_"]:has([class*="st-key-sidebar_trip_title_edit_"]) [class*="st-key-sidebar_trip_pin_"] {
+            display: none !important;
+        }
+        /* 프로필 팝오버의 버튼 아래에 표시하는 보조 설명이다. */
+        .profile-popover-meta {
+            margin: -.75rem 0 .45rem 2.35rem;
+            color: #a2aec2;
+            font-size: .78rem;
+            font-weight: 700;
+            line-height: 1.15;
+        }
+        [class*="st-key-profile_popover_sign_out"] button {
+            color: #c53b35 !important;
+            background: transparent !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            font-weight: 800 !important;
+        }
+        [class*="st-key-profile_popover_sign_out"] button:hover {
+            background: #fff2f1 !important;
+            border-color: transparent !important;
+        }
         /* 일반 여행 행에는 카드 색을 두지 않는다. 선택된 행만 파란색으로
            표시해 현재 선택한 여행을 쉽게 찾을 수 있게 한다. */
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="secondary"] { background: transparent !important; border-color: transparent !important; color: inherit !important; }
@@ -549,6 +717,10 @@ def initialize_session() -> None:
         "create_trip_destination_results": None,
         "create_trip_must_visit": [],
         "create_trip_place_results": None,
+        # 사이드바 여행 이름 수정·삭제 팝오버의 임시 UI 상태다.
+        "sidebar_trip_editing_id": None,
+        "sidebar_trip_pending_delete_id": None,
+        "sidebar_trip_title_error": None,
     }
     for key, value in defaults.items():
         st.session_state.setdefault(key, value)
@@ -1284,27 +1456,95 @@ def render_create_trip_form(form_key: str) -> None:
     st.success(f"새 여행과 식사·활동·휴식을 포함한 일정 {count}개를 만들었어요.")
     st.rerun()
 
-def render_sidebar_trip(trip: dict) -> None:
-    """세로 중앙 핀을 겹쳐 놓은 전체 너비 여행 버튼 하나를 그린다."""
+def save_sidebar_trip_title(trip_id: str, title_key: str) -> None:
+    """입력창에서 확정한 여행 이름을 백엔드에 저장한다."""
 
-    trip_id = trip["id"]
+    title = str(st.session_state.get(title_key) or "").strip()
+    if not title:
+        st.session_state.sidebar_trip_title_error = "여행 이름을 입력하세요."
+        return
+
+    try:
+        api(
+            "PATCH",
+            f"/trips/{trip_id}",
+            json={"title": title},
+            headers=auth_headers(),
+        )
+    except SessionExpired:
+        raise
+    except ApiError as error:
+        st.session_state.sidebar_trip_title_error = str(error)
+        return
+
+    st.session_state.sidebar_trip_editing_id = None
+    st.session_state.pop(title_key, None)
+    st.session_state.pop("sidebar_trip_title_error", None)
+
+
+def render_sidebar_trip(trip: dict) -> None:
+    """여행 이름·고정·더보기 동작을 한 줄에 배치한다."""
+
+    trip_id = str(trip["id"])
+    title = str(trip.get("title") or "이름 없는 여행")
     is_pinned = trip.get("pinned_order") is not None
-    active = trip_id == st.session_state.selected_trip_id
+    active = trip_id == str(st.session_state.get("selected_trip_id") or "")
     requested_pinned = is_pinned
+    title_key = f"sidebar_trip_title_edit_{trip_id}"
+    editing = str(st.session_state.get("sidebar_trip_editing_id") or "") == trip_id
 
     with st.container(key=f"sidebar_trip_row_{trip_id}", border=False):
-        # 버튼 안에 다른 버튼을 중첩하지 않고 왼쪽의 작은 제어 요소로 핀을 여행
-        # 버튼 위에 배치할 수 있도록, 여행 버튼을 먼저 그린다.
-        if st.button(
-            trip["title"],
+        if editing:
+            st.session_state.setdefault(title_key, title)
+            st.text_input(
+                "여행 이름",
+                key=title_key,
+                max_chars=100,
+                label_visibility="collapsed",
+                on_change=save_sidebar_trip_title,
+                args=(trip_id, title_key),
+            )
+            if st.session_state.get("sidebar_trip_title_error"):
+                st.caption(st.session_state.sidebar_trip_title_error)
+        elif st.button(
+            title,
             key=f"sidebar_trip_select_{trip_id}",
             use_container_width=True,
             type="primary" if active else "secondary",
         ):
-            st.session_state.selected_trip_id = trip_id
+            st.session_state.selected_trip_id = trip["id"]
             st.session_state.show_create_trip = False
             request_main_scroll_to_top()
             st.rerun()
+
+        with st.popover(
+            "⋯",
+            key=f"sidebar_trip_actions_{trip_id}",
+            use_container_width=True,
+        ):
+            with st.container(
+                key=f"sidebar_trip_action_title_{trip_id}",
+                border=False,
+            ):
+                st.markdown(escape(title), unsafe_allow_html=True)
+
+            if st.button(
+                "✎ 이름 바꾸기",
+                key=f"sidebar_trip_rename_{trip_id}",
+                use_container_width=True,
+            ):
+                st.session_state.sidebar_trip_editing_id = trip_id
+                st.session_state[title_key] = title
+                st.session_state.pop("sidebar_trip_title_error", None)
+                st.rerun()
+
+            if st.button(
+                "🗑 여행 삭제",
+                key=f"sidebar_trip_delete_{trip_id}",
+                use_container_width=True,
+            ):
+                st.session_state.sidebar_trip_pending_delete_id = trip_id
+                st.rerun()
 
         # 실제 표시는 위의 북마크 SVG가 담당하고, 이 라벨은 버튼 크기를 유지한다.
         pin_label = ":material/bookmark:"
@@ -1541,6 +1781,51 @@ def render_account_management_dialog(display_name: str, email: str) -> None:
         st.warning("회원 탈퇴는 계정과 연결된 여행·일정·채팅을 영구 삭제할 수 있는 작업입니다.")
         st.caption("실제 탈퇴 기능은 팀의 데이터 보관 정책과 별도 확인 절차가 정해진 뒤 제공합니다.")
 
+
+@st.dialog("여행 삭제")
+def render_delete_trip_dialog(trip: dict) -> None:
+    """여행과 연결된 일정·대화를 삭제하기 전에 확인한다."""
+
+    trip_id = str(trip["id"])
+    title = str(trip.get("title") or "이름 없는 여행")
+    st.markdown("### 이 여행을 삭제할까요?")
+    st.markdown(
+        f"**‘{escape(title)}’**의 일정과 대화가 함께 삭제되며 되돌릴 수 없습니다."
+    )
+
+    cancel_column, delete_column = st.columns(2)
+    if cancel_column.button(
+        "취소",
+        key=f"cancel_delete_trip_{trip_id}",
+        use_container_width=True,
+    ):
+        st.session_state.pop("sidebar_trip_pending_delete_id", None)
+        st.rerun()
+    if delete_column.button(
+        "🗑 삭제",
+        key=f"confirm_delete_trip_{trip_id}",
+        use_container_width=True,
+    ):
+        try:
+            api(
+                "DELETE",
+                f"/trips/{trip_id}",
+                headers=auth_headers(),
+            )
+        except SessionExpired:
+            raise
+        except ApiError as error:
+            st.error(str(error))
+            return
+
+        st.session_state.pop("sidebar_trip_pending_delete_id", None)
+        st.session_state.sidebar_trip_editing_id = None
+        st.session_state.pop("sidebar_trip_title_error", None)
+        if str(st.session_state.get("selected_trip_id") or "") == trip_id:
+            st.session_state.selected_trip_id = None
+        st.rerun()
+
+
 def render_sidebar(trips: list[dict]) -> None:
     """여행 그룹·여행 총개수·하단 고정 프로필 팝오버를 그린다."""
 
@@ -1639,19 +1924,31 @@ def render_sidebar(trips: list[dict]) -> None:
                     st.rerun()
 
             with st.container(key="sidebar-profile", border=False):
-                # st.divider()
+                # 이름과 이메일은 팝오버를 열지 않아도 프로필 버튼에 표시한다.
+                profile_initial_css = json.dumps(
+                    display_name[:1].upper() or "여", ensure_ascii=False
+                ).replace("</", "<\\/")
+                profile_email_css = json.dumps(
+                    email or "", ensure_ascii=False
+                ).replace("</", "<\\/")
+                st.markdown(
+                    "<style>"
+                    "[data-testid=\"stSidebar\"] .st-key-sidebar-profile {"
+                    f"--sidebar-profile-initial: {profile_initial_css};"
+                    f"--sidebar-profile-email: {profile_email_css};"
+                    "}</style>",
+                    unsafe_allow_html=True,
+                )
                 # 팝오버를 사용하면 다른 페이지로 이동하지 않고 계정 영역을 열기 전까지
                 # 로그아웃 버튼을 사이드바에서 숨길 수 있다.
                 with st.popover(
-                    # Streamlit은 위젯 라벨을 스스로 이스케이프한다. ``safe_name``은
-                    # 아래 팝오버 안에서 렌더링할 HTML 전용이다.
-                    f"{display_name} · 내 프로필",
+                    display_name,
                     key="sidebar_profile_popover",
                     use_container_width=True,
                 ):
                     st.caption("내 정보")
-                    avatar_column, profile_column, role_column = st.columns(
-                        [0.55, 1.8, 1.15], gap="small"
+                    avatar_column, profile_column = st.columns(
+                        [0.5, 2], gap="medium"
                     )
                     with avatar_column:
                         st.markdown(
@@ -1664,9 +1961,6 @@ def render_sidebar(trips: list[dict]) -> None:
                             f'<div class="sidebar-profile-email">{safe_email}</div>',
                             unsafe_allow_html=True,
                         )
-                    with role_column:
-                        st.caption("일반 사용자")
-                        st.caption(f"Mate · {MATE_TYPE_LABELS[mate_type]}")
 
                     if st.button(
                         "⚙ Mate 설정",
@@ -1675,14 +1969,26 @@ def render_sidebar(trips: list[dict]) -> None:
                         #disabled = True
                     ):
                         open_mate_settings = True
+                    st.markdown(
+                        f'<div class="profile-popover-meta">{escape(MATE_TYPE_LABELS[mate_type])}</div>',
+                        unsafe_allow_html=True,
+                    )
                     if st.button(
                         "♙ 계정 관리",
                         key="profile_account_management",
                         use_container_width=True,
                     ):
                         open_account_management = True
+                    if st.session_state.is_dashboard_admin == True:
+                        account_role = "관리자"
+                    else:
+                        account_role = "회원"
+                    st.markdown(
+                        f'<div class="profile-popover-meta">{account_role}</div>',
+                        unsafe_allow_html=True,
+                    )
                     if st.button(
-                        "로그아웃",
+                        "🚪 로그아웃",
                         key="profile_popover_sign_out",
                         use_container_width=True,
                     ):
@@ -1701,6 +2007,19 @@ def render_sidebar(trips: list[dict]) -> None:
         # 교체한다. 비밀번호 입력은 form의 clear_on_submit으로 저장하지 않는다.
         st.session_state.account_settings_email = email
         render_account_management_dialog(display_name, email)
+
+    pending_delete_id = str(
+        st.session_state.get("sidebar_trip_pending_delete_id") or ""
+    )
+    if pending_delete_id:
+        pending_trip = next(
+            (trip for trip in trips if str(trip.get("id")) == pending_delete_id),
+            None,
+        )
+        if pending_trip:
+            render_delete_trip_dialog(pending_trip)
+        else:
+            st.session_state.pop("sidebar_trip_pending_delete_id", None)
 
 
 def item_time_text(item: dict, timezone_name: object) -> str:
