@@ -513,6 +513,9 @@ def initialize_session() -> None:
         "user_name": None,
         "is_dashboard_admin": None,
         "current_view": "trip",
+        # DB의 profiles.mate_type을 처음 읽기 전까지는 None으로 둔다. 그래야
+        # 이전에 저장한 Mate 설정을 기본값으로 덮어쓰지 않는다.
+        "mate_type": None,
         "selected_trip_id": None,
         "show_create_trip": False,
         "notice": None,
@@ -628,6 +631,7 @@ def debug_auto_login() -> None:
     st.session_state.access_token = result["access_token"]
     st.session_state.user_email = result["email"]
     st.session_state.user_name = None
+    st.session_state.mate_type = None
     request_main_scroll_to_top()
 
 
@@ -638,6 +642,7 @@ def sign_out(notice: str | None = None) -> None:
     st.session_state.user_name = None
     st.session_state.is_dashboard_admin = None
     st.session_state.current_view = "trip"
+    st.session_state.mate_type = None
     st.session_state.selected_trip_id = None
     st.session_state.show_create_trip = False
     st.session_state.place_search_results = {}
@@ -707,13 +712,21 @@ def trip_activity_sort_key(trip: dict) -> tuple[str, str]:
     )
 
 
-def sidebar_profile() -> tuple[str, str]:
-    """간결한 사이드바 계정 카드에 쓸 저장된 프로필 이름과 이메일을 반환한다."""
+MATE_TYPE_LABELS = {
+    "assistant": "비서",
+    "guide": "가이드",
+    "senior": "어르신",
+}
+
+
+def sidebar_profile() -> tuple[str, str, str]:
+    """사이드바 계정 카드에 쓸 이름·이메일·저장된 Mate 방식을 반환한다."""
 
     email = st.session_state.user_email or ""
     cached_name = st.session_state.user_name
-    if cached_name and st.session_state.get("is_dashboard_admin") is not None:
-        return cached_name, email
+    cached_mate_type = st.session_state.mate_type
+    if cached_name and cached_mate_type:
+        return cached_name, email, cached_mate_type
 
     try:
         result = api("GET", "/me", headers=auth_headers())
@@ -726,9 +739,14 @@ def sidebar_profile() -> tuple[str, str]:
 
     profile = result.get("profile") or {}
     display_name = profile.get("username") or email.split("@", 1)[0] or "여행자"
+    mate_type = str(profile.get("mate_type") or "assistant")
+    if mate_type not in MATE_TYPE_LABELS:
+        mate_type = "assistant"
+
     st.session_state.user_name = display_name
     st.session_state.is_dashboard_admin = bool(result.get("is_dashboard_admin"))
-    return display_name, email
+    st.session_state.mate_type = mate_type
+    return display_name, email,mate_type
 
 # def render_login() -> None:
 #     """비로그인 카드를 그리고 현재 인증 화면을 선택해 표시한다."""
@@ -837,6 +855,7 @@ def render_sign_in_or_up() -> None:
                     # 새 회원가입은 입력한 이름을 이미 알고 있고, 일반 로그인은
                     # 사이드바를 처음 그릴 때 저장된 프로필 이름을 불러온다.
                     st.session_state.user_name = username.strip() if is_signup else None
+                    st.session_state.mate_type = None
                     st.session_state.notice = None
                     request_main_scroll_to_top()
                     st.rerun()
@@ -1190,11 +1209,106 @@ def render_admin_dashboard_filters() -> None:
         if st.button("↻", use_container_width=True, key="admin_dashboard_refresh"):
             st.rerun()
 
+@st.dialog("Mate 설정")
+def render_mate_settings_dialog(display_name: str, email: str, mate_type: str) -> None:
+    """사이드바 계정 팝오버에서 여는 내 정보·AI 대화 방식 설정 모달이다.
+
+    이메일은 Supabase Auth의 로그인 식별자라 여기서 바꾸지 않는다. 표시 이름과
+    Mate 방식은 profiles 테이블에 저장하며, 여행이 하나도 없어도 사용할 수 있다.
+    """
+
+    st.caption("TripMate에서 표시할 이름과 AI 대화 방식을 관리합니다.")
+    st.text_input("이메일", disabled=True, key="mate_settings_email")
+    username = st.text_input(
+        "Mate 이름",
+        max_chars=30,
+        key="mate_settings_username",
+        help="여행 목록과 사이드바에 표시되는 이름입니다.",
+    )
+    selected_mate_type = st.radio(
+        "Mate 방식",
+        options=list(MATE_TYPE_LABELS),
+        format_func=lambda value: MATE_TYPE_LABELS[value],
+        horizontal=True,
+        key="mate_settings_type",
+        help="비서는 핵심 위주, 가이드는 설명과 제안 위주, 어르신 Mate는 쉬운 순서 설명 위주로 답합니다.",
+    )
+    st.caption("이메일과 비밀번호는 로그인 정보이므로 이 화면에서 변경하지 않습니다.")
+
+    save_column, cancel_column = st.columns(2)
+    if save_column.button("저장", type="primary", width="stretch", key="save_mate_settings"):
+        cleaned_name = username.strip()
+        if not cleaned_name:
+            st.error("Mate 이름을 입력하세요.")
+            return
+        try:
+            updated = api(
+                "PATCH",
+                "/me/profile",
+                json={"username": cleaned_name, "mate_type": selected_mate_type},
+                headers=auth_headers(),
+            )
+        except SessionExpired:
+            raise
+        except ApiError as error:
+            st.error(str(error))
+            return
+        st.session_state.user_name = str(updated.get("username") or cleaned_name)
+        st.session_state.mate_type = str(updated.get("mate_type") or selected_mate_type)
+        st.rerun()
+    if cancel_column.button("취소", width="stretch", key="cancel_mate_settings"):
+        st.rerun()
+
+
+@st.dialog("계정 관리")
+def render_account_management_dialog(display_name: str, email: str) -> None:
+    """로그인 계정 정보 확인과 현재 비밀번호 기반 비밀번호 변경 모달을 그린다."""
+
+    st.caption("로그인 정보와 비밀번호를 관리합니다.")
+    st.markdown(f"#### {escape(display_name)}")
+    st.text_input("이메일", disabled=True, key="account_settings_email")
+    st.caption("이메일은 Supabase Auth의 로그인 식별자이므로 이 화면에서 변경하지 않습니다.")
+
+    st.divider()
+    st.subheader("비밀번호 변경")
+    st.caption("현재 비밀번호를 확인한 뒤, 6자 이상인 새 비밀번호로 변경합니다.")
+    with st.form("account_password_change_form", clear_on_submit=True):
+        current_password = st.text_input("현재 비밀번호", type="password")
+        new_password = st.text_input("새 비밀번호", type="password")
+        confirm_password = st.text_input("새 비밀번호 확인", type="password")
+        submitted = st.form_submit_button("비밀번호 변경", type="primary", width="stretch")
+
+    if submitted:
+        if not current_password or not new_password or not confirm_password:
+            st.error("현재 비밀번호와 새 비밀번호를 모두 입력하세요.")
+            return
+        if new_password != confirm_password:
+            st.error("새 비밀번호가 서로 다릅니다.")
+            return
+        try:
+            result = api(
+                "POST",
+                "/me/password",
+                json={"current_password": current_password, "new_password": new_password},
+                headers=auth_headers(),
+            )
+        except SessionExpired:
+            raise
+        except ApiError as error:
+            st.error(str(error))
+            return
+        # 새 비밀번호가 실제로 저장됐는지 다음 로그인에서 확인하도록 현재 세션은 비운다.
+        sign_out(str(result.get("message") or "비밀번호가 변경되었습니다. 새 비밀번호로 로그인하세요."))
+
+    st.divider()
+    with st.expander("회원 탈퇴", expanded=False):
+        st.warning("회원 탈퇴는 계정과 연결된 여행·일정·채팅을 영구 삭제할 수 있는 작업입니다.")
+        st.caption("실제 탈퇴 기능은 팀의 데이터 보관 정책과 별도 확인 절차가 정해진 뒤 제공합니다.")
 
 def render_sidebar(trips: list[dict]) -> None:
     """여행 그룹·여행 총개수·하단 고정 프로필 팝오버를 그린다."""
 
-    display_name, email = sidebar_profile()
+    display_name, email, mate_type = sidebar_profile()
     initial = escape(display_name[:1].upper() or "여")
     safe_name = escape(display_name)
     safe_email = escape(email)
@@ -1210,6 +1324,8 @@ def render_sidebar(trips: list[dict]) -> None:
         reverse=True,
     )
 
+    open_mate_settings = False
+    open_account_management = False
     with st.sidebar:
         # 하나의 flex 열을 사용해 두 번째 사이드바 스크롤 영역을 만들지 않고도
         # 프로필이 ``margin-top: auto``로 최하단에 머물 수 있게 한다.
@@ -1314,19 +1430,41 @@ def render_sidebar(trips: list[dict]) -> None:
                         )
                     with role_column:
                         st.caption("일반 사용자")
+                        st.caption(f"Mate · {MATE_TYPE_LABELS[mate_type]}")
 
-                    st.button(
-                        "⚙ 설정 (준비 중)",
+                    if st.button(
+                        "⚙ Mate 설정",
                         key="profile_settings_placeholder",
                         use_container_width=True,
-                        disabled=True,
-                    )
+                        #disabled = True
+                    ):
+                        open_mate_settings = True
+                    if st.button(
+                        "♙ 계정 관리",
+                        key="profile_account_management",
+                        use_container_width=True,
+                    ):
+                        open_account_management = True
                     if st.button(
                         "로그아웃",
                         key="profile_popover_sign_out",
                         use_container_width=True,
                     ):
                         sign_out()
+
+    # dialog는 sidebar 컨테이너 바깥에서 열어 본문을 덮는 모달처럼 보이게 한다.
+    if open_mate_settings:
+        # 이전에 모달을 열었을 때 남은 위젯 값을 새 프로필 값으로 교체한다.
+        # 아직 이번 실행에서 위젯을 그리지 않았으므로 안전하게 초기화할 수 있다.
+        st.session_state.mate_settings_email = email
+        st.session_state.mate_settings_username = display_name
+        st.session_state.mate_settings_type = mate_type
+        render_mate_settings_dialog(display_name, email, mate_type)
+    if open_account_management:
+        # 모달을 다시 열 때 이전 이메일 입력 상태가 남지 않도록 현재 로그인 계정으로
+        # 교체한다. 비밀번호 입력은 form의 clear_on_submit으로 저장하지 않는다.
+        st.session_state.account_settings_email = email
+        render_account_management_dialog(display_name, email)
 
 
 def item_time_text(item: dict, timezone_name: object) -> str:
@@ -2803,6 +2941,22 @@ def render_itinerary_change_card(trip: dict, change: dict) -> None:
                 st.rerun()
 
 
+def render_context_controls(trip: dict, messages: list[dict]) -> None:
+    """해당 여행의 채팅 기록을 DB에서 영구 삭제하는 버튼을 표시한다."""
+
+    reset_column, info_column = st.columns([1, 2.8], vertical_alignment="center")
+    if reset_column.button("대화 전체 삭제", key=f"delete_chat_history_{trip['id']}"):
+        try:
+            api("POST", f"/trips/{trip['id']}/chat/reset-context", headers=auth_headers())
+        except SessionExpired:
+            raise
+        except ApiError as error:
+            st.error(str(error))
+        else:
+            st.rerun()
+    info_column.caption("이 여행의 채팅 기록이 즉시 삭제되며 복구할 수 없습니다. 일정 정보는 유지됩니다.")
+
+
 def render_dashboard_chat(trip: dict, days: list[dict], selected_day: dict) -> None:
     """여행 요약과 첫 안내를 포함한 오른쪽 채팅 패널을 그린다."""
 
@@ -2843,6 +2997,7 @@ def render_dashboard_chat(trip: dict, days: list[dict], selected_day: dict) -> N
         if message.get("role") != "system":
             timeline.append((str(message.get("created_at") or ""), index, "message", message))
     message_count = len(timeline)
+    #message_count = len(messages)
     for index, change in enumerate(changes):
         timeline.append((str(change.get("created_at") or ""), message_count + index, "change", change))
     timeline.sort(key=lambda event: (event[0], event[1]))
@@ -2860,6 +3015,9 @@ def render_dashboard_chat(trip: dict, days: list[dict], selected_day: dict) -> N
         for _, _, event_type, event in timeline:
             if event_type == "change":
                 render_itinerary_change_card(trip, event)
+            elif event.get("role") == "system":
+                # 이전 버전이 남긴 맥락 구분선은 삭제 전까지 보이지 않게만 처리한다.
+                continue
             else:
                 with st.chat_message(event["role"]):
                     st.write(event["content"])
@@ -2869,6 +3027,7 @@ def render_dashboard_chat(trip: dict, days: list[dict], selected_day: dict) -> N
         # 장소 추천 카드는 일반 채팅 메시지 다음에 보여 주되, 선택 시점에는 지금
         # 열어 둔 DAY를 사용한다. 그래서 날짜 탭을 바꾼 뒤 추가하면 그 DAY에 저장된다.
         render_chat_place_recommendation_card(trip, selected_day)
+    render_context_controls(trip, messages)
     prompt = st.chat_input("메시지를 입력하세요", key=f"dashboard_chat_input_{trip['id']}")
     if not prompt:
         return
@@ -2915,6 +3074,7 @@ def render_chat(trip: dict) -> None:
             with st.chat_message(message["role"]):
                 st.write(message["content"])
 
+    render_context_controls(trip, messages)
     prompt = st.chat_input("TripMate에게 물어보세요")
     if prompt:
         # 현재 질문은 위에서 불러온 기록에 아직 없으므로 서버가 AI 답변을 스트리밍하는
