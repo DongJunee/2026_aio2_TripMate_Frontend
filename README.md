@@ -1,5 +1,12 @@
 # TripMate frontend
 
+## Dashboard administrator access
+
+Dashboard access is controlled by the Supabase `public.profiles.is_admin`
+boolean column. Set it to `true` for the administrator profile after running
+the backend migration `supabase/20260908_profile_admin.sql`. The frontend does
+not use a dashboard token or an admin-related environment variable.
+
 Streamlit UI for TripMate.
 
 ## Run
@@ -17,9 +24,10 @@ uv run streamlit run streamlit_app.py
 `여행 화면`을 선택하면 일정 화면으로 돌아갑니다. 별도 대시보드 호스트나 토큰
 입력은 필요하지 않습니다.
 
-테스트 중에는 백엔드의 `DASHBOARD_AUTH_DISABLED=true` 설정으로 로그인한 사용자가
-대시보드에 접근할 수 있습니다. 실제 운영 전에는 백엔드에서 해당 설정을 끄고
-`DASHBOARD_ADMIN_EMAILS`에 허용할 관리자 이메일을 등록해야 합니다.
+운영 대시보드는 Supabase `public.profiles.is_admin` 값으로 접근 권한을
+판별합니다. 백엔드의 `supabase/20260908_profile_admin.sql`을 1회 실행한 뒤
+관리자 프로필의 `is_admin`을 `true`로 설정하면 됩니다. 관리자 토큰이나
+관리자 이메일 환경변수는 사용하지 않습니다.
 
 운영 대시보드의 `운영콘솔` 버튼에서 사용자 목록과 사용자별 여행·활동·API 요청
 정보를 조회할 수 있습니다. 현재 운영콘솔은 조회 전용입니다.
