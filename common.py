@@ -117,16 +117,21 @@ def api(method: str, path: str, **kwargs):
     return response.json() if response.content else None
 
 
-def api_bytes(method: str, path: str, **kwargs) -> bytes:
-    """지도 이미지처럼 인증이 필요한 이진 데이터를 돌려주는 API 요청을 보낸다.
+def api_binary(method: str, path: str, **kwargs) -> httpx.Response:
+    """인증이 필요한 이진 응답을 **헤더까지 그대로** 돌려준다.
 
-    Streamlit 이미지 위젯은 URL을 직접 받을 때 사용자 Bearer 토큰을 붙일 수 없다.
-    여기서 이미지 바이트를 가져오면 보호된 백엔드 프록시를 비공개로 유지하면서
-    JavaScript 없이도 화면에 결과를 표시할 수 있다.
+    일정표 PNG 는 파일 이름을 Content-Disposition 헤더로 받아야 한다. 화면에서
+    이름을 다시 조립하면 서버와 같은 규칙을 두 곳에 두게 되고, 한쪽만 고치면
+    두 경로의 파일 이름이 갈린다.
+
+    [변경 사유] timeout 을 호출부가 정할 수 있게 했다. 일정표 이미지는 서버가
+    모델을 부르는 데 20~40초가 걸리고 그림 없이 오면 한 번 더 걸어, 기본
+    HTTP_TIMEOUT(60초)로는 다 그린 그림을 버리고 실패로 처리하게 된다.
     """
 
+    request_timeout = kwargs.pop("timeout", HTTP_TIMEOUT)
     try:
-        response = httpx.request(method, f"{BACKEND_URL}{path}", timeout=HTTP_TIMEOUT, **kwargs)
+        response = httpx.request(method, f"{BACKEND_URL}{path}", timeout=request_timeout, **kwargs)
     except httpx.ConnectError as error:
         raise ApiError("백엔드 서버에 연결할 수 없습니다. backend 서버가 실행 중인지 확인하세요.") from error
     except httpx.TimeoutException as error:
@@ -140,7 +145,43 @@ def api_bytes(method: str, path: str, **kwargs) -> bytes:
         except ValueError:
             detail = ""
         raise ApiError(detail or f"요청에 실패했습니다. ({response.status_code})")
-    return response.content
+    return response
+
+
+def api_bytes(method: str, path: str, **kwargs) -> bytes:
+    """지도 이미지처럼 인증이 필요한 이진 데이터를 돌려주는 API 요청을 보낸다.
+
+    Streamlit 이미지 위젯은 URL을 직접 받을 때 사용자 Bearer 토큰을 붙일 수 없다.
+    여기서 이미지 바이트를 가져오면 보호된 백엔드 프록시를 비공개로 유지하면서
+    JavaScript 없이도 화면에 결과를 표시할 수 있다.
+    """
+
+    return api_binary(method, path, **kwargs).content
+
+# def api_bytes(method: str, path: str, **kwargs) -> bytes:
+#     """지도 이미지처럼 인증이 필요한 이진 데이터를 돌려주는 API 요청을 보낸다.
+
+#     Streamlit 이미지 위젯은 URL을 직접 받을 때 사용자 Bearer 토큰을 붙일 수 없다.
+#     여기서 이미지 바이트를 가져오면 보호된 백엔드 프록시를 비공개로 유지하면서
+#     JavaScript 없이도 화면에 결과를 표시할 수 있다.
+#     """
+
+#     try:
+#         response = httpx.request(method, f"{BACKEND_URL}{path}", timeout=HTTP_TIMEOUT, **kwargs)
+#     except httpx.ConnectError as error:
+#         raise ApiError("백엔드 서버에 연결할 수 없습니다. backend 서버가 실행 중인지 확인하세요.") from error
+#     except httpx.TimeoutException as error:
+#         raise ApiError("서버 응답이 늦습니다. 잠시 후 다시 시도하세요.") from error
+
+#     if response.status_code == 401:
+#         raise SessionExpired("로그인이 만료되었습니다. 다시 로그인해 주세요.")
+#     if response.status_code >= 400:
+#         try:
+#             detail = response.json().get("detail", "")
+#         except ValueError:
+#             detail = ""
+#         raise ApiError(detail or f"요청에 실패했습니다. ({response.status_code})")
+#     return response.content
 
 
 def auth_headers() -> dict[str, str]:

@@ -19,6 +19,7 @@ from common import (
     SessionExpired,
     _load_env,
     api,
+    api_binary,
     auth_headers,
     stream_answer,
 )
@@ -708,7 +709,7 @@ def initialize_session() -> None:
         # 여행별로 선택한 DAY와 4개씩 보이는 날짜 창의 시작 위치를 유지한다.
         "dashboard_selected_days": {},
         "dashboard_day_windows": {},
-                # [변경 사유] 여행 만들기 화면에서 고른 여행지와 '가고 싶은 장소'다.
+        # [변경 사유] 여행 만들기 화면에서 고른 여행지와 '가고 싶은 장소'다.
         # 여행이 아직 없어 백엔드에 저장할 곳이 없으므로, POST /me/trips 에
         # 실을 때까지만 화면이 들고 있는다.
         # [변경 사유] 검색 결과를 None(아직 검색 안 함)과 [](결과 없음)로
@@ -721,6 +722,18 @@ def initialize_session() -> None:
         "sidebar_trip_editing_id": None,
         "sidebar_trip_pending_delete_id": None,
         "sidebar_trip_title_error": None,
+        # [변경 사유] 일정표 다운로드 모달의 상태다. st.dialog 안은 위젯을 누를
+        # 때마다 스크립트가 재실행되므로, 이미 받은 그림을 다시 받지 않도록
+        # (trip_id, style) 로 캐시한다. 캐시하지 않으면 스타일 카드를 눌러 보는
+        # 것만으로 20~40초짜리 이미지 생성이 다시 돌아간다.
+        "export_dialog_trip_id": None,
+        "export_style": "simple",
+        "export_images": {},
+        # [변경 사유] 모달이 뜨자마자 그리지 않는다. 이미지 생성은 20~40초가
+        # 걸리고 요금도 나가는데, 사용자가 스타일을 고르기도 전에 시작하면
+        # 고르는 동안 이미 다른 스타일을 그리고 있는 셈이 된다. 카드를 누른
+        # 뒤에만 그리도록, 사용자가 실제로 고른 스타일을 여기에 담는다.
+        "export_requested_style": None,
     }
     for key, value in defaults.items():
         st.session_state.setdefault(key, value)
@@ -3658,6 +3671,238 @@ def render_chat(trip: dict) -> None:
         # 임시 화면을 대체하도록 그때만 다시 실행한다.
         st.rerun()
 
+# 서버가 받는 값은 simple / illustrated 두 가지다 (백엔드 style 파라미터).
+# 화면 라벨만 우리말로 붙인다 - 값을 화면에서 새로 만들면 서버가 422 를 준다.
+EXPORT_STYLES = {
+    "simple": ("심플형", "흰 배경 · 구분선 · 텍스트 중심", "인쇄하거나 캘린더에 붙이기 좋아요"),
+    "illustrated": ("일러스트형", "손그림 다이어리 · 아이콘 · 캐릭터", "SNS나 메신저로 공유하기 좋아요"),
+}
+
+# 기다리는 동안 갈아 끼우는 문구다.
+#
+# **남은 시간을 적지 않는다.** 일정 길이에 따라 20초에서 80초까지 벌어지는데,
+# "20~40초" 라고 적어 두면 40초가 지난 순간부터는 안내가 아니라 거짓말이 된다.
+# 무엇을 하고 있는지를 대신 보여 준다.
+EXPORT_PROGRESS_PHRASES = (
+    "여행의 설렘을 한 장에 담고 있어요",
+    "가고 싶은 곳들을 한자리에 모으고 있어요",
+    "복잡한 동선은 가볍게 정리하고 있어요",
+    "여행지의 숨은 매력을 찾고 있어요",
+    "여행 동선을 차근차근 그리고 있어요",
+    "일정마다 작은 즐거움을 더하고 있어요",
+    "우리 여행에 어울리는 색을 입히고 있어요",
+)
+
+# 문구를 갈아 끼우는 간격. 7개를 한 바퀴 도는 데 약 20초라, 가장 짧은 대기에도
+# 서너 개는 보이고 가장 긴 대기에도 같은 문구가 연달아 보이지 않는다.
+EXPORT_PROGRESS_INTERVAL_SECONDS = 2.8
+
+
+# [변경 사유] 일반 호출(60초)보다 길게 잡는다. 서버가 이미지 모델을 부르는 데
+# 한 번에 20~40초가 걸리고, 그림 없이 글만 돌아오면 한 번 더 건다. 여기서 먼저
+# 끊기면 다 그린 그림을 버리고 "만들 수 없어요" 를 띄우게 된다.
+EXPORT_TIMEOUT_SECONDS = 150
+
+
+def _fetch_export_pages(trip_id: str, style: str) -> tuple[list[tuple[str, bytes]], str]:
+    """일정표를 장별로 받아 온다. ([(파일명, PNG), ...], 실패사유) 를 돌려준다.
+
+    서버는 장별 PNG 를 **ZIP 한 개**로 보낸다. 장마다 따로 요청하면 8일 여행에서
+    네 번을 순차로 기다려 타임아웃이 먼저 난다. ZIP 은 전송 형식일 뿐이고,
+    사용자에게는 장별 [저장] 버튼으로 보여 준다.
+
+    파일 이름은 ZIP 안의 엔트리 이름을 그대로 쓴다. 화면에서 다시 조립하면
+    서버와 같은 규칙을 두 곳에 두게 되고, 한쪽만 고치면 이름이 갈린다.
+
+    실패해도 예외를 올리지 않는다 - 모달 안에서 예외가 나면 사용자는 취소
+    버튼조차 못 누른다. 사유를 문장으로 돌려주고 화면이 텍스트 대체 수단을 연다.
+    """
+
+    cache = st.session_state.export_images
+    cache_key = f"{trip_id}:{style}"
+    if cache_key in cache:
+        # 이미 받아 둔 것은 기다릴 이유가 없다 - 문구도 띄우지 않는다.
+        return cache[cache_key], ""
+
+    # auth_headers() 는 st.session_state 를 읽는다. 워커 스레드에서 부르면
+    # 세션 컨텍스트가 없어 실패하므로 **메인 스레드에서 미리** 만들어 넘긴다.
+    headers = auth_headers()
+
+    import random
+    from concurrent.futures import ThreadPoolExecutor
+    from concurrent.futures import TimeoutError as FutureTimeout
+
+    placeholder = st.empty()
+    # 같은 여행을 두 번 받을 때 같은 문구로 시작하면 멈춘 것처럼 보인다.
+    offset = random.randrange(len(EXPORT_PROGRESS_PHRASES))
+
+    def show(step: int) -> None:
+        phrase = EXPORT_PROGRESS_PHRASES[(offset + step) % len(EXPORT_PROGRESS_PHRASES)]
+        placeholder.info(phrase, icon=":material/image:")
+
+    # **다운로드는 워커 스레드가 한다.** 메인 스레드가 응답을 기다리면 화면이
+    # 통째로 멈춰 문구를 갈아 끼울 수 없다. st.spinner 로는 실행 중에 문구를
+    # 바꿀 수 없어서 st.empty() 자리를 직접 고쳐 쓴다.
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(_download_export_pages, trip_id, style, headers)
+        step = 0
+        show(step)
+        while True:
+            try:
+                pages, failure = future.result(timeout=EXPORT_PROGRESS_INTERVAL_SECONDS)
+                break
+            except FutureTimeout:
+                step += 1
+                show(step)
+            except SessionExpired:
+                # 로그인 만료는 최상위 화면 보호 로직이 처리해야 한다.
+                placeholder.empty()
+                raise
+
+    placeholder.empty()
+    if pages:
+        cache[cache_key] = pages
+    return pages, failure
+
+
+def _download_export_pages(
+    trip_id: str, style: str, headers: dict[str, str]
+) -> tuple[list[tuple[str, bytes]], str]:
+    """ZIP 을 받아 장별로 푼다. **세션 상태를 건드리지 않는다.**
+
+    워커 스레드에서 도는 함수라 st.session_state 에 손대면 안 된다. 캐시 읽기와
+    쓰기, 인증 헤더 만들기는 부르는 쪽(_fetch_export_pages)이 메인 스레드에서 한다.
+    """
+
+    try:
+        response = api_binary(
+            "GET",
+            f"/trips/{trip_id}/itinerary/export",
+            params={"style": style},
+            headers=headers,
+            timeout=EXPORT_TIMEOUT_SECONDS,
+        )
+    except SessionExpired:
+        raise
+    except ApiError as error:
+        return [], str(error)
+
+    import io
+    import zipfile
+
+    try:
+        with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+            # 이름에 1of4 · 2of4 가 들어 있어 정렬하면 장 순서가 된다.
+            pages = [(name, archive.read(name)) for name in sorted(archive.namelist())]
+    except zipfile.BadZipFile:
+        return [], "일정표 파일을 열 수 없어요. 잠시 후 다시 시도해 주세요."
+
+    if not pages:
+        return [], "일정표를 만들지 못했어요. 잠시 후 다시 시도해 주세요."
+    return pages, ""
+
+
+@st.dialog("일정표 다운로드")
+def render_export_dialog(trip: dict) -> None:
+    """스타일 선택 -> 다운로드 두 단계로 끝나는 모달이다 (시안 SCR-007).
+
+    카드 전체가 버튼이다. 카드 안에 별도 버튼을 두면 카드 몸통은 눌러도 아무
+    반응이 없는데, 카드처럼 생긴 것을 눌렀는데 아무 일이 없으면 사용자는 그것이
+    못 누르는 것이라고 읽는다.
+    """
+
+    trip_id = str(trip["id"])
+    st.caption("원하는 스타일을 고르면 그때 만들기 시작합니다.")
+
+    style = str(st.session_state.export_style or "simple")
+    requested = st.session_state.export_requested_style
+    cache = st.session_state.export_images
+    for column, (key, (name, first, second)) in zip(st.columns(2), EXPORT_STYLES.items()):
+        chosen = key == requested
+        # 색만으로 가르지 않는다 - 상태를 글자로도 알린다. 이미 만들어 둔 스타일은
+        # 다시 눌러도 곧바로 나오므로, 그 사실을 미리 보여 준다.
+        if chosen:
+            badge = "  ·  ✓ 만들었어요"
+        elif f"{trip_id}:{key}" in cache:
+            badge = "  ·  만들어 둠"
+        else:
+            badge = ""
+        label = f"**{name}**{badge}  \n{first}  \n{second}"
+        with column:
+            if st.button(
+                label,
+                key=f"export_style_{key}",
+                use_container_width=True,
+                type="primary" if chosen else "secondary",
+            ):
+                # 카드를 누른 이 순간이 "만들기" 다. 누르기 전에는 그리지 않는다.
+                st.session_state.export_style = key
+                st.session_state.export_requested_style = key
+                st.rerun()
+
+    st.divider()
+
+    if requested is None:
+        # 아직 아무것도 고르지 않았다. 무엇을 하면 되는지와, 얼마나 걸리는지를
+        # 미리 알린다 - 눌렀는데 30초 동안 아무 설명이 없으면 멈춘 줄 안다.
+        st.info("위에서 스타일을 고르면 일정표를 만듭니다. 잠시 기다려 주세요.",
+                icon=":material/image:")
+        if st.button("닫기", key="export_cancel", use_container_width=True):
+            st.session_state.export_dialog_trip_id = None
+            st.session_state.export_requested_style = None
+            st.rerun()
+        return
+
+    # 대기 문구는 _fetch_export_pages 가 직접 갈아 끼운다 (st.spinner 는 실행
+    # 중에 문구를 바꿀 수 없다). 캐시에 있으면 문구 없이 곧바로 돌아온다.
+    pages, failure = _fetch_export_pages(trip_id, requested)
+
+    if failure:
+        st.warning(failure)
+
+    if len(pages) > 1:
+        # 여러 장이면 왜 나뉘었는지 한 줄로 알린다. 설명이 없으면 사용자는
+        # 일정이 잘려 나간 줄 안다.
+        st.caption(f"일정이 길어 {len(pages)}장으로 나눠 그렸어요. 장마다 저장하세요.")
+        # 썸네일을 함께 보여 준다 - 버튼만 있으면 어느 장이 며칠치인지 알 수 없다.
+        for row_start in range(0, len(pages), 2):
+            for column, (page, (name, image)) in zip(
+                st.columns(2),
+                list(enumerate(pages, start=1))[row_start : row_start + 2],
+            ):
+                with column:
+                    st.image(image, use_container_width=True)
+                    st.download_button(
+                        f"{page}장 저장",
+                        data=image,
+                        file_name=name,
+                        mime="image/png",
+                        type="primary",
+                        use_container_width=True,
+                        key=f"export_download_{page}",
+                    )
+        st.divider()
+
+    cancel_column, save_column = st.columns(2)
+    if cancel_column.button("닫기", key="export_close", use_container_width=True):
+        st.session_state.export_dialog_trip_id = None
+        st.session_state.export_requested_style = None
+        st.rerun()
+    if len(pages) == 1:
+        # 한 장이면 위의 격자를 만들지 않고 [다운로드] 하나로 끝낸다.
+        name, image = pages[0]
+        with save_column:
+            st.download_button(
+                "다운로드",
+                data=image,
+                file_name=name,
+                mime="image/png",
+                type="primary",
+                use_container_width=True,
+                key="export_download",
+            )
+
+
 def render_dashboard(trip_id: str) -> None:
     """선택 여행을 일정·지도 왼쪽과 채팅 오른쪽의 고정 화면으로 그린다."""
     dashboard = api("GET", f"/trips/{trip_id}/dashboard", headers=auth_headers())
@@ -3670,6 +3915,19 @@ def render_dashboard(trip_id: str) -> None:
         left, right = st.columns([1.4, 1], gap="large", vertical_alignment="top")
         with left:
             selected_day = _dashboard_selected_day(trip, days)
+            # [변경 사유] 시안 SCR-005 의 상단 [일정표 다운로드] 자리다. DAY 탭
+            # 줄 아래, "오늘의 일정" 위에 둔다 - 일정을 보고 나서 누르는 동작이라
+            # 일정 위에 있는 편이 자연스럽다.
+            _, export_column = st.columns([2.2, 1])
+            if export_column.button(
+                "일정표 다운로드",
+                key=f"open_export_{trip['id']}",
+                use_container_width=True,
+            ):
+                st.session_state.export_dialog_trip_id = str(trip["id"])
+                # 지난번에 고른 것이 남아 있으면 모달이 열리자마자 다시 그린다.
+                st.session_state.export_requested_style = None
+                st.rerun()
             try:
                 route_plan = api(
                     "GET",
@@ -3728,6 +3986,12 @@ def render_dashboard(trip_id: str) -> None:
             )
         with right:
             render_dashboard_chat(trip, days, selected_day)
+
+    # dialog 는 컬럼 바깥에서 열어 본문을 덮는 모달처럼 보이게 한다
+    # (사이드바가 이미 쓰는 규칙 - streamlit_app.py:1997 주석 참고).
+    if str(st.session_state.get("export_dialog_trip_id") or "") == str(trip["id"]):
+        render_export_dialog(trip)
+
 
 def _admin_dashboard_period_params(start_date: date, end_date: date) -> dict[str, str]:
     """관리자 대시보드가 사용할 KST 기준 조회 기간을 만든다."""
