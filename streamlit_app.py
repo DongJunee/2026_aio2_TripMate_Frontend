@@ -61,23 +61,57 @@ st.markdown(
     <style>
 
         /* .block-container { max-width: 1320px; padding-top: 2rem; padding-bottom: 3rem; } */
+        [data-testid="stSidebar"],
+        [data-testid="stSidebar"] > div:first-child,
+        [data-testid="stSidebar"] [data-testid="stSidebarContent"] {
+            background: #0f1b3d !important;
+        }
         .brand { color: #315cce; font-size: 2rem; font-weight: 800; letter-spacing: -0.08rem; }
-        .sidebar-brand { display: flex; align-items: center; gap: .65rem; font-size: 1.3rem; font-weight: 800; letter-spacing: -.04rem; }
+        .sidebar-brand { display: flex; align-items: center; gap: .65rem; color: #fff !important; font-size: 1.3rem; font-weight: 800; letter-spacing: -.04rem; }
         .sidebar-brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: .65rem; background: #3169e8; color: #fff; font-size: 1rem; }
         .sidebar-section-label { margin: .85rem 0 .35rem; font-size: .78rem; font-weight: 700; opacity: .62; }
+        .sidebar-trip-section-label { margin: .85rem 0 .7rem; color: #7e8db0 !important; font-size: .78rem; font-weight: 700; }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_create_trip"] button {
+            background: #2563eb !important;
+            border-color: #2563eb !important;
+            color: #fff !important;
+            height: 2.3rem !important;
+            min-height: 2.3rem !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_create_trip"] button p { color: #fff !important; font-size: .8rem !important;}
+        [data-testid="stSidebar"] [class*="st-key-sidebar_admin_dashboard"] button {
+            background: #2d266c !important;
+            border-color: #6957aa !important;
+            color: #cdb8fa !important;
+            font-weight: 700 !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_admin_dashboard"] button p { color: #cdb8fa !important; font-weight: 700 !important; }
         .sidebar-avatar { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 50%; background: #e5edff; color: #3169e8; font-weight: 800; }
-        .sidebar-profile-name { font-size: .88rem; font-weight: 800; line-height: 1.2; }
-        .sidebar-profile-email { margin-top: .12rem; font-size: .72rem; opacity: .62; }
+        .sidebar-profile-name {
+            font-family: inherit !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+            line-height: 1.2 !important;
+        }
+        .sidebar-profile-email {
+            margin-top: .12rem !important;
+            font-family: inherit !important;
+            font-size: .78rem !important;
+            font-weight: 500 !important;
+            line-height: 1.2 !important;
+            opacity: .62;
+        }
         /* 하단 프로필은 팝오버를 열지 않아도 계정 카드처럼 보이게 한다. */
         [data-testid="stSidebar"] .st-key-sidebar-profile {
             margin-top: auto !important;
             border-top: 1px solid rgba(112, 128, 157, .28);
+            padding-top: 0 !important;
         }
         [data-testid="stSidebar"] .st-key-sidebar-profile [data-testid="stPopoverButton"] {
             position: relative;
             width: 100% !important;
-            min-height: 3.8rem !important;
-            padding: .45rem .5rem .45rem 3.35rem !important;
+            min-height: 2.5rem !important;
+            padding: .0rem .5rem .0rem 2.8rem !important;
             border: 0 !important;
             border-radius: 0 !important;
             background: transparent !important;
@@ -99,12 +133,12 @@ st.markdown(
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 2.35rem;
-            height: 2.35rem;
+            width: 2rem;
+            height: 2rem;
             transform: translateY(-50%);
             border-radius: 50%;
-            background: #e5edff;
-            color: #3169e8;
+            background: var(--sidebar-profile-avatar-bg, #2563eb);
+            color: #fff;
             font-size: 1.1rem;
             font-weight: 800;
         }
@@ -112,9 +146,9 @@ st.markdown(
             width: 100% !important;
             margin: 0 !important;
             overflow: hidden !important;
-            color: inherit !important;
-            font-size: .95rem !important;
-            font-weight: 800 !important;
+            color: #fff !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
             line-height: 1.2 !important;
             text-align: left !important;
             text-overflow: ellipsis !important;
@@ -125,11 +159,11 @@ st.markdown(
             display: block;
             margin-top: .12rem;
             overflow: hidden;
-            color: inherit;
+            color: #8a97b8 !important;
             font-size: .78rem;
             font-weight: 500;
             line-height: 1.2;
-            opacity: .62;
+            opacity: 1 !important;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
@@ -137,33 +171,34 @@ st.markdown(
         [data-testid="stSidebar"] .st-key-sidebar-profile [data-testid="stPopoverButton"] > div > div:last-child {
             display: none !important;
         }
-        /* 여행 이름 버튼 오른쪽에 더보기 메뉴가 들어갈 공간을 확보한다. */
-        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button {
-            padding-right: 3rem !important;
+        /* 프로필 팝오버는 어두운 사이드바와 분리된 흰색 카드로 표시한다. */
+        [data-baseweb="popover"],
+        [data-baseweb="popover"] [role="dialog"] {
+            background: #fff !important;
         }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_row_"] {
             position: relative;
-            min-height: 2.5rem;
+            min-height: 2.2rem;
         }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_actions_"] {
             position: absolute !important;
             top: 50%;
             right: .35rem;
             z-index: 3;
-            width: 2.25rem !important;
-            height: 2.25rem !important;
+            width: 1.7rem !important;
+            height: 1.7rem !important;
             transform: translateY(-50%);
         }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_actions_"] [data-testid="stPopoverButton"] {
-            width: 2.25rem !important;
-            min-width: 2.25rem !important;
-            height: 2.25rem !important;
-            min-height: 2.25rem !important;
+            width: 1.7rem !important;
+            min-width: 1.7rem !important;
+            height: 1.7rem !important;
+            min-height: 1.7rem !important;
             padding: 0 !important;
             border: 1px solid transparent !important;
             border-radius: .65rem !important;
             background: transparent !important;
-            color: #42516a !important;
+            color: #c7d2e9 !important;
             box-shadow: none !important;
             justify-content: center !important;
         }
@@ -174,8 +209,8 @@ st.markdown(
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_actions_"] [data-testid="stPopoverButton"] p {
             margin: 0 !important;
             color: inherit !important;
-            font-size: 1.15rem !important;
-            font-weight: 800 !important;
+            font-size: .85rem !important;
+            font-weight: 700 !important;
             line-height: 1 !important;
         }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_actions_"] [data-testid="stPopoverButton"] > div > div:last-child {
@@ -238,15 +273,15 @@ st.markdown(
         }
         /* 일반 여행 행에는 카드 색을 두지 않는다. 선택된 행만 파란색으로
            표시해 현재 선택한 여행을 쉽게 찾을 수 있게 한다. */
-        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="secondary"] { background: transparent !important; border-color: transparent !important; color: inherit !important; }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="secondary"] { background: transparent !important; border-color: transparent !important; color: #c7d2e9 !important; }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button {
             justify-content: flex-start !important;
             /* 겹쳐진 핀 뒤에서 제목이 시작하는 위치는 48px 값을 바꿔 조절한다. */
-            padding-left: 48px !important;
+            padding-left: 37px !important;
             padding-right: 8px !important;
             text-align: left !important;
         }
-        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="secondary"] p { width: 100%; color: inherit !important; text-align: left !important; }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="secondary"] p { width: 100%; color: #c7d2e9 !important; text-align: left !important; }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button > div,
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button > div > span {
             justify-content: flex-start !important;
@@ -267,10 +302,37 @@ st.markdown(
             overflow: hidden !important;
             white-space: nowrap !important;
             text-overflow: ellipsis !important;
+            font-size: .8rem !important;
         }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="secondary"]:hover { background: rgba(49, 51, 63, .06) !important; border-color: transparent !important; }
-        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="primary"] { background: #e5f2ff !important; border-color: #d2e8ff !important; border-left: 8px solid #3169e8 !important; color: #2872d8 !important; }
-        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="primary"] p { width: 100%; color: #2872d8 !important; font-weight: 700; text-align: left !important; }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="primary"] { background: #152f6e !important; border-color: #4263b7 !important; border-left: 4px solid #4263b7 !important; color: #2872d8 !important; }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="primary"] p { width: 100%; color: #c7d2e9 !important; font-weight: 700; text-align: left !important; }
+        /* 기존 기본 여백보다 이 규칙이 뒤에서 적용되어 더보기 버튼과 겹치지 않게 한다. */
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button {
+            padding-right: 2rem !important;
+            height: 2.2rem !important;
+            min-height: 2.2rem !important;
+        }
+        /* 선택 상태의 왼쪽 8px 테두리가 제목 위치에 중복으로 더해지지 않게 한다. */
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button[kind="primary"] {
+            padding-left: 33px !important;
+        }
+        /* 작은 글씨도 여행 버튼의 상하 중앙에 오도록 기본 여백과 줄 높이를
+           명시한다. ``justify-content``는 가로 정렬이므로 세로에는
+           ``align-items``가 필요하다. */
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button {
+            align-items: center !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button > div,
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button > div > span {
+            align-items: center !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_trip_select_"] button p {
+            margin: 0 !important;
+            line-height: 1.2 !important;
+        }
         /* 테두리 북마크는 고정되지 않음을, 파란 채움 북마크는 현재 고정 상태를
            뜻한다. Streamlit의 회색 스위치를 대신한다. */
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_pin_"] button {
@@ -313,7 +375,7 @@ st.markdown(
                그대로 두고 채워진 bookmark 아이콘에만 파란색을 적용한다. */
             background: transparent !important;
             border-color: transparent !important;
-            color: #3169e8 !important;
+            color: #90aae4 !important;
             box-shadow: none !important;
         }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_pin_"] button[kind="primary"]::after {
@@ -323,18 +385,18 @@ st.markdown(
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_pin_"] button[kind="primary"]:hover {
             background: #eef3fb !important;
             border-color: transparent !important;
-            color: #3169e8 !important;
+            color: #90aae4 !important;
         }
         /* 각 행의 핀은 왼쪽에 별도 열을 차지하지 않고 전체 너비 여행 버튼 위에
            겹쳐 표시된다. */
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_row_"] {
             position: relative;
-            min-height: 2.5rem;
+            min-height: 2.2rem;
         }
         [data-testid="stSidebar"] [class*="st-key-sidebar_trip_row_"] [class*="st-key-sidebar_trip_pin_"] {
             position: absolute !important;
             top: 50%;
-            left: 8px;
+            left: 4px;
             z-index: 2;
             transform: translateY(-50%);
         }
@@ -343,16 +405,16 @@ st.markdown(
         /* 기본 Streamlit 사이드바 너비는 약 336px이다. 280px은 여행 이름을
            읽기 좋게 유지하면서 그 너비의 약 70%에 해당한다. */
         [data-testid="stSidebar"] {
-            width: 280px !important;
-            min-width: 280px !important;
-            max-width: 280px !important;
-            flex: 0 0 280px !important;
+            width: 210px !important;
+            min-width: 210px !important;
+            max-width: 210px !important;
+            flex: 0 0 210px !important;
             overflow: hidden;
         }
         [data-testid="stSidebar"] > div:first-child {
-            width: 280px !important;
-            min-width: 280px !important;
-            max-width: 280px !important;
+            width: 210px !important;
+            min-width: 210px !important;
+            max-width: 210px !important;
         }
         /* 상단 도구 모음과 사이드바 접기·펼치기 제어를 숨겨 Streamlit 페이지가
            앱처럼 보이게 한다. */
@@ -535,14 +597,37 @@ st.markdown(
           height: 100dvh !important;
           max-width: none !important;
           padding-top: 15px !important;
-          padding-right: 80px !important;
+          padding-right: 0px !important;
           padding-bottom: 15px !important;
-          padding-left: 80px !important;
-          overflow: hidden !important;
+          padding-left: 0px !important;
+          overflow: visible !important;
         }
-        .st-key-trip_dashboard_shell { height: calc(100dvh - 16px); overflow: hidden; }
+        .st-key-trip_dashboard_shell { height: calc(100dvh - 16px); overflow: visible; }
         .st-key-trip_dashboard_shell > div,
         .st-key-trip_dashboard_shell [data-testid="stHorizontalBlock"] { min-height: 0; }
+        .st-key-trip_dashboard_shell [data-testid="stHorizontalBlock"],
+        .st-key-trip_dashboard_shell [data-testid="stColumn"] {
+          overflow: visible !important;
+        }
+        .st-key-trip_dashboard_shell
+        [data-testid="stHorizontalBlock"]
+        > [data-testid="stColumn"]:first-child {
+          position: relative;
+          padding: 0 .1rem !important;
+        }
+        .st-key-trip_dashboard_shell
+        [data-testid="stHorizontalBlock"]
+        > [data-testid="stColumn"]:first-child::after {
+          content: "";
+          position: absolute;
+          top: -100px;
+          right: 0;
+          bottom: 0;
+          width: 1px;
+          background: #E4E9F2;
+          z-index: 10;
+          pointer-events: none;
+        }
         /* Windows 화면 배율이나 브라우저 줌에 따라 CSS 픽셀 높이가 달라져도
            실제 화면에서 일정·지도·채팅이 비슷한 비율을 차지하게 한다. */
         /* 일정 목록의 실제 높이와 스크롤은 render_compact_schedule()의
@@ -578,58 +663,168 @@ st.markdown(
           padding-top: .2rem !important;
           padding-bottom: .2rem !important;
         }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_action_placeholder_"] button {
+          height: clamp(32px, 4.5dvh, 42px) !important;
+          min-height: 0 !important;
+          padding: 0 !important;
+          border-color: #e2e8f2 !important;
+          background: #ffffff !important;
+        }
         .dashboard-panel { height: 100%; border: 1px solid #e1e7f0; border-radius: 16px; background: var(--secondary-background-color); }
-        .dashboard-date-summary { display:flex; align-items:center; justify-content:space-between; gap:.75rem; height:clamp(36px, 5.5dvh, 52px); box-sizing:border-box; padding:.4rem .9rem; border:1px solid #e2e8f2; border-radius:12px; margin:.25rem 0 .4rem; }
+        .dashboard-date-summary { display:flex; align-items:center; justify-content:space-between; gap:.75rem; min-height:clamp(36px, 5.5dvh, 52px); box-sizing:border-box; padding:.45rem 0; border-top:1px solid #e6ebf3; border-bottom:1px solid #e6ebf3; margin:.45rem 0 .4rem; }
         .dashboard-date-title { font-size:.98rem; font-weight:800; }
         .dashboard-badges { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.35rem; }
-        .dashboard-badge { padding:.22rem .55rem; border-radius:999px; background:#edf3ff; color:#315fca; font-size:.9rem; font-weight:700; white-space:nowrap; }
+        .dashboard-badge { padding:.22rem .55rem; border-radius:999px; background:#edf3ff; color:#315fca; font-size:.76rem; font-weight:700; white-space:nowrap; }
+        .dashboard-schedule-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; margin:.7rem 0 .35rem; color:#7c8aa1; font-size:.72rem; font-weight:700; }
+        .dashboard-schedule-heading-title { color:#8794a9; }
+        .dashboard-schedule-heading-legend { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.55rem; color:#9aa6b8; font-size:.68rem; font-weight:600; }
+        .dashboard-schedule-heading-legend .is-fixed { color:#4f74de; }
+        .dashboard-schedule-heading-legend .needs-confirmation { color:#d5a13b; }
+        .dashboard-schedule-note { margin:.45rem 0 .8rem; color:#b3bdcc; font-size:.68rem; text-align:center; }
         /* 일정 한 줄 전체를 하나의 카드로 감싼다. 정보·삭제 버튼도 카드 안쪽에
            두고, 오른쪽 끝과 버튼 사이에는 20px의 여백을 남긴다. */
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"] {
-          padding: 0 10px 0 0 !important;
+          padding: 0 .45rem 0 0 !important;
           margin: .15rem 0 !important;
           border: 1px solid #dfe6f2;
           border-radius: 12px;
-          background: var(--secondary-background-color);
+          background: #ffffff;
           overflow: hidden;
         }
-        /* 일정 내용은 시간 20%와 장소명 80%로 한 줄을 나눈다. 장소의 평점·체류
-           정보는 우측 정보 버튼에서 확인하므로 이 카드에서는 중복해 표시하지 않는다. */
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"]:has(.compact-item-state-fixed) {
+          border-color:#77a0ff;
+          box-shadow:0 0 0 1px rgba(80, 132, 240, .08);
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"]:has(.compact-item-state-warning) {
+          border-color:#f1d7a0;
+          background:#fffdfa;
+        }
+        /* 일정 내용은 시간·종류 아이콘·장소 정보의 세 영역으로 나눈다. */
         .compact-item {
           display:grid;
-          grid-template-columns:20% minmax(0, 1fr);
-          height:80px;
-          min-height:80px;
+          grid-template-columns:68px 38px minmax(0, 1fr);
+          align-items:center;
+          min-height:68px;
           border:0;
           background:transparent;
         }
         .compact-item-time {
           display:flex;
+          flex-direction:column;
           align-items:center;
           justify-content:center;
-          height:100%;
+          align-self:center;
+          height:68px;
           box-sizing:border-box;
-          padding:.0rem;
-          background:#e5f2ff;
-          color:#3169e8;
-          font-size:1.0rem;
-          font-weight:700;
+          gap:.18rem;
+          padding:0 .35rem;
+          margin:0;
+          color:#26354d;
           text-align:center;
-          line-height:1;
+          line-height:1.1;
+          transform:translateY(-7px);
         }
-        .compact-item-title {
+        .compact-item-time-main {
+          font-size:1.08rem;
+          font-weight:700;
+        }
+        .compact-item-time-main.is-undefined {
+          font-size:.86rem;
+          font-weight:600;
+        }
+        .compact-item-duration {
+          color:#9aa6b8;
+          font-size:.78rem;
+          font-weight:500;
+        }
+        .compact-item-icon {
+          position:relative;
           display:flex;
           align-items:center;
+          justify-content:center;
+          place-self:center;
+          height:48px;
+          margin:0;
+        }
+        .compact-item-icon::before {
+          content:"";
+          position:absolute;
+          top:8px;
+          bottom:8px;
+          left:0;
+          width:1px;
+          background:#e3e9f2;
+        }
+        .compact-item-icon-badge {
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          line-height:1;
+          width:24px;
+          height:24px;
+          border-radius:8px;
+          background:#eef7f4;
+          color:#4a9b82;
+          font-size:.82rem;
+          font-weight:800;
+        }
+        .compact-item-icon-badge.is-food {
+          background:#fff2e5;
+          color:#d68a3e;
+        }
+        .compact-item-icon-badge.is-transport {
+          background:#edf3ff;
+          color:#4775dc;
+        }
+        .compact-item-icon-badge.is-warning {
+          background:#fff3dc;
+          color:#d99b2d;
+        }
+        .compact-item-info {
+          display:flex;
           min-width:0;
-          height:100%;
-          box-sizing:border-box;
-          padding:.0rem .8rem;
+          flex-direction:column;
+          justify-content:center;
+          gap:.18rem;
+          padding:0 .55rem 0 .1rem;
+          transform:translateY(-7px);
+        }
+        .compact-item-title {
+          min-width:0;
           overflow:hidden;
+          color:#2b3950;
+          font-size:.86rem;
+          font-weight:800;
+          line-height:1.15;
           text-overflow:ellipsis;
           white-space:nowrap;
-          font-size:1.0rem;
-          font-weight:700;
-          line-height:1;
+        }
+        .compact-item-meta {
+          overflow:hidden;
+          color:#8d99aa;
+          font-size:.65rem;
+          font-weight:600;
+          line-height:1.15;
+          text-overflow:ellipsis;
+          white-space:nowrap;
+        }
+        .compact-item-meta .rating {
+          margin-left:.35rem;
+          color:#c89526;
+        }
+        .compact-item-state-fixed {
+          border:0;
+        }
+        .compact-item-state-fixed .compact-item-time-main {
+          color:#3169e8;
+        }
+        .compact-item-state-warning {
+          border:0;
+          background:transparent !important;
+        }
+        .compact-item-state-warning .compact-item-icon-badge {
+          background:#fff3dc;
+          color:#d99b2d;
         }
         /* 일정 카드 오른쪽 기능 버튼은 칼럼 비율과 관계없이 동일한 아이콘 크기를 쓴다. */
         .st-key-trip_dashboard_shell [class*="st-key-compact_move_"] button,
@@ -641,6 +836,22 @@ st.markdown(
           height: 30px !important;
           min-height: 30px !important;
           padding: 0 !important;
+        }
+        /* 일정 카드의 조작 아이콘은 카드에 마우스를 올렸을 때만 드러낸다. */
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"] [class*="st-key-compact_move_"],
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"] [class*="st-key-compact_time_"],
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"] [class*="st-key-compact_place_"],
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"] [class*="st-key-compact_delete_"] {
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity .15s ease;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"]:hover [class*="st-key-compact_move_"],
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"]:hover [class*="st-key-compact_time_"],
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"]:hover [class*="st-key-compact_place_"],
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"]:hover [class*="st-key-compact_delete_"] {
+          opacity: 1;
+          pointer-events: auto;
         }
         /* 카드 사이 이동 안내는 독립된 높이 안에서 세로 중앙에 정렬한다. 양쪽
            카드의 동일한 margin까지 포함하면, 안내 문구가 두 카드 간격 정중앙에 놓인다. */
@@ -1877,7 +2088,7 @@ def render_sidebar(trips: list[dict]) -> None:
                 )
                 st.markdown("<div style='height:.85rem'></div>", unsafe_allow_html=True)
             if not is_admin_view:
-                if st.button("＋ 새 여행 만들기", use_container_width=True, type="primary"):
+                if st.button("＋ 새 여행 만들기", use_container_width=True, type="primary", key="sidebar_create_trip"):
                     open_create_trip_form()
             # st.markdown("<div class='sidebar-section-label'>나의 여행</div>", unsafe_allow_html=True)
             # CSS는 Streamlit의 초기 높이와 관계없이 이 영역만 스크롤되게 하고,
@@ -1915,14 +2126,14 @@ def render_sidebar(trips: list[dict]) -> None:
 
             with st.container(key="sidebar-trip-list", height=390, border=False):
                 if pinned_trips:
-                    st.caption("고정된 여행")
+                    st.markdown('<div class="sidebar-trip-section-label">고정된 여행</div>', unsafe_allow_html=True)
                     for trip in pinned_trips:
                         render_sidebar_trip(trip)
 
                 if previous_trips:
                     # if pinned_trips:
                     #     st.divider()
-                    st.caption("이전 여행")
+                    st.markdown('<div class="sidebar-trip-section-label">이전 여행</div>', unsafe_allow_html=True)
                     for trip in previous_trips:
                         render_sidebar_trip(trip)
 
@@ -1930,7 +2141,7 @@ def render_sidebar(trips: list[dict]) -> None:
                     st.caption("아직 만든 여행이 없어요.\n위 버튼으로 첫 여행을 시작하세요.")
 
             if st.session_state.get("is_dashboard_admin") and not is_admin_view:
-                if st.button("운영 대시보드", use_container_width=True):
+                if st.button("운영 대시보드", use_container_width=True, key="sidebar_admin_dashboard"):
                     st.session_state.current_view = "admin_dashboard"
                     st.session_state.show_create_trip = False
                     request_main_scroll_to_top()
@@ -1944,11 +2155,17 @@ def render_sidebar(trips: list[dict]) -> None:
                 profile_email_css = json.dumps(
                     email or "", ensure_ascii=False
                 ).replace("</", "<\\/")
+                profile_avatar_bg = (
+                    "#6d3fd1"
+                    if st.session_state.get("is_dashboard_admin")
+                    else "#2563eb"
+                )
                 st.markdown(
                     "<style>"
                     "[data-testid=\"stSidebar\"] .st-key-sidebar-profile {"
                     f"--sidebar-profile-initial: {profile_initial_css};"
                     f"--sidebar-profile-email: {profile_email_css};"
+                    f"--sidebar-profile-avatar-bg: {profile_avatar_bg};"
                     "}</style>",
                     unsafe_allow_html=True,
                 )
@@ -1961,7 +2178,7 @@ def render_sidebar(trips: list[dict]) -> None:
                 ):
                     st.caption("내 정보")
                     avatar_column, profile_column = st.columns(
-                        [0.5, 2], gap="medium"
+                        [0.5, 2], gap="small"
                     )
                     with avatar_column:
                         st.markdown(
@@ -2735,45 +2952,57 @@ def render_trip_preferences_editor(trip: dict) -> None:
 
 
 def _dashboard_selected_day(trip: dict, days: list[dict]) -> dict:
-    """여행별 DAY 선택값을 확인하고 4개짜리 날짜 탐색 범위 안에 유지한다."""
+    """여행별 DAY 선택값을 확인하고 5개짜리 날짜 탐색 범위 안에 유지한다."""
 
     trip_id = str(trip["id"])
     selected_by_trip = st.session_state.dashboard_selected_days
     selected_index = min(max(int(selected_by_trip.get(trip_id, 0)), 0), len(days) - 1)
     window_by_trip = st.session_state.dashboard_day_windows
-    window_start = min(max(int(window_by_trip.get(trip_id, 0)), 0), max(0, len(days) - 4))
+    window_start = min(max(int(window_by_trip.get(trip_id, 0)), 0), max(0, len(days) - 5))
 
-    # 여행 일수에 따라 버튼이 생겼다 사라지지 않도록 화살표 자리는 항상 유지한다.
-    # 이동할 날짜가 없는 경우에는 숨기는 대신 비활성화한다.
-    columns = st.columns([.45, 1, 1, 1, 1, .45])
-    with columns[0]:
-        if st.button("‹", key=f"dashboard_day_previous_{trip_id}", disabled=window_start == 0,
-                     use_container_width=True):
-            window_by_trip[trip_id] = window_start - 1
-            st.rerun()
-    day_columns = columns[1:5]
-
-    visible = days[window_start : window_start + 4]
-    weekdays = "월화수목금토일"
-    for column, day in zip(day_columns, visible):
-        index = days.index(day)
-        try:
-            value = date.fromisoformat(str(day["travel_date"]))
-            label = f"{day['day_number']}일 {value.month}.{value.day}({weekdays[value.weekday()]})"
-        except (KeyError, TypeError, ValueError):
-            label = f"DAY {day.get('day_number', index + 1)}"
-        with column:
-            if st.button(label, key=f"dashboard_day_{trip_id}_{day['id']}",
-                         type="primary" if index == selected_index else "secondary",
+    # 날짜 탐색 영역은 전체를 3:1로 나누고, 기존 날짜 칼럼은 왼쪽 3에 둔다.
+    navigation_column, action_column = st.columns([3, 1], gap="small")
+    with navigation_column:
+        # 여행 일수에 따라 버튼이 생겼다 사라지지 않도록 화살표 자리는 항상 유지한다.
+        # 이동할 날짜가 없는 경우에는 숨기는 대신 비활성화한다.
+        columns = st.columns([.45, 1, 1, 1, 1, 1, .45])
+        with columns[0]:
+            if st.button("‹", key=f"dashboard_day_previous_{trip_id}", disabled=window_start == 0,
                          use_container_width=True):
-                selected_by_trip[trip_id] = index
+                window_by_trip[trip_id] = window_start - 1
+                st.rerun()
+        day_columns = columns[1:6]
+
+        visible = days[window_start : window_start + 5]
+        weekdays = "월화수목금토일"
+        for column, day in zip(day_columns, visible):
+            index = days.index(day)
+            try:
+                value = date.fromisoformat(str(day["travel_date"]))
+                label = f"{day['day_number']}일 {value.month}.{value.day}({weekdays[value.weekday()]})"
+            except (KeyError, TypeError, ValueError):
+                label = f"DAY {day.get('day_number', index + 1)}"
+            with column:
+                if st.button(label, key=f"dashboard_day_{trip_id}_{day['id']}",
+                             type="primary" if index == selected_index else "secondary",
+                             use_container_width=True):
+                    selected_by_trip[trip_id] = index
+                    st.rerun()
+
+        with columns[5]:
+            if st.button("›", key=f"dashboard_day_next_{trip_id}",
+                         disabled=window_start + 5 >= len(days), use_container_width=True):
+                window_by_trip[trip_id] = window_start + 1
                 st.rerun()
 
-    with columns[5]:
-        if st.button("›", key=f"dashboard_day_next_{trip_id}",
-                     disabled=window_start + 4 >= len(days), use_container_width=True):
-            window_by_trip[trip_id] = window_start + 1
-            st.rerun()
+    with action_column:
+        action_one, action_two = st.columns(2, gap="small")
+        with action_one:
+            st.button(" ", key=f"dashboard_day_action_placeholder_1_{trip_id}",
+                      use_container_width=True, disabled=True)
+        with action_two:
+            st.button(" ", key=f"dashboard_day_action_placeholder_2_{trip_id}",
+                      use_container_width=True, disabled=True)
     return days[selected_index]
 
 
@@ -2854,8 +3083,18 @@ def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
     """선택 DAY의 일정만 고정 높이 스크롤 영역에 그린다."""
 
     items = day.get("items") or []
+    st.markdown(
+        '<div class="dashboard-schedule-heading">'
+        f'<span class="dashboard-schedule-heading-title">☷   {escape(str(day.get("day_number") or ""))}일차  일정 {len(items)}곳</span>'
+        '<span class="dashboard-schedule-heading-legend">'
+        '<span class="is-fixed">♙ 확정</span>'
+        '<span class="needs-confirmation">⚠ 확인 필요</span>'
+        '<span>카드에 마우스를 올리면 조작 아이콘</span>'
+        '</span></div>',
+        unsafe_allow_html=True,
+    )
     # CSS가 로드되기 전에도 너무 작게 보이지 않도록 기본 높이도 함께 맞춘다.
-    with st.container(height=300, key=f"dashboard_schedule_{day['id']}", border=False):
+    with st.container(height=330, key=f"dashboard_schedule_{day['id']}", border=False):
         if not items:
             st.info("아직 일정이 없습니다.")
             return
@@ -2872,12 +3111,63 @@ def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
                     unsafe_allow_html=True,
                 )
             place = item.get("place") if isinstance(item.get("place"), dict) else {}
-            time_text = (
-                f"{_extended_day_time(start, day.get('travel_date'))}–"
-                f"{_extended_day_time(end, day.get('travel_date'))}"
-                if start and end
-                else "시간 미정"
+            item_type = str(item.get("item_type") or "place")
+            type_labels = {
+                "place": "관광",
+                "cafe": "카페",
+                "restaurant": "맛집",
+                "hotel": "숙소",
+                "flight": "항공",
+                "train": "기차",
+                "transit": "교통",
+                "activity": "활동",
+                "note": "안내",
+            }
+            type_icons = {
+                "place": "◉",
+                "cafe": "☕",
+                "restaurant": "★",
+                "hotel": "⌂",
+                "flight": "✈",
+                "train": "▦",
+                "transit": "↕",
+                "activity": "◇",
+                "note": "!",
+            }
+            type_label = type_labels.get(item_type, item_type)
+            icon = type_icons.get(item_type, "◉")
+            icon_class = (
+                "is-food" if item_type in {"cafe", "restaurant"}
+                else "is-transport" if item_type in {"flight", "train", "transit"}
+                else ""
             )
+            notes = str(item.get("notes") or "")
+            needs_confirmation = item_type == "hotel" and not place or any(
+                word in notes for word in ("예약", "확인 필요", "확인")
+            )
+            state_class = (
+                "compact-item-state-warning" if needs_confirmation
+                else "compact-item-state-fixed" if item.get("is_fixed")
+                else ""
+            )
+            start_text = (
+                _extended_day_time(start, day.get("travel_date")) if start else "시간 미정"
+            )
+            start_text_class = (
+                "compact-item-time-main"
+                if start
+                else "compact-item-time-main is-undefined"
+            )
+            if start and end:
+                duration_minutes = max(0, round((end - start).total_seconds() / 60))
+            else:
+                duration_minutes = max(0, int(item.get("estimated_stay_minutes") or 0))
+            rating_html = ""
+            if place.get("google_rating") is not None:
+                try:
+                    rating_html = f'<span class="rating">★ {float(place["google_rating"]):.1f}</span>'
+                except (TypeError, ValueError):
+                    rating_html = ""
             place_name = str(place.get("display_name") or item.get("title") or "일정")
             # 일정 내용과 기능 버튼을 한 카드 안의 두 영역으로 배치한다. 버튼 수가
             # 늘어나도 actions 영역 안에서만 확장되게 해 일정 내용 폭을 안정적으로 둔다.
@@ -2889,8 +3179,16 @@ def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
                 )
                 with main:
                     st.markdown(
-                        f'<div class="compact-item"><div class="compact-item-time">{escape(time_text)}</div>'
-                        f'<div class="compact-item-title">{escape(place_name)}</div></div>',
+                        f'<div class="compact-item {state_class}">'
+                        f'<div class="compact-item-time">'
+                        f'<span class="{start_text_class}">{escape(start_text)}</span>'
+                        f'<span class="compact-item-duration">{duration_minutes}분</span>'
+                        '</div>'
+                        f'<div class="compact-item-icon"><span class="compact-item-icon-badge {icon_class}">{escape(icon)}</span></div>'
+                        f'<div class="compact-item-info">'
+                        f'<div class="compact-item-title">{escape(place_name)}</div>'
+                        f'<div class="compact-item-meta">{escape(type_label)}{rating_html}</div>'
+                        '</div></div>',
                         unsafe_allow_html=True,
                     )
                 with actions:
@@ -2992,6 +3290,11 @@ def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
                                 st.error(str(error))
                             else:
                                 st.rerun()
+
+    st.markdown(
+        '<div class="dashboard-schedule-note">일정이 늘어나면 이 목록만 스크롤됩니다 · 탭·히스토리·지도·요약은 고정</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def _recommendation_query_from_message(message: str) -> str:
@@ -3912,7 +4215,7 @@ def render_dashboard(trip_id: str) -> None:
         return
 
     with st.container(key="trip_dashboard_shell", border=False):
-        left, right = st.columns([1.4, 1], gap="large", vertical_alignment="top")
+        left, right = st.columns([1.2, 1], gap="small", vertical_alignment="top")
         with left:
             selected_day = _dashboard_selected_day(trip, days)
             # [변경 사유] 시안 SCR-005 의 상단 [일정표 다운로드] 자리다. DAY 탭
@@ -3958,7 +4261,6 @@ def render_dashboard(trip_id: str) -> None:
                 '</div></div>',
                 unsafe_allow_html=True,
             )
-            st.markdown('<div class="dashboard-section-label">오늘의 일정</div>', unsafe_allow_html=True)
             render_compact_schedule(trip, selected_day, route_plan)
             st.markdown('<div class="dashboard-section-label">동선 지도</div>', unsafe_allow_html=True)
             if route_plan.get("markers"):
