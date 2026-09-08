@@ -609,24 +609,19 @@ st.markdown(
         .st-key-trip_dashboard_shell [data-testid="stColumn"] {
           overflow: visible !important;
         }
+        /* 좌우 대시보드 컬럼은 배경이 끊기지 않도록 자체 패딩을 갖지 않는다.
+           필요한 좌우 간격은 안쪽 컨트롤에 margin으로만 준다. */
         .st-key-trip_dashboard_shell
-        [data-testid="stHorizontalBlock"]
-        > [data-testid="stColumn"]:first-child {
-          position: relative;
-          padding: 0 .1rem !important;
+        > [data-testid="stLayoutWrapper"]
+        > [data-testid="stHorizontalBlock"]
+        > [data-testid="stColumn"] {
+          padding: 0 !important;
         }
         .st-key-trip_dashboard_shell
-        [data-testid="stHorizontalBlock"]
-        > [data-testid="stColumn"]:first-child::after {
-          content: "";
-          position: absolute;
-          top: -100px;
-          right: 0;
-          bottom: 0;
-          width: 1px;
-          background: #E4E9F2;
-          z-index: 10;
-          pointer-events: none;
+        > [data-testid="stLayoutWrapper"]
+        > [data-testid="stHorizontalBlock"]
+        > [data-testid="stColumn"]:first-child {
+          position: relative;
         }
         /* Windows 화면 배율이나 브라우저 줌에 따라 CSS 픽셀 높이가 달라져도
            실제 화면에서 일정·지도·채팅이 비슷한 비율을 차지하게 한다. */
@@ -655,6 +650,12 @@ st.markdown(
           max-height: 900px !important;
           overflow-y: auto !important;
         }
+        /* 3:1 바깥 컬럼은 유지하고, 날짜 네비게이션 묶음만 조금 짧게 만든다. */
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_navigation_"] {
+          width: 90% !important;
+          max-width: 90% !important;
+          margin-right: auto !important;
+        }
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_"] button,
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_previous_"] button,
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_next_"] button {
@@ -663,12 +664,123 @@ st.markdown(
           padding-top: .2rem !important;
           padding-bottom: .2rem !important;
         }
+        /* 상단 날짜 탭은 피그마처럼 DAY와 날짜를 두 줄로 보여 준다. */
+        .st-key-trip_dashboard_shell
+        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          height: 48px !important;
+          min-height: 48px !important;
+          width: 70px !important;
+          max-width: 70px !important;
+          padding: .3rem .35rem !important;
+          border-radius: 10px !important;
+          border-color: #e9edf4 !important;
+          background: #f1f3f7 !important;
+          color: #7c8799 !important;
+          box-shadow: none !important;
+        }
+        .st-key-trip_dashboard_shell
+        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button[data-testid="stBaseButton-primary"] {
+          border-color: #2f6fe9 !important;
+          background: #2f6fe9 !important;
+          color: #fff !important;
+        }
+        .st-key-trip_dashboard_shell
+        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button p {
+          display: block !important;
+          margin: 0 !important;
+          color: inherit !important;
+          font-size: .73rem !important;
+          font-weight: 700 !important;
+          line-height: 1.15 !important;
+          white-space: pre-line !important;
+          text-align: center !important;
+        }
+        .st-key-trip_dashboard_shell
+        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button:hover {
+          border-color: #9eb8ef !important;
+          background: #e7efff !important;
+          color: #3d66b4 !important;
+        }
+        .st-key-trip_dashboard_shell
+        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button[data-testid="stBaseButton-primary"]:hover {
+          border-color: #255fcd !important;
+          background: #255fcd !important;
+          color: #fff !important;
+        }
+        /* 좌우 화살표는 날짜 탭보다 작고 흰색 테두리 버튼으로 둔다. */
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_previous_"] button,
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_next_"] button {
+          display: inline-flex !important;
+          width: 32px !important;
+          height: 32px !important;
+          min-height: 32px !important;
+          border-radius: 9px !important;
+          border-color: #e1e7f0 !important;
+          background: #fff !important;
+          color: #71809a !important;
+          box-shadow: none !important;
+          font-size: 1rem !important;
+        }
+        /* 컬럼은 flush로 두고, 양 끝 버튼에만 바깥 여백을 준다. */
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_previous_"] button {
+          width: 32px !important;
+          min-width: 32px !important;
+          max-width: 32px !important;
+          margin-left: .5rem !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_next_"] button {
+          width: 32px !important;
+          min-width: 32px !important;
+          max-width: 32px !important;
+          margin-right: .5rem !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_previous_"] button:disabled {
+          opacity: .58 !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_previous_"] button p,
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_next_"] button p {
+          display: inline !important;
+          margin: 0 !important;
+          color: inherit !important;
+          font-size: 1rem !important;
+          line-height: 1 !important;
+        }
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_action_placeholder_"] button {
           height: clamp(32px, 4.5dvh, 42px) !important;
           min-height: 0 !important;
           padding: 0 !important;
           border-color: #e2e8f2 !important;
           background: #ffffff !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_action_placeholder_1_"] button {
+          width: calc(100% - .35rem) !important;
+          margin-left: .35rem !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-open_export_"] button {
+          height: clamp(32px, 4.5dvh, 42px) !important;
+          min-height: 0 !important;
+          padding: 0 .35rem !important;
+          border-color: #d9e4fa !important;
+          background: #fff !important;
+          color: #386bd2 !important;
+          font-size: .72rem !important;
+          font-weight: 700 !important;
+          white-space: nowrap !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-open_export_"] button {
+          width: calc(100% - .35rem) !important;
+          margin-right: .35rem !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-open_export_"] button p {
+          margin: 0 !important;
+          color: inherit !important;
+          font-size: .68rem !important;
+          font-weight: 700 !important;
+          line-height: 1.1 !important;
+          white-space: nowrap !important;
         }
         .dashboard-panel { height: 100%; border: 1px solid #e1e7f0; border-radius: 16px; background: var(--secondary-background-color); }
         .dashboard-date-summary { display:flex; align-items:center; justify-content:space-between; gap:.75rem; min-height:clamp(36px, 5.5dvh, 52px); box-sizing:border-box; padding:.45rem 0; border-top:1px solid #e6ebf3; border-bottom:1px solid #e6ebf3; margin:.45rem 0 .4rem; }
@@ -687,6 +799,7 @@ st.markdown(
           padding: 0 .45rem 0 0 !important;
           margin: .15rem 0 !important;
           border: 1px solid #dfe6f2;
+          border-left: 0 !important;
           border-radius: 12px;
           background: #ffffff;
           overflow: hidden;
@@ -702,11 +815,24 @@ st.markdown(
         /* 일정 내용은 시간·종류 아이콘·장소 정보의 세 영역으로 나눈다. */
         .compact-item {
           display:grid;
-          grid-template-columns:68px 38px minmax(0, 1fr);
+          grid-template-columns:68px 1px 38px minmax(0, 1fr);
           align-items:center;
+          height:68px;
           min-height:68px;
           border:0;
           background:transparent;
+        }
+        .compact-item::before {
+          content:none !important;
+          display:none !important;
+        }
+        .compact-item-divider {
+          grid-column:2;
+          align-self:center;
+          justify-self:center;
+          width:1px;
+          height:70% !important;
+          background:#e3e9f2;
         }
         .compact-item-time {
           display:flex;
@@ -738,22 +864,19 @@ st.markdown(
           font-weight:500;
         }
         .compact-item-icon {
-          position:relative;
+          grid-column:3;
           display:flex;
           align-items:center;
           justify-content:center;
-          place-self:center;
-          height:48px;
+          align-self:center;
+          justify-self:center;
+          height:68px;
           margin:0;
         }
+        /* 이전 아이콘 칸 기준 구분선이 남아 카드 전체 선과 겹치지 않게 한다. */
         .compact-item-icon::before {
-          content:"";
-          position:absolute;
-          top:8px;
-          bottom:8px;
-          left:0;
-          width:1px;
-          background:#e3e9f2;
+          content:none !important;
+          display:none !important;
         }
         .compact-item-icon-badge {
           display:flex;
@@ -767,6 +890,7 @@ st.markdown(
           color:#4a9b82;
           font-size:.82rem;
           font-weight:800;
+          transform:translateY(-2px);
         }
         .compact-item-icon-badge.is-food {
           background:#fff2e5;
@@ -781,6 +905,7 @@ st.markdown(
           color:#d99b2d;
         }
         .compact-item-info {
+          grid-column:4;
           display:flex;
           min-width:0;
           flex-direction:column;
@@ -2965,44 +3090,51 @@ def _dashboard_selected_day(trip: dict, days: list[dict]) -> dict:
     with navigation_column:
         # 여행 일수에 따라 버튼이 생겼다 사라지지 않도록 화살표 자리는 항상 유지한다.
         # 이동할 날짜가 없는 경우에는 숨기는 대신 비활성화한다.
-        columns = st.columns([.45, 1, 1, 1, 1, 1, .45])
-        with columns[0]:
-            if st.button("‹", key=f"dashboard_day_previous_{trip_id}", disabled=window_start == 0,
-                         use_container_width=True):
-                window_by_trip[trip_id] = window_start - 1
-                st.rerun()
-        day_columns = columns[1:6]
-
-        visible = days[window_start : window_start + 5]
-        weekdays = "월화수목금토일"
-        for column, day in zip(day_columns, visible):
-            index = days.index(day)
-            try:
-                value = date.fromisoformat(str(day["travel_date"]))
-                label = f"{day['day_number']}일 {value.month}.{value.day}({weekdays[value.weekday()]})"
-            except (KeyError, TypeError, ValueError):
-                label = f"DAY {day.get('day_number', index + 1)}"
-            with column:
-                if st.button(label, key=f"dashboard_day_{trip_id}_{day['id']}",
-                             type="primary" if index == selected_index else "secondary",
+        with st.container(key=f"dashboard_day_navigation_{trip_id}", border=False):
+            columns = st.columns([.45, 1, 1, 1, 1, 1, .45], gap="small")
+            with columns[0]:
+                if st.button("‹", key=f"dashboard_day_previous_{trip_id}", disabled=window_start == 0,
                              use_container_width=True):
-                    selected_by_trip[trip_id] = index
+                    window_by_trip[trip_id] = window_start - 1
+                    st.rerun()
+            day_columns = columns[1:6]
+
+            visible = days[window_start : window_start + 5]
+            weekdays = "월화수목금토일"
+            for column, day in zip(day_columns, visible):
+                index = days.index(day)
+                try:
+                    value = date.fromisoformat(str(day["travel_date"]))
+                    label = f"{day['day_number']}일차  \n{value.month}.{value.day} {weekdays[value.weekday()]}"
+                except (KeyError, TypeError, ValueError):
+                    label = f"DAY {day.get('day_number', index + 1)}"
+                with column:
+                    if st.button(label, key=f"dashboard_day_{trip_id}_{day['id']}",
+                                 type="primary" if index == selected_index else "secondary",
+                                 use_container_width=True):
+                        selected_by_trip[trip_id] = index
+                        st.rerun()
+
+            with columns[6]:
+                if st.button("›", key=f"dashboard_day_next_{trip_id}",
+                             disabled=window_start + 5 >= len(days), use_container_width=True):
+                    window_by_trip[trip_id] = window_start + 1
                     st.rerun()
 
-        with columns[5]:
-            if st.button("›", key=f"dashboard_day_next_{trip_id}",
-                         disabled=window_start + 5 >= len(days), use_container_width=True):
-                window_by_trip[trip_id] = window_start + 1
-                st.rerun()
-
     with action_column:
-        action_one, action_two = st.columns(2, gap="small")
+        action_one, action_two = st.columns([.45, 1.55], gap="small")
         with action_one:
             st.button(" ", key=f"dashboard_day_action_placeholder_1_{trip_id}",
                       use_container_width=True, disabled=True)
         with action_two:
-            st.button(" ", key=f"dashboard_day_action_placeholder_2_{trip_id}",
-                      use_container_width=True, disabled=True)
+            if st.button(
+                "일정표 다운로드",
+                key=f"open_export_{trip['id']}",
+                use_container_width=True,
+            ):
+                st.session_state.export_dialog_trip_id = str(trip["id"])
+                st.session_state.export_requested_style = None
+                st.rerun()
     return days[selected_index]
 
 
@@ -3184,6 +3316,7 @@ def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
                         f'<span class="{start_text_class}">{escape(start_text)}</span>'
                         f'<span class="compact-item-duration">{duration_minutes}분</span>'
                         '</div>'
+                        '<div class="compact-item-divider" aria-hidden="true"></div>'
                         f'<div class="compact-item-icon"><span class="compact-item-icon-badge {icon_class}">{escape(icon)}</span></div>'
                         f'<div class="compact-item-info">'
                         f'<div class="compact-item-title">{escape(place_name)}</div>'
@@ -4218,19 +4351,6 @@ def render_dashboard(trip_id: str) -> None:
         left, right = st.columns([1.2, 1], gap="small", vertical_alignment="top")
         with left:
             selected_day = _dashboard_selected_day(trip, days)
-            # [변경 사유] 시안 SCR-005 의 상단 [일정표 다운로드] 자리다. DAY 탭
-            # 줄 아래, "오늘의 일정" 위에 둔다 - 일정을 보고 나서 누르는 동작이라
-            # 일정 위에 있는 편이 자연스럽다.
-            _, export_column = st.columns([2.2, 1])
-            if export_column.button(
-                "일정표 다운로드",
-                key=f"open_export_{trip['id']}",
-                use_container_width=True,
-            ):
-                st.session_state.export_dialog_trip_id = str(trip["id"])
-                # 지난번에 고른 것이 남아 있으면 모달이 열리자마자 다시 그린다.
-                st.session_state.export_requested_style = None
-                st.rerun()
             try:
                 route_plan = api(
                     "GET",
