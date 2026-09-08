@@ -230,6 +230,9 @@ st.markdown(
         [data-testid="stSidebar"] [data-testid="stLayoutWrapper"]:has(> .st-key-sidebar-profile) {
             margin-top: auto !important;
         }
+        [data-testid="stSidebar"] [data-testid="stLayoutWrapper"]:has(> .st-key-admin-sidebar-profile) {
+            margin-top: auto !important;
+        }
         /* Streamlit의 원래 390px 높이를 유지하지 않고, 하나의 스크롤 가능한
            여행 목록 영역이 고정 프로필 위의 모든 공간을 쓰게 한다. */
         [data-testid="stSidebar"] [data-testid="stLayoutWrapper"]:has(> .st-key-sidebar-trip-list) {
@@ -241,9 +244,23 @@ st.markdown(
             display: flex;
             flex: 1 1 auto;
             flex-direction: column;
-            min-height: 0;
+            height: 100% !important;
+            min-height: calc(100dvh - 2rem) !important;
         }
         [data-testid="stSidebar"] .st-key-sidebar-profile { margin-top: auto !important; }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile { margin-top: auto !important; }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer { margin-top: auto !important; }
+        [data-testid="stSidebar"] .st-key-admin-console-sidebar-footer { margin-top: auto !important; }
+        /* 운영 콘솔의 하단 전환 버튼과 프로필은 피그마처럼 항상 사이드바
+           아래에 고정한다. 본문이 길어져도 이 영역이 위로 밀리지 않는다. */
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer,
+        [data-testid="stSidebar"] .st-key-admin-console-sidebar-footer {
+            position: fixed !important;
+            left: .75rem;
+            bottom: .7rem;
+            width: calc(280px - 1.5rem);
+            z-index: 10;
+        }
         [data-testid="stSidebar"] .st-key-sidebar-trip-list {
             flex: 1 1 auto !important;
             height: 100% !important;
@@ -316,6 +333,27 @@ st.markdown(
           text-align: center !important;
         }
         .empty-card { padding: 2.2rem; text-align: center; border: 1px dashed #c8d4eb; border-radius: 18px; background: white; }
+        .admin-access-denied { padding: 3rem 2rem; border: 1px solid #eadff8; border-radius: 20px; background: linear-gradient(135deg, #fbf8ff, #ffffff); text-align: center; }
+        .admin-access-denied h1 { margin-bottom: .6rem; color: #432a77; }
+        .admin-access-denied p { color: #726987; }
+        .admin-kpi-card { padding: .75rem .85rem; border: 1px solid #e7def5; border-radius: 12px; background: #fff; }
+        .admin-panel-title { margin: .25rem 0 .65rem; color: #3c2b58; font-size: 1rem; font-weight: 800; }
+        .admin-console-brand { margin: .7rem 0 1.05rem; color: #fff; font-size: 1.05rem; font-weight: 800; }
+        .admin-console-brand small { display: block; margin-top: .22rem; color: #b9aee1; font-size: .68rem; font-weight: 600; }
+        .admin-console-description { margin-top: 1rem; padding: .85rem .8rem; border-radius: .7rem; background: rgba(255,255,255,.08); color: #c5bde0; font-size: .72rem; line-height: 1.55; }
+        .admin-console-description strong { display: block; margin-bottom: .35rem; color: #f0ebff; font-size: .76rem; }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button { border-radius: .45rem !important; text-align: left !important; }
+        [data-testid="stMain"] [class*="st-key-admin-tab-"] button {
+            border-radius: 0 !important;
+            border-width: 0 0 2px 0 !important;
+            background: transparent !important;
+            color: #766e88 !important;
+            font-weight: 700 !important;
+        }
+        [data-testid="stMain"] [class*="st-key-admin-tab-"] button:hover {
+            border-bottom-color: #7a4bd8 !important;
+            color: #4a2b83 !important;
+        }
         .login-wrap { max-width: 470px; margin: 8vh auto; }
         .login-card { padding: 2.7rem 2.25rem; border-radius: 24px; background: white; border: 1px solid #e3e9f6; box-shadow: 0 18px 45px rgba(37, 64, 120, .08); }
         /* 여행이 선택된 화면은 1920×1080에서 페이지 자체가 아니라 일정 목록만
@@ -473,6 +511,8 @@ def initialize_session() -> None:
         "access_token": None,
         "user_email": None,
         "user_name": None,
+        "is_dashboard_admin": None,
+        "current_view": "trip",
         "selected_trip_id": None,
         "show_create_trip": False,
         "notice": None,
@@ -596,6 +636,8 @@ def sign_out(notice: str | None = None) -> None:
     st.session_state.access_token = None
     st.session_state.user_email = None
     st.session_state.user_name = None
+    st.session_state.is_dashboard_admin = None
+    st.session_state.current_view = "trip"
     st.session_state.selected_trip_id = None
     st.session_state.show_create_trip = False
     st.session_state.place_search_results = {}
@@ -670,7 +712,7 @@ def sidebar_profile() -> tuple[str, str]:
 
     email = st.session_state.user_email or ""
     cached_name = st.session_state.user_name
-    if cached_name:
+    if cached_name and st.session_state.get("is_dashboard_admin") is not None:
         return cached_name, email
 
     try:
@@ -685,6 +727,7 @@ def sidebar_profile() -> tuple[str, str]:
     profile = result.get("profile") or {}
     display_name = profile.get("username") or email.split("@", 1)[0] or "여행자"
     st.session_state.user_name = display_name
+    st.session_state.is_dashboard_admin = bool(result.get("is_dashboard_admin"))
     return display_name, email
 
 # def render_login() -> None:
@@ -1035,6 +1078,119 @@ def render_sidebar_trip(trip: dict) -> None:
         return
     st.rerun()
 
+def render_admin_sidebar_profile(display_name: str, email: str) -> None:
+    """Render the compact profile menu used in the admin dashboard view."""
+
+    initial = escape(display_name[:1].upper() or "?")
+    safe_name = escape(display_name)
+    safe_email = escape(email)
+    with st.container(key="admin-sidebar-profile", border=False):
+        with st.popover(
+            f"{display_name} · 내 프로필",
+            key="admin_sidebar_profile_popover",
+            use_container_width=True,
+        ):
+            st.caption("내 프로필")
+            avatar_column, profile_column, role_column = st.columns(
+                [0.55, 1.8, 1.15], gap="small"
+            )
+            with avatar_column:
+                st.markdown(
+                    f'<span class="sidebar-avatar">{initial}</span>',
+                    unsafe_allow_html=True,
+                )
+            with profile_column:
+                st.markdown(
+                    f'<div class="sidebar-profile-name">{safe_name}</div>'
+                    f'<div class="sidebar-profile-email">{safe_email}</div>',
+                    unsafe_allow_html=True,
+                )
+            with role_column:
+                st.caption("관리자")
+
+            st.button(
+                "⚙ 설정 (준비 중)",
+                key="admin_profile_settings_placeholder",
+                use_container_width=True,
+                disabled=True,
+            )
+
+
+def render_admin_console_navigation(current_view: str) -> None:
+    """피그마 운영 콘솔의 왼쪽 대시보드·사용자 관리 메뉴를 렌더링한다."""
+
+    console_views = {"admin_console", "admin_feedback", "admin_system"}
+
+    st.markdown(
+        '<div class="admin-console-brand">운영 콘솔<small>TripMate Admin</small></div>',
+        unsafe_allow_html=True,
+    )
+    if st.button(
+        "▦  대시보드",
+        use_container_width=True,
+        type="primary" if current_view == "admin_dashboard" else "secondary",
+        key="admin-nav-dashboard",
+    ) and current_view != "admin_dashboard":
+        st.session_state.current_view = "admin_dashboard"
+        request_main_scroll_to_top()
+        st.rerun()
+    if st.button(
+        "♧  사용자 관리",
+        use_container_width=True,
+        type="primary" if current_view in console_views else "secondary",
+        key="admin-nav-users",
+    ) and current_view != "admin_console":
+        st.session_state.current_view = "admin_console"
+        request_main_scroll_to_top()
+        st.rerun()
+    st.markdown(
+        '<div class="admin-console-description"><strong>절대 규칙</strong>'
+        '대시보드는 어떤 권한으로도 열람할 수 없습니다. 이 콘솔은 집계와 메타데이터만 다룹니다.</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def render_admin_console_tabs(current_view: str) -> None:
+    """피그마 ADM-002·003·004의 본문 상단 가로 탭을 렌더링한다."""
+
+    tab_specs = [
+        ("ADM-002 사용자 관리", "admin_console", "admin-tab-users"),
+        ("ADM-003 피드백·페이스", "admin_feedback", "admin-tab-feedback"),
+        ("ADM-004 시스템 상태", "admin_system", "admin-tab-system"),
+    ]
+    st.markdown(
+        '<div class="admin-console-breadcrumb">운영 콘솔&nbsp;&nbsp;›&nbsp;&nbsp;'
+        '사용자 관리 · 피드백·페이스 · 시스템 상태</div>',
+        unsafe_allow_html=True,
+    )
+    tab_columns = st.columns(3, gap="small")
+    for column, (label, target_view, key) in zip(tab_columns, tab_specs):
+        with column:
+            if st.button(
+                label,
+                use_container_width=True,
+                type="primary" if current_view == target_view else "secondary",
+                key=key,
+            ) and current_view != target_view:
+                st.session_state.current_view = target_view
+                request_main_scroll_to_top()
+                st.rerun()
+
+
+def render_admin_dashboard_filters() -> None:
+    """피그마처럼 대시보드 본문 상단에 조회 조건을 배치한다."""
+
+    start_column, end_column, refresh_column = st.columns([1, 1, .35], gap="small")
+    with start_column:
+        st.date_input("조회 시작일", value=date.today(), key="admin_dashboard_start_date")
+    with end_column:
+        st.date_input("조회 종료일", value=date.today(), key="admin_dashboard_end_date")
+    with refresh_column:
+        st.markdown("<div style='height:1.72rem'></div>", unsafe_allow_html=True)
+        if st.button("↻", use_container_width=True, key="admin_dashboard_refresh"):
+            st.rerun()
+
+
 def render_sidebar(trips: list[dict]) -> None:
     """여행 그룹·여행 총개수·하단 고정 프로필 팝오버를 그린다."""
 
@@ -1058,20 +1214,55 @@ def render_sidebar(trips: list[dict]) -> None:
         # 하나의 flex 열을 사용해 두 번째 사이드바 스크롤 영역을 만들지 않고도
         # 프로필이 ``margin-top: auto``로 최하단에 머물 수 있게 한다.
         with st.container(key="sidebar-layout", border=False):
-            # 고정된 여행과 이전 여행 모두 사용자가 저장한 여행 수에 포함된다.
-            st.markdown(
-                '<div class="sidebar-brand"><span class="sidebar-brand-mark">◉</span>TripMate</div>',
-                unsafe_allow_html=True,
-            )
-            st.markdown("<div style='height:.85rem'></div>", unsafe_allow_html=True)
-            if st.button("＋ 새 여행 만들기", use_container_width=True, type="primary"):
-                open_create_trip_form()
-                # 버튼 클릭 자체가 재실행을 일으킨다. 여기서 다시 중단하면 아직
-                # 그리지 않은 양식 위젯 상태가 정리될 수 있어 같은 실행에서 이어 그린다.
-
+            current_view = st.session_state.get("current_view")
+            admin_views = {"admin_dashboard", "admin_console", "admin_feedback", "admin_system"}
+            is_admin_dashboard_view = current_view == "admin_dashboard"
+            is_admin_console_view = current_view == "admin_console"
+            is_admin_view = current_view in admin_views
+            if not is_admin_view:
+                # 고정된 여행과 이전 여행 모두 사용자가 저장한 여행 수에 포함된다.
+                st.markdown(
+                    '<div class="sidebar-brand"><span class="sidebar-brand-mark">◉</span>TripMate</div>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown("<div style='height:.85rem'></div>", unsafe_allow_html=True)
+            if not is_admin_view:
+                if st.button("＋ 새 여행 만들기", use_container_width=True, type="primary"):
+                    open_create_trip_form()
             # st.markdown("<div class='sidebar-section-label'>나의 여행</div>", unsafe_allow_html=True)
             # CSS는 Streamlit의 초기 높이와 관계없이 이 영역만 스크롤되게 하고,
             # 하단 고정 프로필 바로 위까지 늘어나게 한다.
+            if is_admin_dashboard_view and st.session_state.get("is_dashboard_admin"):
+                render_admin_console_navigation("admin_dashboard")
+                with st.container(key="admin-sidebar-footer", border=False):
+                    if st.button("여행 화면", use_container_width=True, key="admin_dashboard_to_trip"):
+                        st.session_state.current_view = "trip"
+                        st.rerun()
+                    render_admin_sidebar_profile(display_name, email)
+                return
+
+            if is_admin_console_view and st.session_state.get("is_dashboard_admin"):
+                render_admin_console_navigation("admin_console")
+                with st.container(key="admin-console-sidebar-footer", border=False):
+                    if st.button("여행 화면", use_container_width=True, key="console_to_trip"):
+                        st.session_state.current_view = "trip"
+                        st.rerun()
+                    render_admin_sidebar_profile(display_name, email)
+                return
+
+            if is_admin_view and st.session_state.get("is_dashboard_admin"):
+                render_admin_console_navigation(current_view)
+                with st.container(key="admin-sidebar-footer", border=False):
+                    if st.button("여행 화면", use_container_width=True, key="admin_to_trip"):
+                        st.session_state.current_view = "trip"
+                        st.rerun()
+                    render_admin_sidebar_profile(display_name, email)
+                return
+
+            if is_admin_view:
+                render_admin_sidebar_profile(display_name, email)
+                return
+
             with st.container(key="sidebar-trip-list", height=390, border=False):
                 if pinned_trips:
                     st.caption("고정된 여행")
@@ -1087,6 +1278,13 @@ def render_sidebar(trips: list[dict]) -> None:
 
                 if not trips:
                     st.caption("아직 만든 여행이 없어요.\n위 버튼으로 첫 여행을 시작하세요.")
+
+            if st.session_state.get("is_dashboard_admin") and not is_admin_view:
+                if st.button("운영 대시보드", use_container_width=True):
+                    st.session_state.current_view = "admin_dashboard"
+                    st.session_state.show_create_trip = False
+                    request_main_scroll_to_top()
+                    st.rerun()
 
             with st.container(key="sidebar-profile", border=False):
                 # st.divider()
@@ -2816,6 +3014,639 @@ def render_dashboard(trip_id: str) -> None:
         with right:
             render_dashboard_chat(trip, days, selected_day)
 
+def _admin_dashboard_period_params(start_date: date, end_date: date) -> dict[str, str]:
+    """관리자 대시보드가 사용할 KST 기준 조회 기간을 만든다."""
+
+    start_at = datetime.combine(start_date, time.min, tzinfo=ZoneInfo("Asia/Seoul"))
+    end_at = datetime.combine(
+        end_date + timedelta(days=1),
+        time.min,
+        tzinfo=ZoneInfo("Asia/Seoul"),
+    )
+    return {"start_at": start_at.isoformat(), "end_at": end_at.isoformat()}
+
+
+def _admin_dashboard_metric_value(value: int | float | None, suffix: str = "") -> str:
+    return f"{value or 0}{suffix}"
+
+
+def _render_admin_dashboard_summary(summary: dict) -> None:
+    kpis = summary.get("kpis", {})
+    cards = st.columns(6)
+    card_values = [
+        ("사용자 가입 수", kpis.get("user_signup_count", 0), ""),
+        ("전체 요청 수", kpis.get("total_requests", 0), ""),
+        ("성공 수", kpis.get("success_count", 0), ""),
+        ("실패 수", kpis.get("failure_count", 0), ""),
+        ("에러율", kpis.get("error_rate_percent", 0), "%"),
+        ("평균 응답시간", kpis.get("average_latency_ms", 0), " ms"),
+    ]
+    for column, (label, value, suffix) in zip(cards, card_values):
+        with column:
+            st.metric(label, _admin_dashboard_metric_value(value, suffix))
+
+    st.subheader("시간별 요청량")
+    hourly = summary.get("hourly_requests", [])
+    if hourly:
+        st.line_chart(
+            {
+                "요청 수": [item.get("request_count", 0) for item in hourly],
+                "성공 수": [item.get("success_count", 0) for item in hourly],
+                "실패 수": [item.get("failure_count", 0) for item in hourly],
+            }
+        )
+        st.dataframe(
+            [
+                {
+                    "시간": item.get("hour"),
+                    "요청 수": item.get("request_count", 0),
+                    "성공 수": item.get("success_count", 0),
+                    "실패 수": item.get("failure_count", 0),
+                }
+                for item in hourly
+            ],
+            use_container_width=True,
+            hide_index=True,
+        )
+    else:
+        st.info("선택한 기간에 요청 로그가 없습니다.")
+
+    left, right = st.columns(2)
+    with left:
+        st.subheader("엔드포인트별 이용량")
+        st.dataframe(
+            [
+                {
+                    "엔드포인트": item.get("endpoint"),
+                    "요청 수": item.get("request_count", 0),
+                    "고유 사용자": item.get("unique_user_count", 0),
+                    "평균 응답시간(ms)": item.get("average_latency_ms", 0),
+                    "에러율(%)": item.get("error_rate_percent", 0),
+                }
+                for item in summary.get("endpoint_usage", [])
+            ],
+            use_container_width=True,
+            hide_index=True,
+        )
+    with right:
+        st.subheader("LLM 요청 요약")
+        llm_summary = summary.get("llm_summary", [])
+        if llm_summary:
+            st.dataframe(
+                [
+                    {
+                        "모델": item.get("model"),
+                        "요청 수": item.get("request_count", 0),
+                        "실패 수": item.get("failure_count", 0),
+                        "에러율(%)": item.get("error_rate_percent", 0),
+                        "평균 응답시간(ms)": item.get("average_latency_ms", 0),
+                    }
+                    for item in llm_summary
+                ],
+                use_container_width=True,
+                hide_index=True,
+            )
+        else:
+            st.info("선택한 기간에 LLM 요청 로그가 없습니다.")
+
+
+def _render_admin_dashboard_figma(summary: dict, error_items: list[dict]) -> None:
+    """피그마의 KPI·차트·오류 모니터링 구성을 Streamlit 기본 기능으로 표현한다."""
+
+    kpis = summary.get("kpis", {})
+    with st.container(border=True):
+        st.markdown('<div class="admin-panel-title">운영 현황</div>', unsafe_allow_html=True)
+        cards = st.columns(5)
+        card_values = [
+            ("신규 가입자", kpis.get("user_signup_count", 0), ""),
+            ("전체 요청", kpis.get("total_requests", 0), ""),
+            ("성공 · 실패", f"{kpis.get('success_count', 0)} · {kpis.get('failure_count', 0)}", ""),
+            ("에러율", kpis.get("error_rate_percent", 0), "%"),
+            ("평균 응답시간", kpis.get("average_latency_ms", 0), " ms"),
+        ]
+        for column, (label, value, suffix) in zip(cards, card_values):
+            with column:
+                st.metric(label, _admin_dashboard_metric_value(value, suffix))
+
+    hourly = summary.get("hourly_requests", [])
+    chart_column, status_column = st.columns([1.55, 1], gap="medium")
+    with chart_column:
+        with st.container(border=True):
+            st.markdown('<div class="admin-panel-title">시간별 요청량</div>', unsafe_allow_html=True)
+            if hourly:
+                st.bar_chart(
+                    {
+                        "성공": [item.get("success_count", 0) for item in hourly],
+                        "실패": [item.get("failure_count", 0) for item in hourly],
+                    },
+                    height=250,
+                )
+            else:
+                st.info("선택한 기간에 요청 로그가 없습니다.")
+    with status_column:
+        with st.container(border=True):
+            st.markdown('<div class="admin-panel-title">성공 · 실패 현황</div>', unsafe_allow_html=True)
+            success_count = int(kpis.get("success_count", 0) or 0)
+            failure_count = int(kpis.get("failure_count", 0) or 0)
+            total_count = success_count + failure_count
+            success_ratio = success_count / total_count if total_count else 0
+            st.metric("성공률", f"{success_ratio * 100:.1f}%")
+            st.progress(success_ratio, text=f"성공 {success_count}건 / 실패 {failure_count}건")
+            st.caption("요청 상태 코드 200~399를 성공으로 집계합니다.")
+
+    error_counts: dict[str, int] = {}
+    for item in error_items:
+        label = str(item.get("error_type") or item.get("endpoint") or "알 수 없는 오류")
+        error_counts[label] = error_counts.get(label, 0) + 1
+    top_errors = sorted(error_counts.items(), key=lambda pair: (-pair[1], pair[0]))[:3]
+    endpoint_column, error_column = st.columns([1.35, 1], gap="medium")
+    with endpoint_column:
+        with st.container(border=True):
+            st.markdown('<div class="admin-panel-title">엔드포인트별 이용량</div>', unsafe_allow_html=True)
+            endpoint_rows = [
+                {
+                    "엔드포인트": item.get("endpoint"),
+                    "요청": item.get("request_count", 0),
+                    "사용자": item.get("unique_user_count", 0),
+                    "평균 응답(ms)": item.get("average_latency_ms", 0),
+                    "에러율(%)": item.get("error_rate_percent", 0),
+                }
+                for item in summary.get("endpoint_usage", [])[:10]
+            ]
+            if endpoint_rows:
+                st.dataframe(endpoint_rows, use_container_width=True, hide_index=True)
+            else:
+                st.info("엔드포인트 사용량이 없습니다.")
+    with error_column:
+        with st.container(border=True):
+            st.markdown('<div class="admin-panel-title">오류 TOP 3</div>', unsafe_allow_html=True)
+            if top_errors:
+                for rank, (label, count) in enumerate(top_errors, start=1):
+                    st.write(f"{rank}. {label}  ·  {count}건")
+            else:
+                st.success("오류가 없습니다.")
+
+    llm_summary = summary.get("llm_summary", [])
+    with st.container(border=True):
+        st.markdown('<div class="admin-panel-title">LLM 요청 요약</div>', unsafe_allow_html=True)
+        if llm_summary:
+            st.dataframe(
+                [
+                    {
+                        "모델": item.get("model"),
+                        "요청": item.get("request_count", 0),
+                        "실패": item.get("failure_count", 0),
+                        "에러율(%)": item.get("error_rate_percent", 0),
+                        "평균 응답(ms)": item.get("average_latency_ms", 0),
+                    }
+                    for item in llm_summary
+                ],
+                use_container_width=True,
+                hide_index=True,
+            )
+        else:
+            st.info("선택한 기간에 LLM 요청 로그가 없습니다.")
+
+
+def render_admin_access_denied() -> None:
+    """관리자 인증이 없는 사용자가 직접 접근했을 때의 ADM-005 화면."""
+
+    st.markdown(
+        """
+        <div class="admin-access-denied">
+            <div class="eyebrow">TripMate_13_ADM-005</div>
+            <h1>접근이 거부되었습니다</h1>
+            <p>관리자 권한이 있는 계정으로 로그인한 뒤 다시 시도해주세요.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    _, button_column, _ = st.columns([1, 1, 1])
+    with button_column:
+        if st.button("여행 화면으로 돌아가기", use_container_width=True, key="access_denied_to_trip"):
+            st.session_state.current_view = "trip"
+            request_main_scroll_to_top()
+            st.rerun()
+
+
+def render_admin_dashboard() -> None:
+    """로그인한 관리자 세션 안에서 운영 대시보드를 렌더링한다."""
+
+    st.title("운영 대시보드")
+    render_admin_dashboard_filters()
+    start_date = st.session_state.get("admin_dashboard_start_date", date.today())
+    end_date = st.session_state.get("admin_dashboard_end_date", date.today())
+
+    if start_date > end_date:
+        st.error("시작일은 종료일보다 늦을 수 없습니다.")
+        return
+
+    params = _admin_dashboard_period_params(start_date, end_date)
+    try:
+        headers = auth_headers()
+        summary = api("GET", "/admin/dashboard/summary", params=params, headers=headers, timeout=30)
+        errors = api(
+            "GET",
+            "/admin/dashboard/errors",
+            params={**params, "limit": "100"},
+            headers=headers,
+            timeout=30,
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+
+    period = summary.get("period", {})
+    st.caption(f"조회 기간: {period.get('start_at', '')} ~ {period.get('end_at', '')}")
+    _render_admin_dashboard_figma(
+        summary,
+        errors.get("items", []) if isinstance(errors, dict) else [],
+    )
+
+    st.subheader("최근 오류 로그")
+    error_items = errors.get("items", []) if isinstance(errors, dict) else []
+    if error_items:
+        st.dataframe(
+            [
+                {
+                    "발생 시각": item.get("occurred_at"),
+                    "요청 ID": item.get("request_id"),
+                    "메서드": item.get("method"),
+                    "엔드포인트": item.get("endpoint"),
+                    "상태 코드": item.get("status_code"),
+                    "응답시간(ms)": item.get("latency_ms"),
+                    "오류 유형": item.get("error_type"),
+                    "모델": item.get("model"),
+                }
+                for item in error_items
+            ],
+            use_container_width=True,
+            hide_index=True,
+        )
+    else:
+        st.success("선택한 기간에 오류 로그가 없습니다.")
+
+
+def _render_admin_console_figma() -> None:
+    """피그마 ADM-002의 사용자 목록·상세 2열 구성을 렌더링한다."""
+
+    render_admin_console_tabs("admin_console")
+    st.title("사용자 관리")
+    st.caption("운영 콘솔 · TripMate Admin")
+    search = st.text_input(
+        "사용자 검색",
+        placeholder="이름 또는 이메일을 입력하세요",
+        key="admin_console_search",
+    ).strip()
+    try:
+        result = api(
+            "GET",
+            "/admin/console/users",
+            params={"search": search, "limit": 100},
+            headers=auth_headers(),
+            timeout=30,
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+
+    users = result.get("items", []) if isinstance(result, dict) else []
+    st.caption(f"전체 사용자 {result.get('total', 0) if isinstance(result, dict) else 0}명")
+    if not users:
+        st.info("조건에 맞는 사용자가 없습니다.")
+        return
+
+    list_column, detail_column = st.columns([1, 1.35], gap="medium")
+    with list_column:
+        with st.container(border=True):
+            st.markdown('<div class="admin-panel-title">사용자 목록</div>', unsafe_allow_html=True)
+            st.dataframe(
+                [
+                    {
+                        "사용자": item.get("username") or "-",
+                        "이메일": item.get("email") or "-",
+                        "가입일": item.get("created_at") or "-",
+                    }
+                    for item in users
+                ],
+                use_container_width=True,
+                hide_index=True,
+            )
+            user_options = {str(item.get("id")): item for item in users if item.get("id")}
+            selected_user_id = st.selectbox(
+                "상세 조회 사용자",
+                options=list(user_options),
+                format_func=lambda user_id: (
+                    f"{user_options[user_id].get('username') or '-'} · "
+                    f"{user_options[user_id].get('email') or '-'}"
+                ),
+                key="admin_console_selected_user",
+            )
+
+    try:
+        detail = api(
+            "GET",
+            f"/admin/console/users/{selected_user_id}",
+            headers=auth_headers(),
+            timeout=30,
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+
+    with detail_column:
+        with st.container(border=True):
+            st.markdown('<div class="admin-panel-title">사용자 상세</div>', unsafe_allow_html=True)
+            st.markdown(f"**{detail.get('username') or '-'}**")
+            st.caption(detail.get("email") or "-")
+            detail_values = [
+                ("여행 수", detail.get("trip_count", 0)),
+                ("API 요청", detail.get("request_count", 0)),
+                ("활동 로그", detail.get("activity_count", 0)),
+            ]
+            for label, value in detail_values:
+                st.metric(label, value)
+            trips = detail.get("trips", [])
+            if trips:
+                st.markdown("#### 여행 목록")
+                st.dataframe(
+                    [
+                        {
+                            "여행": item.get("title") or item.get("destination") or "-",
+                            "기간": f"{item.get('start_date') or '-'} ~ {item.get('end_date') or '-'}",
+                            "상태": item.get("status") or "-",
+                        }
+                        for item in trips
+                    ],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            else:
+                st.info("여행 기록이 없습니다.")
+
+            st.markdown("#### 최근 활동")
+            activities = detail.get("recent_activities", [])
+            if activities:
+                st.dataframe(activities[:8], use_container_width=True, hide_index=True)
+            else:
+                st.info("활동 로그가 없습니다.")
+
+            st.markdown("#### 최근 API 요청")
+            requests = detail.get("recent_requests", [])
+            if requests:
+                st.dataframe(requests[:8], use_container_width=True, hide_index=True)
+            else:
+                st.info("API 요청 로그가 없습니다.")
+
+
+def render_admin_feedback() -> None:
+    """피그마 ADM-003의 피드백·페이스 집계 전용 화면을 렌더링한다."""
+
+    render_admin_console_tabs("admin_feedback")
+    st.title("피드백 · 페이스")
+    st.caption("ADM-003 · 집계 전용")
+    try:
+        summary = api(
+            "GET",
+            "/admin/console/feedback",
+            headers=auth_headers(),
+            timeout=30,
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+
+    cards = st.columns(4)
+    card_values = [
+        ("전체 피드백", summary.get("feedback_count", 0)),
+        ("긍정 피드백", summary.get("positive_count", 0)),
+        ("부정 피드백", summary.get("negative_count", 0)),
+        ("페이스 기록", summary.get("pace_count", 0)),
+    ]
+    for column, (label, value) in zip(cards, card_values):
+        with column:
+            st.metric(label, value)
+
+    feedback_breakdown = summary.get("feedback_breakdown", [])
+    pace_breakdown = summary.get("pace_breakdown", [])
+    feedback_column, pace_column = st.columns(2, gap="medium")
+    with feedback_column:
+        with st.container(border=True):
+            st.markdown('<div class="admin-panel-title">피드백 집계</div>', unsafe_allow_html=True)
+            if feedback_breakdown:
+                st.bar_chart(
+                    {"건수": [int(item.get("count", 0) or 0) for item in feedback_breakdown]},
+                    height=220,
+                )
+                st.dataframe(
+                    [
+                        {"구분": item.get("label") or "기타", "건수": item.get("count", 0)}
+                        for item in feedback_breakdown
+                    ],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            else:
+                st.info("수집된 피드백 로그가 없습니다.")
+    with pace_column:
+        with st.container(border=True):
+            st.markdown('<div class="admin-panel-title">페이스 집계</div>', unsafe_allow_html=True)
+            if pace_breakdown:
+                st.bar_chart(
+                    {"건수": [int(item.get("count", 0) or 0) for item in pace_breakdown]},
+                    height=220,
+                )
+                st.dataframe(
+                    [
+                        {"페이스": item.get("label") or "기타", "건수": item.get("count", 0)}
+                        for item in pace_breakdown
+                    ],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            else:
+                st.info("수집된 페이스 로그가 없습니다.")
+
+    st.caption("원문과 개인 식별 정보는 표시하지 않고 집계 결과만 제공합니다.")
+
+
+def render_admin_system_status() -> None:
+    """피그마 ADM-004의 최근 1시간 시스템 상태 화면을 렌더링한다."""
+
+    render_admin_console_tabs("admin_system")
+    st.title("시스템 상태")
+    st.caption("ADM-004 · 최근 1시간")
+    try:
+        status = api(
+            "GET",
+            "/admin/console/system-status",
+            headers=auth_headers(),
+            timeout=30,
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+
+    overview_columns = st.columns(4)
+    overview_values = [
+        ("전체 요청", status.get("total_requests", 0)),
+        ("실패 요청", status.get("failure_count", 0)),
+        ("에러율", f'{status.get("error_rate_percent", 0)}%'),
+        ("조회 범위", "최근 1시간"),
+    ]
+    for column, (label, value) in zip(overview_columns, overview_values):
+        with column:
+            st.metric(label, value)
+
+    services = status.get("services", [])
+    if not services:
+        st.info("시스템 상태 데이터가 없습니다.")
+        return
+
+    service_columns = st.columns(2, gap="medium")
+    for index, service in enumerate(services):
+        with service_columns[index % 2]:
+            with st.container(border=True):
+                service_name = service.get("service") or "서비스"
+                service_status = service.get("status") or "데이터 없음"
+                st.markdown(
+                    f'<div class="admin-panel-title">{escape(str(service_name))}</div>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(f"상태: **{service_status}**")
+                metrics = st.columns(3)
+                metric_values = [
+                    ("요청", service.get("request_count", 0)),
+                    ("실패율", f'{service.get("failure_rate_percent", 0)}%'),
+                    ("P95 응답", f'{service.get("p95_latency_ms", 0)} ms'),
+                ]
+                for metric_column, (label, value) in zip(metrics, metric_values):
+                    with metric_column:
+                        st.metric(label, value)
+
+    st.caption("api_request_logs 기준으로 최근 1시간의 서비스 요청 상태를 집계합니다.")
+
+
+def render_admin_console() -> None:
+    """로그인한 관리자 세션 안에서 운영콘솔 사용자 조회 화면을 렌더링한다."""
+
+    st.title("사용자 관리")
+    st.caption("운영 콘솔 · TripMate Admin")
+
+    search = st.text_input(
+        "사용자 검색",
+        placeholder="이름 또는 이메일을 입력하세요",
+        key="admin_console_search",
+    ).strip()
+    try:
+        result = api(
+            "GET",
+            "/admin/console/users",
+            params={"search": search, "limit": 100},
+            headers=auth_headers(),
+            timeout=30,
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+
+    users = result.get("items", []) if isinstance(result, dict) else []
+    st.caption(f"전체 사용자 {result.get('total', 0) if isinstance(result, dict) else 0}명")
+    if not users:
+        st.info("조건에 맞는 사용자가 없습니다.")
+        return
+
+    with st.container(border=True):
+        st.markdown('<div class="admin-panel-title">서비스 이용 현황</div>', unsafe_allow_html=True)
+        overview_columns = st.columns(4)
+        overview_values = [
+            ("가입 사용자", result.get("total", 0)),
+            ("전체 여행", sum(int(item.get("trip_count", 0) or 0) for item in users)),
+            ("API 요청", sum(int(item.get("request_count", 0) or 0) for item in users)),
+            ("사용자 활동", sum(int(item.get("activity_count", 0) or 0) for item in users)),
+        ]
+        for column, (label, value) in zip(overview_columns, overview_values):
+            with column:
+                st.metric(label, value)
+
+    st.bar_chart(
+        {
+            "여행 수": [int(item.get("trip_count", 0) or 0) for item in users[:10]],
+            "API 요청 수": [int(item.get("request_count", 0) or 0) for item in users[:10]],
+        },
+        height=180,
+    )
+
+    st.dataframe(
+        [
+            {
+                "사용자명": item.get("username") or "-",
+                "이메일": item.get("email") or "-",
+                "가입일": item.get("created_at") or "-",
+                "여행 수": item.get("trip_count", 0),
+                "요청 수": item.get("request_count", 0),
+                "최근 활동": item.get("last_active_at") or "-",
+            }
+            for item in users
+        ],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    user_options = {str(item.get("id")): item for item in users if item.get("id")}
+    selected_user_id = st.selectbox(
+        "상세 조회 사용자",
+        options=list(user_options),
+        format_func=lambda user_id: (
+            f"{user_options[user_id].get('username') or '-'} · "
+            f"{user_options[user_id].get('email') or '-'}"
+        ),
+        key="admin_console_selected_user",
+    )
+    try:
+        detail = api(
+            "GET",
+            f"/admin/console/users/{selected_user_id}",
+            headers=auth_headers(),
+            timeout=30,
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+
+    st.subheader("사용자 상세")
+    detail_columns = st.columns(5)
+    detail_values = [
+        ("사용자명", detail.get("username") or "-"),
+        ("이메일", detail.get("email") or "-"),
+        ("가입일", detail.get("created_at") or "-"),
+        ("여행 수", detail.get("trip_count", 0)),
+        ("API 요청 수", detail.get("request_count", 0)),
+    ]
+    for column, (label, value) in zip(detail_columns, detail_values):
+        with column:
+            st.metric(label, value)
+
+    left, right = st.columns(2)
+    with left:
+        st.markdown("#### 여행 목록")
+        st.dataframe(detail.get("trips", []), use_container_width=True, hide_index=True)
+    with right:
+        st.markdown("#### 최근 활동 로그")
+        activities = detail.get("recent_activities", [])
+        if activities:
+            st.dataframe(activities, use_container_width=True, hide_index=True)
+        else:
+            st.info("활동 로그가 없습니다.")
+
+    st.markdown("#### 최근 API 요청")
+    requests = detail.get("recent_requests", [])
+    if requests:
+        st.dataframe(requests, use_container_width=True, hide_index=True)
+    else:
+        st.info("API 요청 로그가 없습니다.")
+
+
 def render_signed_in() -> None:
     """현재 사용자의 여행을 불러오고 알맞은 로그인 상태 화면을 그린다."""
     trips = api("GET", "/me/trips", headers=auth_headers())
@@ -2824,6 +3655,27 @@ def render_signed_in() -> None:
         request_main_scroll_to_top()
 
     render_sidebar(trips)
+
+    admin_views = {"admin_dashboard", "admin_console", "admin_feedback", "admin_system"}
+    if st.session_state.get("current_view") in admin_views and not st.session_state.get("is_dashboard_admin"):
+        render_admin_access_denied()
+        return
+
+    if st.session_state.get("current_view") == "admin_dashboard":
+        render_admin_dashboard()
+        return
+
+    if st.session_state.get("current_view") == "admin_console":
+        _render_admin_console_figma()
+        return
+
+    if st.session_state.get("current_view") == "admin_feedback":
+        render_admin_feedback()
+        return
+
+    if st.session_state.get("current_view") == "admin_system":
+        render_admin_system_status()
+        return
 
     if st.session_state.show_create_trip:
         st.markdown('<div class="brand">여행 추가</div>', unsafe_allow_html=True)
