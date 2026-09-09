@@ -83,6 +83,8 @@ st.markdown(
             background: #2d266c !important;
             border-color: #6957aa !important;
             color: #cdb8fa !important;
+            height: 2.5rem !important;
+            min-height: 2.5rem !important;
             font-weight: 700 !important;
         }
         [data-testid="stSidebar"] [class*="st-key-sidebar_admin_dashboard"] button p { color: #cdb8fa !important; font-weight: 700 !important; }
@@ -432,6 +434,7 @@ st.markdown(
             display: flex;
             flex-direction: column;
             height: 100dvh;
+            position: relative;
             /* TripMate 영역을 세로로 옮기려면 이 값만 바꾼다. */
             padding-top: 20px !important;
             padding-bottom: .7rem !important;
@@ -490,11 +493,16 @@ st.markdown(
            아래에 고정한다. 본문이 길어져도 이 영역이 위로 밀리지 않는다. */
         [data-testid="stSidebar"] .st-key-admin-sidebar-footer,
         [data-testid="stSidebar"] .st-key-admin-console-sidebar-footer {
-            position: fixed !important;
-            left: .75rem;
+            /* 실제 사이드바 폭을 기준으로 하단에 고정한다. 이전의 fixed +
+               280px 계산은 210px 사이드바를 넘겨 여행 화면 버튼을 밀어냈다. */
+            position: absolute !important;
+            left: 1rem;
+            right: 1rem;
             bottom: .7rem;
-            width: calc(280px - 1.5rem);
+            width: auto !important;
+            max-width: none !important;
             z-index: 10;
+            box-sizing: border-box !important;
         }
         [data-testid="stSidebar"] .st-key-sidebar-trip-list {
             flex: 1 1 auto !important;
@@ -1167,6 +1175,1357 @@ st.markdown(
           .login-wrap { margin: 4vh auto; }
           .login-card { padding: 2rem 1.4rem; }
         }
+
+        /* ------------------------------------------------------------------
+           SCR-001 / 001v / 002 / 003 · 인증 화면
+           설계서(브랜드 스플릿 + 우측 폼)를 그대로 옮긴 스타일이다. 여기 있는
+           규칙은 .auth-brand-panel 이 그려진 화면에서만 살아 있어야 한다.
+           로그인 뒤 화면까지 여백이 사라지면 대시보드 레이아웃이 무너진다.
+           ------------------------------------------------------------------ */
+        .stApp:has(.auth-brand-panel) .block-container {
+            max-width: 100% !important;
+            padding: 0 !important;
+        }
+        .stApp:has(.auth-brand-panel) [data-testid="stMainBlockContainer"] { padding: 0 !important; }
+        /* 최상위 세로 블록의 gap 16px 이 화면을 16px 밀어내려, 100vh 패널이
+           그만큼 넘쳐 로그인 화면에도 세로 스크롤이 생겼다. 인증 화면에서만 없앤다. */
+        .stApp:has(.auth-brand-panel) [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] {
+            gap: 0 !important;
+        }
+        .stApp:has(.auth-brand-panel) [data-testid="stHorizontalBlock"] { gap: 0 !important; }
+        [data-testid="stColumn"]:has(.auth-brand-panel) {
+            padding: 0 !important;
+            background: #0f1b3d;
+            display: flex;
+            flex-direction: column;
+        }
+        [data-testid="stColumn"]:has(.auth-brand-panel) > [data-testid="stVerticalBlock"] {
+            flex: 1 1 auto;
+        }
+        /* 여기 gap 16px 도 패널을 16px 넘치게 만든다. 브랜드 열은 요소가 하나뿐이라 필요 없다. */
+        [data-testid="stColumn"]:has(.auth-brand-panel) [data-testid="stVerticalBlock"] { gap: 0 !important; }
+        /* height:100% 는 부모 높이가 확정되지 않아 무시된다. flex-grow 로 늘린다. */
+        [data-testid="stColumn"]:has(.auth-brand-panel) [data-testid="stElementContainer"],
+        [data-testid="stColumn"]:has(.auth-brand-panel) [data-testid="stMarkdown"],
+        [data-testid="stColumn"]:has(.auth-brand-panel) [data-testid="stMarkdownContainer"],
+        /* stMarkdown 과 stMarkdownContainer 사이에 testid 없는 래퍼가 하나 더 있고,
+           그것만 flex:0 1 auto 라 여기서 늘어남이 끊긴다. 클래스가 Streamlit 버전마다
+           바뀌는 해시라 구조(직계 자식)로 짚는다. */
+        [data-testid="stColumn"]:has(.auth-brand-panel) [data-testid="stMarkdown"] > div {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+        }
+        /* Streamlit 이 stMarkdownContainer 에 margin-bottom:-16px 를 준다. 세로 flex
+           안에서 음수 마진은 그만큼 더 늘어나는 것으로 계산돼, 패널이 열보다 16px
+           높아지고 로그인 화면에 세로 스크롤이 생긴다. */
+        [data-testid="stColumn"]:has(.auth-brand-panel) [data-testid="stMarkdownContainer"] {
+            margin-bottom: 0 !important;
+        }
+        [data-testid="stColumn"]:has(.auth-brand-panel) .auth-brand-panel { flex: 1 1 auto; }
+
+        .auth-brand-panel {
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            /* min-height:100vh 는 두지 않는다. 열이 이미 행 높이(오른쪽 폼의
+               100vh)만큼 늘어나고 패널은 flex 로 그 열을 채우므로, 여기에 100vh 를
+               또 걸면 래퍼 여백만큼 넘쳐 로그인 화면에 세로 스크롤이 생긴다. */
+            height: 100%;
+            /* 설계서 여백 72px = 3.75vw */
+            padding: clamp(1.8rem, 3.75vw, 4.5rem);
+            background: #0f1b3d;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        /* 설계서의 두 원. 장식일 뿐이라 내용 위로 올라오지 않게 뒤로 보낸다. */
+        .auth-brand-panel::before,
+        .auth-brand-panel::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .auth-brand-panel::before {
+            top: -170px; right: -160px;
+            width: 320px; height: 320px;
+            background: rgba(37, 99, 235, .28);
+        }
+        .auth-brand-panel::after {
+            bottom: -130px; left: 46%;
+            width: 260px; height: 260px;
+            background: rgba(255, 255, 255, .06);
+        }
+        .auth-brand-panel > * { position: relative; z-index: 1; }
+        /* 문구 덩어리는 바닥에 딱 붙이지 않고 조금 띄운다.
+           margin 으로 밀면 패널 내용 높이가 그만큼 늘어 100vh 를 넘겨 세로
+           스크롤이 생긴다. 자리만 옮기고 높이는 건드리지 않도록 relative 로 띄운다.
+           (부모 .auth-brand-panel > * 에 position:relative 가 이미 걸려 있다.) */
+        .auth-brand-copy { bottom: clamp(1rem, 2.5vw, 3rem); }
+
+        .auth-brand-logo { display: flex; align-items: center; gap: clamp(.5rem, .833vw, .8rem); }
+        .auth-brand-logo-mark {
+            display: inline-flex; align-items: center; justify-content: center;
+            flex: 0 0 auto;
+            /* 설계서 38px = 1.98vw */
+            width: clamp(1.6rem, 1.98vw, 2.4rem);
+            height: clamp(1.6rem, 1.98vw, 2.4rem);
+            border-radius: .75rem;
+            background: #2563eb;
+        }
+        .auth-brand-logo-name {
+            color: #fff;
+            /* 설계서 25px = 1.302vw */
+            font-size: clamp(1.15rem, 1.302vw, 1.5625rem) !important;
+            font-weight: 800 !important;
+            letter-spacing: -.02em;
+        }
+        .auth-brand-headline {
+            margin: 0 0 1.1rem;
+            color: #fff;
+            /* 설계서는 59px(3.073vw)이지만 한 단계 줄여 52px = 2.708vw 로 쓴다. */
+            font-size: clamp(1.7rem, 2.708vw, 3.25rem) !important;
+            font-weight: 800 !important;
+            letter-spacing: -.035em;
+            line-height: 1.2 !important;
+            word-break: keep-all;
+        }
+        .auth-brand-subcopy {
+            margin: 0 0 2.4rem;
+            max-width: 100%;
+            /* 한국어는 기본값(break-all 유사)으로 두면 "드립니 / 다." 처럼
+               낱말 한가운데가 갈린다. 어절 단위로 넘긴다. */
+            word-break: keep-all;
+            color: #c7d2e9;
+            font-size: clamp(1rem, .964vw, 1.156rem) !important;   /* 설계서 18.5px */
+            line-height: 1.55 !important;
+        }
+        .auth-brand-feature {
+            display: flex; align-items: center; gap: clamp(.6rem, .833vw, .95rem);
+            /* 설계서 항목 간격 16px = .833vw */
+            margin-bottom: clamp(.6rem, .833vw, 1.05rem);
+        }
+        .auth-brand-feature:last-child { margin-bottom: 0; }
+        .auth-brand-feature-icon {
+            display: inline-flex; align-items: center; justify-content: center;
+            flex: 0 0 auto;
+            /* 설계서 40px = 2.083vw */
+            width: clamp(1.75rem, 2.083vw, 2.5rem);
+            height: clamp(1.75rem, 2.083vw, 2.5rem);
+            border-radius: .75rem;
+            background: rgba(37, 99, 235, .38);
+        }
+        .auth-brand-feature-text {
+            color: #fff;
+            font-size: clamp(.95rem, .911vw, 1.094rem) !important;   /* 설계서 17.5px */
+            font-weight: 700 !important;
+        }
+
+        /* 우측 폼 영역 ----------------------------------------------------
+           설계서 SCR-001 의 우측 패널은 x 1020.89~1920.89 (900), 폼은
+           x 1211.33~1730.44 (519). 좌우 여백이 190 으로 같고, 세로도 패널
+           중앙(588)에 내용 중앙(≈593)이 맞는다. 즉 가로·세로 모두 가운데다.
+           ------------------------------------------------------------------ */
+        [data-testid="stColumn"]:has(.auth-form-anchor) {
+            background: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2.5rem 0 !important;
+        }
+        /* 열의 자식 세로 블록은 height:100% 라서, 열에 건 justify-content 로는
+           내용이 위에 붙은 채 그대로다. 블록 자신을 가운데 정렬 컨테이너로 만든다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) > [data-testid="stVerticalBlock"] {
+            justify-content: center;
+        }
+
+        .auth-title {
+            margin: 0 0 .35rem;
+            color: #111827;
+            /* 설계서는 39px 이지만 로그인 후 화면(.brand 32px)에 맞춘다. 1.667vw */
+            font-size: clamp(1.5rem, 1.667vw, 2rem) !important;
+            font-weight: 800 !important;
+            letter-spacing: -.025em;
+            line-height: 1.25 !important;
+        }
+        .auth-subtitle {
+            margin: 0 0 2.4rem;
+            color: #6b7280;
+            /* 설계서 17.5px -> 15px. 로그인 후 화면 본문이 14px 이다. 0.781vw */
+            font-size: clamp(.85rem, .781vw, .9375rem) !important;
+        }
+        .auth-field-label {
+            margin: 0 0 .35rem;
+            color: #4b5563;
+            /* 설계서 14.5px -> 14px. 로그인 후 화면 본문과 같은 크기. 0.729vw */
+            font-size: clamp(.78rem, .729vw, .875rem) !important;
+            font-weight: 700 !important;
+        }
+
+        /* 입력칸: 설계서 높이 61px · 모서리 13.5px · 테두리 #dce3f0 */
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stTextInputRootElement"] {
+            /* 설계서 61px = 3.182vw */
+            min-height: clamp(2.875rem, 3.182vw, 3.8125rem);
+            border-radius: .85rem !important;
+            border-color: #dce3f0 !important;
+            background: #fff !important;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stTextInputRootElement"] input {
+            /* 설계서 17.5px -> 16px (앱 body 기본값). 0.833vw */
+            font-size: clamp(.9rem, .833vw, 1rem);
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stTextInputRootElement"]:focus-within {
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+        }
+        /* 설계서는 라벨을 직접 그린다. 위젯 기본 라벨은 자리만 차지한다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stWidgetLabel"] { display: none; }
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stForm"] {
+            border: 0;
+            padding: 0;
+        }
+        /* Streamlit 은 요소 사이에 16px gap 을 넣는다. 칸 사이 간격은 이미 설계서
+           수치대로 스페이서로 넣고 있어서, gap 이 그 위에 얹히면 23px 자리가 39px,
+           26px 자리가 42px 이 된다. 라벨 · 오류 · 배너 · 힌트 카드는 모두 자기
+           margin 을 갖고 있으므로 gap 을 0 으로 둬도 붙지 않는다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stVerticalBlock"] {
+            gap: 0 !important;
+        }
+        /* 그 16px gap 은 Streamlit 이 stMarkdownContainer 에 주는 margin-bottom:-16px
+           와 짝이다. gap 만 없애면 음수 마진이 그대로 남아 라벨이 입력칸 위로
+           10px 파고든다. 둘을 같이 0 으로 둬야 스페이서 값이 그대로 나온다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stMarkdownContainer"] {
+            margin-bottom: 0 !important;
+        }
+
+        /* SCR-001v · 인라인 에러 ------------------------------------------ */
+        .auth-field-error {
+            display: flex; align-items: center; gap: .35rem;
+            margin: .3rem 0 0;
+            color: #9e332f;
+            font-size: clamp(.75rem, .677vw, .8125rem);   /* 설계서 13px */
+            font-weight: 700;
+        }
+        .auth-error-banner {
+            display: flex; align-items: center; gap: .5rem;
+            margin: 0 0 1.1rem;
+            padding: .7rem .9rem;
+            border-radius: .6rem;
+            background: #fdecec;
+            color: #9e332f;
+            font-size: clamp(.8rem, .729vw, .875rem);   /* 설계서 14px */
+            font-weight: 700;
+        }
+        .auth-notice-banner {
+            display: flex; align-items: center; gap: .5rem;
+            margin: 0 0 1.1rem;
+            padding: .7rem .9rem;
+            border-radius: .6rem;
+            background: #eaf0ff;
+            border: 1px solid #c9d8ff;
+            color: #1d4ed8;
+            font-size: clamp(.8rem, .729vw, .875rem);   /* 설계서 14px */
+            font-weight: 700;
+        }
+        .auth-hint-card {
+            margin: 1.1rem 0 0;
+            padding: .8rem .95rem;
+            border: 1px solid #e4e9f2;
+            border-radius: .8rem;
+            color: #6b7280;
+            font-size: clamp(.72rem, .651vw, .781rem);   /* 설계서 12.5px */
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        /* SCR-002 · 비밀번호 강도 ----------------------------------------- */
+        .auth-strength-track {
+            height: .3rem;
+            margin: .55rem 0 .4rem;
+            border-radius: .3rem;
+            background: #e7ecf5;
+            overflow: hidden;
+        }
+        .auth-strength-fill { height: 100%; border-radius: .3rem; }
+        .auth-strength-label { font-size: clamp(.72rem, .651vw, .781rem); font-weight: 700; }
+
+        /* Primary 버튼 -----------------------------------------------------
+           이 앱은 config.toml 에 primaryColor 를 두지 않아 Streamlit 기본값인
+           빨강(#FF4B4B)이 나온다. 설계서의 파랑(#2563eb)으로 덮는다.
+           사이드바 버튼들이 이미 쓰는 방식과 같다(전역 테마는 §MD 참고).
+           ------------------------------------------------------------------ */
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stFormSubmitButton"] button,
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="primary"],
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="primaryFormSubmit"] {
+            height: clamp(2.875rem, 3.229vw, 3.875rem);   /* 설계서 62px */
+            border-radius: .875rem;
+            background: #2563eb !important;
+            border-color: #2563eb !important;
+            color: #fff !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stFormSubmitButton"] button p,
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="primary"] p,
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="primaryFormSubmit"] p {
+            color: #fff !important;
+            /* 설계서 18.5px -> 16px. 로그인 후 화면 버튼은 12.8~14px 이다. 0.833vw */
+            font-size: clamp(.9rem, .833vw, 1rem) !important;
+            font-weight: 800 !important;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stFormSubmitButton"] button:hover,
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="primary"]:hover,
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="primaryFormSubmit"]:hover {
+            background: #1d4ed8 !important;
+            border-color: #1d4ed8 !important;
+        }
+        /* 포커스 링도 기본 빨강으로 돌아오므로 함께 덮는다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stFormSubmitButton"] button:focus,
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stFormSubmitButton"] button:focus-visible,
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stFormSubmitButton"] button:active {
+            background: #1d4ed8 !important;
+            border-color: #1d4ed8 !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, .25) !important;
+            outline: none !important;
+        }
+
+        /* 보조 경로는 버튼이 아니라 텍스트 링크로 둔다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="tertiary"] {
+            padding: 0 !important;
+            min-height: 0 !important;
+            /* Streamlit 버튼은 기본이 width:100% 라, 이걸 풀지 않으면 링크가 칸을
+               가득 채워서 가운데로 모으는 정렬이 아무 효과가 없다. */
+            width: auto !important;
+            background: transparent !important;
+            border: 0 !important;
+            color: #2563eb !important;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="tertiary"] p {
+            color: #2563eb !important;
+            /* 설계서 16px -> 15px. 0.781vw */
+            font-size: clamp(.85rem, .781vw, .9375rem) !important;
+            font-weight: 700 !important;
+        }
+        /* 설계서에서 [계정 찾기 · 회원가입]은 가운데에 붙어 있는 한 덩어리다.
+           각 칸의 가운데가 아니라 가운뎃점 쪽으로 몰아 준다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_password_reset,
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_signup {
+            display: flex;
+            width: 100% !important;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_password_reset,
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_password_reset [data-testid="stButton"] {
+            display: flex;
+            justify-content: flex-end;
+            width: 100% !important;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_signup,
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_signup [data-testid="stButton"] {
+            display: flex;
+            justify-content: flex-start;
+            width: 100% !important;
+        }
+        /* 회원가입 · 계정 찾기 화면의 되돌아가기 링크도 로그인 화면처럼 가운데 둔다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-back_to_login_from_signup,
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-back_to_login_from_signup [data-testid="stButton"],
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-back_to_login_from_reset,
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-back_to_login_from_reset [data-testid="stButton"] {
+            display: flex;
+            justify-content: center;
+            width: 100% !important;
+        }
+        /* 가운뎃점은 왼쪽 링크 칸 안에 ::after 로 그린다. 버튼과 같은 flex
+           줄에 들어가므로 세로 정렬이 저절로 맞는다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_password_reset {
+            align-items: center;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_password_reset::after {
+            content: "·";
+            padding: 0 .6rem;
+            color: #c3cad8;
+            font-size: clamp(.85rem, .781vw, .9375rem);
+            font-weight: 700;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 900px) {
+            /* 좁은 화면에서는 브랜드 패널이 폼을 밀어내지 않게 접는다. */
+            .auth-brand-panel { min-height: auto; padding: 2.2rem 1.6rem; }
+            .auth-brand-subcopy { margin-bottom: 1.4rem; }
+            [data-testid="stColumn"]:has(.auth-form-anchor) { min-height: auto; padding: 2rem 1.2rem !important; }
+            /* 좌우로 계속 붙어 있으면 폼이 200px 남짓까지 눌려 쓸 수 없다.
+               바깥 두 칸만 세로로 쌓는다. 안쪽 폼·링크 칸은 그대로 둔다. */
+            [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] .auth-brand-panel) {
+                flex-wrap: wrap !important;
+            }
+            [data-testid="stColumn"]:has(.auth-brand-panel),
+            [data-testid="stColumn"]:has(.auth-form-anchor) {
+                flex: 1 1 100% !important;
+                min-width: 100% !important;
+            }
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# 운영 대시보드와 사용자 관리 화면은 여행 화면과 별도의 관리자 콘솔 톤을 사용한다.
+# 아래 규칙은 해당 화면의 key가 렌더링될 때만 적용된다.
+st.markdown(
+    """
+    <style>
+        [data-testid="stAppViewContainer"]:has(.st-key-admin-dashboard-kpi-panel),
+        [data-testid="stAppViewContainer"]:has(.st-key-admin-user-list-panel),
+        [data-testid="stAppViewContainer"]:has(.st-key-admin-user-search-panel) {
+            background: #faf9fe !important;
+        }
+        [data-testid="stMain"]:has(.st-key-admin-dashboard-kpi-panel) [data-testid="stMainBlockContainer"],
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) [data-testid="stMainBlockContainer"],
+        [data-testid="stMain"]:has(.st-key-admin-user-search-panel) [data-testid="stMainBlockContainer"] {
+            box-sizing: border-box !important;
+            width: 100% !important;
+            max-width: 1400px !important;
+            padding: 2rem 2.5rem 3rem !important;
+        }
+        [data-testid="stMain"]:has(.st-key-admin-dashboard-kpi-panel) h1 {
+            margin: .2rem 0 .35rem !important;
+            color: #111827 !important;
+            font-size: 2rem !important;
+            font-weight: 800 !important;
+            letter-spacing: -.07rem !important;
+        }
+        .admin-main-description {
+            margin: 0 0 1rem;
+            color: #8a93a6;
+            font-size: .84rem;
+            font-weight: 600;
+        }
+        .admin-console-page-title {
+            margin: 0 0 .95rem;
+            color: #111827;
+            font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+            font-weight: 800;
+            letter-spacing: -.075rem;
+            line-height: 1.2;
+        }
+        .st-key-admin-console-header {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 50 !important;
+            margin: -1rem 0 1.25rem !important;
+            padding: 1rem 0 .9rem !important;
+            border-bottom: 1px solid #e9e1f5 !important;
+            background: #faf9fe !important;
+        }
+        [data-testid="stMain"] [class*="st-key-admin-tab-"] button {
+            height: 2.7rem !important;
+            min-height: 2.7rem !important;
+            padding: .35rem .4rem !important;
+            border: 0 !important;
+            border-bottom: 2px solid transparent !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            color: #8a93a6 !important;
+            box-shadow: none !important;
+            font-size: .85rem !important;
+            font-weight: 800 !important;
+            justify-content: flex-start !important;
+        }
+        [data-testid="stMain"] [class*="st-key-admin-tab-"] button:hover {
+            border-bottom-color: #c9b9ee !important;
+            background: transparent !important;
+            color: #6d3fd1 !important;
+        }
+        [data-testid="stMain"] [class*="st-key-admin-tab-"] button[data-testid="stBaseButton-primary"] {
+            border-bottom-color: #6d3fd1 !important;
+            background: transparent !important;
+            color: #4b2e8f !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button {
+            width: 100% !important;
+            height: 2.3rem !important;
+            min-height: 2.3rem !important;
+            padding: .45rem .75rem !important;
+            border: 1px solid transparent !important;
+            border-radius: .65rem !important;
+            background: transparent !important;
+            color: #cdb8fa !important;
+            box-shadow: none !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+            text-align: left !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button[data-testid="stBaseButton-primary"] {
+            border-color: #6d3fd1 !important;
+            background: #6d3fd1 !important;
+            color: #fff !important;
+        }
+        .st-key-admin-dashboard-kpi-panel {
+            margin-top: 1rem;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+        }
+        .st-key-admin-dashboard-kpi-user-signups,
+        .st-key-admin-dashboard-kpi-total-requests,
+        .st-key-admin-dashboard-kpi-success-failure,
+        .st-key-admin-dashboard-kpi-error-rate,
+        .st-key-admin-dashboard-kpi-latency {
+            min-height: 9.25rem;
+            box-sizing: border-box;
+            padding: 0 !important;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02) !important;
+        }
+        .st-key-admin-dashboard-hourly-panel,
+        .st-key-admin-dashboard-status-panel,
+        .st-key-admin-dashboard-error-panel,
+        .st-key-admin-dashboard-llm-panel,
+        .st-key-admin-user-list-panel,
+        .st-key-admin-user-detail-panel {
+            box-sizing: border-box;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            padding: 1.05rem 1.1rem !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02), 0 8px 22px rgba(31, 24, 61, .035) !important;
+        }
+        .admin-panel-title {
+            margin: .1rem 0 .95rem;
+            color: #111827;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -.035rem;
+            line-height: 1.35;
+        }
+        .admin-kpi-card {
+            min-height: 9.25rem;
+            box-sizing: border-box;
+            padding: 1.05rem 1.1rem .9rem;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+        }
+        .admin-kpi-card-header {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            color: #8a93a6;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+        .admin-kpi-icon {
+            display: inline-flex;
+            width: 1.65rem;
+            height: 1.65rem;
+            align-items: center;
+            justify-content: center;
+            border-radius: .5rem;
+            background: #f1ebfe;
+            color: #6d3fd1;
+            font-size: 0;
+        }
+        .admin-kpi-icon::before {
+            width: .48rem;
+            height: .48rem;
+            border-radius: 50%;
+            background: currentColor;
+            content: "";
+        }
+        .admin-kpi-icon-danger { background: #fdecec; color: #b03a35; }
+        .admin-kpi-icon-warn { background: #fff5df; color: #b4740a; }
+        .admin-kpi-value {
+            margin-top: 1.15rem;
+            color: #111827;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -.065rem;
+            line-height: 1.05;
+            font-variant-numeric: tabular-nums;
+        }
+        .admin-kpi-value-danger { color: #b03a35; }
+        .admin-kpi-footnote { margin-top: .9rem; color: #a9b2c4; font-size: .72rem; font-weight: 500; }
+        .admin-chart-shell { width: 100%; overflow: hidden; border-radius: 10px; background: #fff; }
+        .admin-chart-shell svg { display: block; width: 100%; height: 15rem; }
+        .admin-chart-legend { display: flex; gap: 1rem; margin-top: .5rem; color: #8a93a6; font-size: .72rem; font-weight: 700; }
+        .admin-chart-legend span::before {
+            display: inline-block;
+            width: .55rem;
+            height: .55rem;
+            margin-right: .3rem;
+            border-radius: 50%;
+            background: #6d3fd1;
+            content: "";
+        }
+        .admin-chart-legend span:last-child::before { background: #d9c9f6; }
+        .admin-donut-shell { display: flex; align-items: center; justify-content: center; gap: 1.15rem; min-height: 15rem; }
+        .admin-donut-chart { flex: 0 0 12.5rem; width: 12.5rem; height: 12.5rem; }
+        .admin-donut-chart svg { display: block; width: 100%; height: 100%; }
+        .admin-donut-legend { display: grid; gap: .8rem; min-width: 8rem; color: #8a93a6; font-size: .78rem; }
+        .admin-donut-legend div { display: grid; grid-template-columns: .65rem auto auto; align-items: center; gap: .45rem; }
+        .admin-donut-legend strong { color: #374151; }
+        .admin-donut-legend b { color: #111827; font-size: .95rem; }
+        .admin-donut-dot { width: .6rem; height: .6rem; border-radius: 50%; }
+        .admin-donut-dot.success { background: #6d3fd1; }
+        .admin-donut-dot.failure { background: #d9c9f6; }
+        .admin-status-note { margin-top: .75rem; color: #8a93a6; font-size: .76rem; font-weight: 600; }
+        .admin-error-list { display: grid; gap: .2rem; }
+        .admin-error-row {
+            display: grid;
+            grid-template-columns: 1.65rem 1fr auto;
+            gap: .5rem;
+            align-items: center;
+            padding: .65rem .1rem;
+            border-bottom: 1px solid #f1eef7;
+            color: #374151;
+            font-size: .8rem;
+            font-weight: 700;
+        }
+        .admin-error-row:last-child { border-bottom: 0; }
+        .admin-error-rank { display: inline-flex; width: 1.45rem; height: 1.45rem; align-items: center; justify-content: center; border-radius: .4rem; background: #f1ebfe; color: #6d3fd1; font-size: .72rem; }
+        .admin-error-count { color: #111827; }
+        [data-testid="stMain"]:has(.st-key-admin-dashboard-kpi-panel) [data-testid="stDataFrame"],
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) [data-testid="stDataFrame"] {
+            overflow: hidden !important;
+            border: 1px solid #edeaf6 !important;
+            border-radius: 10px !important;
+            background: #fff !important;
+        }
+        .st-key-admin-user-search-panel {
+            margin: .25rem 0 1.15rem !important;
+            padding: 1rem 1.1rem .8rem !important;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02), 0 8px 22px rgba(31, 24, 61, .035) !important;
+        }
+        [data-testid="stMain"]:has(.st-key-admin-user-search-panel) [data-testid="stTextInput"] > div,
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) [data-testid="stSelectbox"] > div {
+            border: 1px solid #e1d9f5 !important;
+            border-radius: 10px !important;
+            background: #faf9fe !important;
+        }
+        [data-testid="stMain"]:has(.st-key-admin-user-search-panel) [data-testid="stTextInput"] > div:focus-within {
+            border-color: #9d7be8 !important;
+            box-shadow: 0 0 0 .16rem rgba(109, 63, 209, .1) !important;
+        }
+        .admin-user-detail-heading { margin: .1rem 0 1rem; color: #111827; font-size: 1.1rem; font-weight: 800; }
+        .admin-user-detail-heading small { display: block; margin-top: .35rem; color: #8a93a6; font-size: .78rem; font-weight: 600; }
+        /* 사용자 관리 상세 패널의 섹션 제목은 본문 흐름에 맞게 한 단계 작게 표시한다. */
+        [data-testid="stMain"] .st-key-admin-user-detail-panel [data-testid="stMarkdownContainer"] h4 {
+            margin-top: 1rem !important;
+            margin-bottom: .55rem !important;
+            font-size: 1.25rem !important;
+            line-height: 1.25 !important;
+        }
+        [class*="st-key-admin-user-detail-stat-"] { min-height: 5.5rem; padding: .8rem !important; border: 1px solid #edeaf6 !important; border-radius: 10px !important; background: #fbfaff !important; }
+        .admin-user-detail-stat-label { color: #8a93a6; font-size: .72rem; font-weight: 800; }
+        .admin-user-detail-stat-value { margin-top: .55rem; color: #111827; font-size: 1.25rem; font-weight: 800; }
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) .admin-panel-title { display: flex; align-items: center; gap: .5rem; }
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) .admin-panel-title::before { width: .24rem; height: 1rem; border-radius: 999px; background: #6d3fd1; content: ""; }
+        @media (max-width: 900px) {
+            [data-testid="stMain"]:has(.st-key-admin-dashboard-kpi-panel) [data-testid="stMainBlockContainer"],
+            [data-testid="stMain"]:has(.st-key-admin-user-list-panel) [data-testid="stMainBlockContainer"],
+            [data-testid="stMain"]:has(.st-key-admin-user-search-panel) [data-testid="stMainBlockContainer"] { padding-right: 1rem !important; padding-left: 1rem !important; }
+            .admin-donut-shell { flex-direction: column; }
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <style>
+        [data-testid="stAppViewContainer"]:has([class*="st-key-admin-feedback-kpi-"]),
+        [data-testid="stAppViewContainer"]:has([class*="st-key-admin-system-kpi-"]) {
+            background: #faf9fe !important;
+        }
+        [data-testid="stMain"]:has([class*="st-key-admin-feedback-kpi-"]) [data-testid="stMainBlockContainer"],
+        [data-testid="stMain"]:has([class*="st-key-admin-system-kpi-"]) [data-testid="stMainBlockContainer"] {
+            box-sizing: border-box !important;
+            width: 100% !important;
+            max-width: 1400px !important;
+            padding: 2rem 2.5rem 3rem !important;
+        }
+        [class*="st-key-admin-feedback-kpi-"],
+        [class*="st-key-admin-system-kpi-"] {
+            min-height: 9.25rem;
+            box-sizing: border-box;
+            padding: 0 !important;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02) !important;
+        }
+        .st-key-admin-feedback-breakdown-panel,
+        .st-key-admin-pace-breakdown-panel,
+        [class*="st-key-admin-system-service-"] {
+            box-sizing: border-box;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            padding: 1.05rem 1.1rem !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02), 0 8px 22px rgba(31, 24, 61, .035) !important;
+        }
+        .admin-breakdown-list { display: grid; gap: .9rem; }
+        .admin-breakdown-row-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .8rem;
+            margin-bottom: .35rem;
+            color: #5e6880;
+            font-size: .78rem;
+            font-weight: 700;
+        }
+        .admin-breakdown-row-head strong { color: #111827; font-size: .82rem; }
+        .admin-breakdown-track { height: .55rem; overflow: hidden; border-radius: 999px; background: #f0ecf8; }
+        .admin-breakdown-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #6d3fd1, #9d7be8); }
+        .admin-service-status-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            margin: -.2rem 0 1rem;
+            color: #8a93a6;
+            font-size: .78rem;
+            font-weight: 700;
+        }
+        .admin-service-status-badge { padding: .25rem .55rem; border-radius: 999px; background: #efe9ff; color: #5e35b1; font-size: .72rem; font-weight: 800; }
+        .admin-service-status-badge.is-warning { background: #fff4dc; color: #a56a00; }
+        .admin-service-metric { padding: .65rem .7rem; border: 1px solid #f0ecf8; border-radius: 10px; background: #fbfaff; }
+        .admin-service-metric-label { color: #8a93a6; font-size: .7rem; font-weight: 700; }
+        .admin-service-metric-value { margin-top: .35rem; color: #111827; font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+        @media (max-width: 900px) {
+            [data-testid="stMain"]:has([class*="st-key-admin-feedback-kpi-"]) [data-testid="stMainBlockContainer"],
+            [data-testid="stMain"]:has([class*="st-key-admin-system-kpi-"]) [data-testid="stMainBlockContainer"] { padding-right: 1rem !important; padding-left: 1rem !important; }
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# 운영 화면도 여행 화면과 동일한 사이드바 컴포넌트를 사용한다.
+st.markdown(
+    """
+    <style>
+        [data-testid="stSidebar"] .admin-sidebar-subtitle {
+            margin: .18rem 0 1rem 2.65rem;
+            color: #8a97b8;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            height: 2.3rem !important;
+            min-height: 2.3rem !important;
+            padding: .45rem .75rem !important;
+            border: 1px solid transparent !important;
+            border-radius: .55rem !important;
+            background: transparent !important;
+            color: #c7d2e9 !important;
+            box-shadow: none !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+            text-align: left !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button:hover {
+            background: rgba(49, 51, 63, .18) !important;
+            color: #fff !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button[data-testid="stBaseButton-primary"] {
+            border-color: #2563eb !important;
+            background: #2563eb !important;
+            color: #fff !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer [class*="st-key-admin_dashboard_to_trip"] button,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer [class*="st-key-admin_to_trip"] button,
+        [data-testid="stSidebar"] .st-key-admin-console-sidebar-footer [class*="st-key-console_to_trip"] button {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            height: 2.3rem !important;
+            min-height: 2.3rem !important;
+            padding: .45rem .75rem !important;
+            border-color: #6957aa !important;
+            border-radius: .55rem !important;
+            background: #2d266c !important;
+            color: #cdb8fa !important;
+            box-shadow: none !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer [class*="st-key-admin_dashboard_to_trip"] button:hover,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer [class*="st-key-admin_to_trip"] button:hover,
+        [data-testid="stSidebar"] .st-key-admin-console-sidebar-footer [class*="st-key-console_to_trip"] button:hover {
+            border-color: #806bc9 !important;
+            background: #3b3282 !important;
+            color: #fff !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            margin-top: auto !important;
+            border-top: 1px solid rgba(112, 128, 157, .28);
+            padding-top: 0 !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"] {
+            position: relative;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            height: 2.5rem !important;
+            min-height: 2.5rem !important;
+            max-height: 2.5rem !important;
+            padding: 0 .5rem 0 2.8rem !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"]:hover,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"]:focus-visible {
+            border: 0 !important;
+            background: rgba(49, 51, 63, .06) !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"]::before {
+            content: var(--sidebar-profile-initial, "여");
+            position: absolute;
+            top: 50%;
+            left: .5rem;
+            display: inline-flex;
+            width: 2rem;
+            height: 2rem;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-50%);
+            border-radius: 50%;
+            background: var(--sidebar-profile-avatar-bg, #2563eb);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"] p {
+            width: 100% !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+            color: #fff !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+            line-height: 1.2 !important;
+            text-align: left !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"] p::after {
+            content: var(--sidebar-profile-email, "");
+            display: block;
+            margin-top: .12rem;
+            overflow: hidden;
+            color: #8a97b8 !important;
+            font-size: .78rem;
+            font-weight: 500;
+            line-height: 1.2;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"] > div > div:last-child {
+            display: none !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# 운영 대시보드와 사용자 관리 화면은 여행 화면과 별도의 관리자 콘솔 톤을 사용한다.
+# 아래 규칙은 해당 화면의 key가 렌더링될 때만 적용된다.
+st.markdown(
+    """
+    <style>
+        [data-testid="stAppViewContainer"]:has(.st-key-admin-dashboard-kpi-panel),
+        [data-testid="stAppViewContainer"]:has(.st-key-admin-user-list-panel),
+        [data-testid="stAppViewContainer"]:has(.st-key-admin-user-search-panel) {
+            background: #faf9fe !important;
+        }
+        [data-testid="stMain"]:has(.st-key-admin-dashboard-kpi-panel) [data-testid="stMainBlockContainer"],
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) [data-testid="stMainBlockContainer"],
+        [data-testid="stMain"]:has(.st-key-admin-user-search-panel) [data-testid="stMainBlockContainer"] {
+            box-sizing: border-box !important;
+            width: 100% !important;
+            max-width: 1400px !important;
+            padding: 2rem 2.5rem 3rem !important;
+        }
+        [data-testid="stMain"]:has(.st-key-admin-dashboard-kpi-panel) h1 {
+            margin: .2rem 0 .35rem !important;
+            color: #111827 !important;
+            font-size: 2rem !important;
+            font-weight: 800 !important;
+            letter-spacing: -.07rem !important;
+        }
+        .admin-main-description {
+            margin: 0 0 1rem;
+            color: #8a93a6;
+            font-size: .84rem;
+            font-weight: 600;
+        }
+        .admin-console-page-title {
+            margin: 0 0 .95rem;
+            color: #111827;
+            font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+            font-weight: 800;
+            letter-spacing: -.075rem;
+            line-height: 1.2;
+        }
+        .st-key-admin-console-header {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 50 !important;
+            margin: -1rem 0 1.25rem !important;
+            padding: 1rem 0 .9rem !important;
+            border-bottom: 1px solid #e9e1f5 !important;
+            background: #faf9fe !important;
+        }
+        [data-testid="stMain"] [class*="st-key-admin-tab-"] button {
+            height: 2.7rem !important;
+            min-height: 2.7rem !important;
+            padding: .35rem .4rem !important;
+            border: 0 !important;
+            border-bottom: 2px solid transparent !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            color: #8a93a6 !important;
+            box-shadow: none !important;
+            font-size: .85rem !important;
+            font-weight: 800 !important;
+            justify-content: flex-start !important;
+        }
+        [data-testid="stMain"] [class*="st-key-admin-tab-"] button:hover {
+            border-bottom-color: #c9b9ee !important;
+            background: transparent !important;
+            color: #6d3fd1 !important;
+        }
+        [data-testid="stMain"] [class*="st-key-admin-tab-"] button[data-testid="stBaseButton-primary"] {
+            border-bottom-color: #6d3fd1 !important;
+            background: transparent !important;
+            color: #4b2e8f !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button {
+            width: 100% !important;
+            height: 2.3rem !important;
+            min-height: 2.3rem !important;
+            padding: .45rem .75rem !important;
+            border: 1px solid transparent !important;
+            border-radius: .65rem !important;
+            background: transparent !important;
+            color: #cdb8fa !important;
+            box-shadow: none !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+            text-align: left !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button[data-testid="stBaseButton-primary"] {
+            border-color: #6d3fd1 !important;
+            background: #6d3fd1 !important;
+            color: #fff !important;
+        }
+        .st-key-admin-dashboard-kpi-panel {
+            margin-top: 1rem;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+        }
+        .st-key-admin-dashboard-kpi-user-signups,
+        .st-key-admin-dashboard-kpi-total-requests,
+        .st-key-admin-dashboard-kpi-success-failure,
+        .st-key-admin-dashboard-kpi-error-rate,
+        .st-key-admin-dashboard-kpi-latency {
+            min-height: 9.25rem;
+            box-sizing: border-box;
+            padding: 0 !important;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02) !important;
+        }
+        .st-key-admin-dashboard-hourly-panel,
+        .st-key-admin-dashboard-status-panel,
+        .st-key-admin-dashboard-error-panel,
+        .st-key-admin-dashboard-llm-panel,
+        .st-key-admin-user-list-panel,
+        .st-key-admin-user-detail-panel {
+            box-sizing: border-box;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            padding: 1.05rem 1.1rem !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02), 0 8px 22px rgba(31, 24, 61, .035) !important;
+        }
+        .admin-panel-title {
+            margin: .1rem 0 .95rem;
+            color: #111827;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -.035rem;
+            line-height: 1.35;
+        }
+        .admin-kpi-card {
+            min-height: 9.25rem;
+            box-sizing: border-box;
+            padding: 1.05rem 1.1rem .9rem;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+        }
+        .admin-kpi-card-header {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            color: #8a93a6;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+        .admin-kpi-icon {
+            display: inline-flex;
+            width: 1.65rem;
+            height: 1.65rem;
+            align-items: center;
+            justify-content: center;
+            border-radius: .5rem;
+            background: #f1ebfe;
+            color: #6d3fd1;
+            font-size: 0;
+        }
+        .admin-kpi-icon::before {
+            width: .48rem;
+            height: .48rem;
+            border-radius: 50%;
+            background: currentColor;
+            content: "";
+        }
+        .admin-kpi-icon-danger { background: #fdecec; color: #b03a35; }
+        .admin-kpi-icon-warn { background: #fff5df; color: #b4740a; }
+        .admin-kpi-value {
+            margin-top: 1.15rem;
+            color: #111827;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -.065rem;
+            line-height: 1.05;
+            font-variant-numeric: tabular-nums;
+        }
+        .admin-kpi-value-danger { color: #b03a35; }
+        .admin-kpi-footnote { margin-top: .9rem; color: #a9b2c4; font-size: .72rem; font-weight: 500; }
+        .admin-chart-shell { width: 100%; overflow: hidden; border-radius: 10px; background: #fff; }
+        .admin-chart-shell svg { display: block; width: 100%; height: 15rem; }
+        .admin-chart-legend { display: flex; gap: 1rem; margin-top: .5rem; color: #8a93a6; font-size: .72rem; font-weight: 700; }
+        .admin-chart-legend span::before {
+            display: inline-block;
+            width: .55rem;
+            height: .55rem;
+            margin-right: .3rem;
+            border-radius: 50%;
+            background: #6d3fd1;
+            content: "";
+        }
+        .admin-chart-legend span:last-child::before { background: #d9c9f6; }
+        .admin-donut-shell { display: flex; align-items: center; justify-content: center; gap: 1.15rem; min-height: 15rem; }
+        .admin-donut-chart { flex: 0 0 12.5rem; width: 12.5rem; height: 12.5rem; }
+        .admin-donut-chart svg { display: block; width: 100%; height: 100%; }
+        .admin-donut-legend { display: grid; gap: .8rem; min-width: 8rem; color: #8a93a6; font-size: .78rem; }
+        .admin-donut-legend div { display: grid; grid-template-columns: .65rem auto auto; align-items: center; gap: .45rem; }
+        .admin-donut-legend strong { color: #374151; }
+        .admin-donut-legend b { color: #111827; font-size: .95rem; }
+        .admin-donut-dot { width: .6rem; height: .6rem; border-radius: 50%; }
+        .admin-donut-dot.success { background: #6d3fd1; }
+        .admin-donut-dot.failure { background: #d9c9f6; }
+        .admin-status-note { margin-top: .75rem; color: #8a93a6; font-size: .76rem; font-weight: 600; }
+        .admin-error-list { display: grid; gap: .2rem; }
+        .admin-error-row {
+            display: grid;
+            grid-template-columns: 1.65rem 1fr auto;
+            gap: .5rem;
+            align-items: center;
+            padding: .65rem .1rem;
+            border-bottom: 1px solid #f1eef7;
+            color: #374151;
+            font-size: .8rem;
+            font-weight: 700;
+        }
+        .admin-error-row:last-child { border-bottom: 0; }
+        .admin-error-rank { display: inline-flex; width: 1.45rem; height: 1.45rem; align-items: center; justify-content: center; border-radius: .4rem; background: #f1ebfe; color: #6d3fd1; font-size: .72rem; }
+        .admin-error-count { color: #111827; }
+        [data-testid="stMain"]:has(.st-key-admin-dashboard-kpi-panel) [data-testid="stDataFrame"],
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) [data-testid="stDataFrame"] {
+            overflow: hidden !important;
+            border: 1px solid #edeaf6 !important;
+            border-radius: 10px !important;
+            background: #fff !important;
+        }
+        .st-key-admin-user-search-panel {
+            margin: .25rem 0 1.15rem !important;
+            padding: 1rem 1.1rem .8rem !important;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02), 0 8px 22px rgba(31, 24, 61, .035) !important;
+        }
+        [data-testid="stMain"]:has(.st-key-admin-user-search-panel) [data-testid="stTextInput"] > div,
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) [data-testid="stSelectbox"] > div {
+            border: 1px solid #e1d9f5 !important;
+            border-radius: 10px !important;
+            background: #faf9fe !important;
+        }
+        [data-testid="stMain"]:has(.st-key-admin-user-search-panel) [data-testid="stTextInput"] > div:focus-within {
+            border-color: #9d7be8 !important;
+            box-shadow: 0 0 0 .16rem rgba(109, 63, 209, .1) !important;
+        }
+        .admin-user-detail-heading { margin: .1rem 0 1rem; color: #111827; font-size: 1.1rem; font-weight: 800; }
+        .admin-user-detail-heading small { display: block; margin-top: .35rem; color: #8a93a6; font-size: .78rem; font-weight: 600; }
+        /* 사용자 관리 상세 패널의 섹션 제목은 본문 흐름에 맞게 한 단계 작게 표시한다. */
+        [data-testid="stMain"] .st-key-admin-user-detail-panel [data-testid="stMarkdownContainer"] h4 {
+            margin-top: 1rem !important;
+            margin-bottom: .55rem !important;
+            font-size: 1.25rem !important;
+            line-height: 1.25 !important;
+        }
+        [class*="st-key-admin-user-detail-stat-"] { min-height: 5.5rem; padding: .8rem !important; border: 1px solid #edeaf6 !important; border-radius: 10px !important; background: #fbfaff !important; }
+        .admin-user-detail-stat-label { color: #8a93a6; font-size: .72rem; font-weight: 800; }
+        .admin-user-detail-stat-value { margin-top: .55rem; color: #111827; font-size: 1.25rem; font-weight: 800; }
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) .admin-panel-title { display: flex; align-items: center; gap: .5rem; }
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) .admin-panel-title::before { width: .24rem; height: 1rem; border-radius: 999px; background: #6d3fd1; content: ""; }
+        @media (max-width: 900px) {
+            [data-testid="stMain"]:has(.st-key-admin-dashboard-kpi-panel) [data-testid="stMainBlockContainer"],
+            [data-testid="stMain"]:has(.st-key-admin-user-list-panel) [data-testid="stMainBlockContainer"],
+            [data-testid="stMain"]:has(.st-key-admin-user-search-panel) [data-testid="stMainBlockContainer"] { padding-right: 1rem !important; padding-left: 1rem !important; }
+            .admin-donut-shell { flex-direction: column; }
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <style>
+        [data-testid="stAppViewContainer"]:has([class*="st-key-admin-feedback-kpi-"]),
+        [data-testid="stAppViewContainer"]:has([class*="st-key-admin-system-kpi-"]) {
+            background: #faf9fe !important;
+        }
+        [data-testid="stMain"]:has([class*="st-key-admin-feedback-kpi-"]) [data-testid="stMainBlockContainer"],
+        [data-testid="stMain"]:has([class*="st-key-admin-system-kpi-"]) [data-testid="stMainBlockContainer"] {
+            box-sizing: border-box !important;
+            width: 100% !important;
+            max-width: 1400px !important;
+            padding: 2rem 2.5rem 3rem !important;
+        }
+        [class*="st-key-admin-feedback-kpi-"],
+        [class*="st-key-admin-system-kpi-"] {
+            min-height: 9.25rem;
+            box-sizing: border-box;
+            padding: 0 !important;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02) !important;
+        }
+        .st-key-admin-feedback-breakdown-panel,
+        .st-key-admin-pace-breakdown-panel,
+        [class*="st-key-admin-system-service-"] {
+            box-sizing: border-box;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            padding: 1.05rem 1.1rem !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02), 0 8px 22px rgba(31, 24, 61, .035) !important;
+        }
+        .admin-breakdown-list { display: grid; gap: .9rem; }
+        .admin-breakdown-row-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .8rem;
+            margin-bottom: .35rem;
+            color: #5e6880;
+            font-size: .78rem;
+            font-weight: 700;
+        }
+        .admin-breakdown-row-head strong { color: #111827; font-size: .82rem; }
+        .admin-breakdown-track { height: .55rem; overflow: hidden; border-radius: 999px; background: #f0ecf8; }
+        .admin-breakdown-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #6d3fd1, #9d7be8); }
+        .admin-service-status-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            margin: -.2rem 0 1rem;
+            color: #8a93a6;
+            font-size: .78rem;
+            font-weight: 700;
+        }
+        .admin-service-status-badge { padding: .25rem .55rem; border-radius: 999px; background: #efe9ff; color: #5e35b1; font-size: .72rem; font-weight: 800; }
+        .admin-service-status-badge.is-warning { background: #fff4dc; color: #a56a00; }
+        .admin-service-metric { padding: .65rem .7rem; border: 1px solid #f0ecf8; border-radius: 10px; background: #fbfaff; }
+        .admin-service-metric-label { color: #8a93a6; font-size: .7rem; font-weight: 700; }
+        .admin-service-metric-value { margin-top: .35rem; color: #111827; font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+        @media (max-width: 900px) {
+            [data-testid="stMain"]:has([class*="st-key-admin-feedback-kpi-"]) [data-testid="stMainBlockContainer"],
+            [data-testid="stMain"]:has([class*="st-key-admin-system-kpi-"]) [data-testid="stMainBlockContainer"] { padding-right: 1rem !important; padding-left: 1rem !important; }
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# 운영 화면도 여행 화면과 동일한 사이드바 컴포넌트를 사용한다.
+st.markdown(
+    """
+    <style>
+        [data-testid="stSidebar"] .admin-sidebar-subtitle {
+            margin: .18rem 0 1rem 2.65rem;
+            color: #8a97b8;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            height: 2.3rem !important;
+            min-height: 2.3rem !important;
+            padding: .45rem .75rem !important;
+            border: 1px solid transparent !important;
+            border-radius: .55rem !important;
+            background: transparent !important;
+            color: #c7d2e9 !important;
+            box-shadow: none !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+            text-align: left !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button:hover {
+            background: rgba(49, 51, 63, .18) !important;
+            color: #fff !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button[data-testid="stBaseButton-primary"] {
+            border-color: #2563eb !important;
+            background: #2563eb !important;
+            color: #fff !important;
+        }
+        /* 여행 화면의 "운영 대시보드"와 관리자 화면의 "여행 화면"은
+           서로 이동 대상만 반대인 같은 전환 버튼이다. 두 화면에서 크기와
+           톤이 달라지지 않도록 하나의 규칙으로 묶는다. */
+        [data-testid="stSidebar"] [class*="st-key-sidebar_admin_dashboard"] button,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer [class*="st-key-admin_dashboard_to_trip"] button,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer [class*="st-key-admin_to_trip"] button,
+        [data-testid="stSidebar"] .st-key-admin-console-sidebar-footer [class*="st-key-console_to_trip"] button {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            height: 2.5rem !important;
+            min-height: 2.5rem !important;
+            padding: .45rem .75rem !important;
+            border: 1px solid #6957aa !important;
+            border-radius: .55rem !important;
+            background: #2d266c !important;
+            color: #cdb8fa !important;
+            box-shadow: none !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_admin_dashboard"] button:hover,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer [class*="st-key-admin_dashboard_to_trip"] button:hover,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer [class*="st-key-admin_to_trip"] button:hover,
+        [data-testid="stSidebar"] .st-key-admin-console-sidebar-footer [class*="st-key-console_to_trip"] button:hover {
+            border-color: #806bc9 !important;
+            background: #3b3282 !important;
+            color: #fff !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            margin-top: auto !important;
+            border-top: 1px solid rgba(112, 128, 157, .28);
+            padding-top: 0 !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"] {
+            position: relative;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            height: 2.5rem !important;
+            min-height: 2.5rem !important;
+            max-height: 2.5rem !important;
+            padding: 0 .5rem 0 2.8rem !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"]:hover,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"]:focus-visible {
+            border: 0 !important;
+            background: rgba(49, 51, 63, .06) !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"]::before {
+            content: var(--sidebar-profile-initial, "여");
+            position: absolute;
+            top: 50%;
+            left: .5rem;
+            display: inline-flex;
+            width: 2rem;
+            height: 2rem;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-50%);
+            border-radius: 50%;
+            background: var(--sidebar-profile-avatar-bg, #2563eb);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"] p {
+            width: 100% !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+            color: #fff !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+            line-height: 1.2 !important;
+            text-align: left !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"] p::after {
+            content: var(--sidebar-profile-email, "");
+            display: block;
+            margin-top: .12rem;
+            overflow: hidden;
+            color: #8a97b8 !important;
+            font-size: .78rem;
+            font-weight: 500;
+            line-height: 1.2;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"] > div > div:last-child {
+            display: none !important;
+        }
     </style>
     """,
     unsafe_allow_html=True,
@@ -1187,6 +2546,11 @@ def initialize_session() -> None:
         "show_create_trip": False,
         "notice": None,
         "auth_mode": "login",
+        # SCR-001v 인라인 오류. {필드명: 문구} 로 담아 두고 다음 실행에서
+        # 해당 입력칸 바로 아래에 붙인다. auth_banner 는 어느 칸이라고
+        # 짚을 수 없는 서버 응답(예: 401)을 폼 위에 한 줄로 보여 준다.
+        "auth_errors": {},
+        "auth_banner": None,
         # 로그인·여행 전환 뒤 이전 화면의 맨 아래 스크롤 위치를 이어받지 않도록
         # 다음 렌더링에서 브라우저의 메인 영역을 맨 위로 보낼지 기록한다.
         "scroll_main_to_top": False,
@@ -1344,6 +2708,8 @@ def sign_out(notice: str | None = None) -> None:
     st.session_state.chat_place_recommendations = {}
     st.session_state.chat_accommodation_candidates = {}
     st.session_state.notice = notice
+    st.session_state.auth_errors = {}
+    st.session_state.auth_banner = None
     st.rerun()
 
 
@@ -1457,153 +2823,531 @@ def sidebar_profile() -> tuple[str, str, str]:
 #         st.markdown("</div>", unsafe_allow_html=True)
 
 def render_login() -> None:
-    """비로그인 화면을 왼쪽 이미지 + 오른쪽 로그인 영역으로 표시한다."""
+    """설계서 SCR-001 대로 좌측 브랜드 패널과 우측 인증 영역으로 화면을 나눈다.
 
-    if st.session_state.notice:
-        st.warning(st.session_state.notice)
+    좌우 비율은 설계서의 1020 : 900(약 53 : 47)을 그대로 옮겼다. 왼쪽은
+    "이 서비스가 무엇을 해 주는가"만 말하고, 실제로 누를 수 있는 것은 모두
+    오른쪽에 둔다.
+    """
 
-    # 왼쪽 이미지 40% / 오른쪽 로그인 영역 60%
-    left_column, right_column = st.columns(
-        [2, 3],
-        gap=None,
-        vertical_alignment="top",
-    )
+    brand_column, form_column = st.columns([53, 47], gap=None, vertical_alignment="top")
 
-    # 왼쪽 이미지
-    with left_column:
-        image_path = os.path.join(
-            os.path.dirname(__file__),
-            "assets",
-            "login_image.png",
-        )
+    with brand_column:
+        st.markdown(AUTH_BRAND_PANEL_HTML, unsafe_allow_html=True)
 
-        st.image(
-            image_path,
-            use_container_width=True,
-        )
-
-    # 오른쪽 로그인
-    with right_column:
-
-        # 로그인 폼의 최대 너비를 줄이기 위한 내부 컬럼
-        _, login_column, _ = st.columns(
-            [0.8, 2, 0.8]
-        )
-
-        with login_column:
-            st.markdown(
-                '<div class="brand">만나서 반가워요</div>',
-                unsafe_allow_html=True,
-            )
-
+    with form_column:
+        # 이 앵커가 있어야 인증 화면 전용 CSS가 이 열에만 걸린다.
+        st.markdown('<div class="auth-form-anchor"></div>', unsafe_allow_html=True)
+        # 설계서의 폼 너비는 우측 패널 900 중 519(57.7%)이고 좌우 여백이 같다.
+        _, inner_column, _ = st.columns([21.15, 57.7, 21.15])
+        with inner_column:
             if st.session_state.auth_mode == "password_reset":
                 render_password_reset()
+            elif st.session_state.auth_mode == "signup":
+                render_sign_up()
             else:
-                render_sign_in_or_up()
+                render_sign_in()
 
-def render_sign_in_or_up() -> None:
-    """공용 로그인·회원가입 양식을 그리고 입력한 인증 정보를 제출한다."""
-    is_signup = st.session_state.auth_mode == "signup"
-    st.subheader("회원가입" if is_signup else "여행을 시작해 볼까요?")
-    st.caption(
-        "이름, 여행, 일정은 내 계정에 안전하게 저장됩니다."
-        if is_signup
-        else "로그인하면 나의 여행과 일정이 저장됩니다."
+
+# 좌측 브랜드 패널. 아이콘은 설계서 SVG의 경로를 그대로 옮긴 것이다.
+_AUTH_ICON_ROUTE = (
+    '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff"'
+    ' stroke-width="1.8" stroke-linecap="round">'
+    '<circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="18" r="2.6"/>'
+    '<path d="M8.6 6H14a3 3 0 0 1 0 6h-4a3 3 0 0 0 0 6h5.4"/></svg>'
+)
+_AUTH_ICON_CHAT = (
+    '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff"'
+    ' stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+    '<path d="M4 5.5h16v10H12l-5 4v-4H4z"/></svg>'
+)
+_AUTH_ICON_COMPASS = (
+    '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff"'
+    ' stroke-width="1.8" stroke-linecap="round">'
+    '<path d="M4 18a8 8 0 1 1 16 0"/><path d="m12 17 4-5.5"/></svg>'
+)
+
+AUTH_BRAND_PANEL_HTML = f"""
+<div class="auth-brand-panel">
+  <div class="auth-brand-logo">
+    <span class="auth-brand-logo-mark">{_AUTH_ICON_ROUTE}</span>
+    <span class="auth-brand-logo-name">TripMate</span>
+  </div>
+  <div class="auth-brand-copy">
+    <p class="auth-brand-headline">상황에 맞춰<br>움직이는 여행 계획</p>
+    <p class="auth-brand-subcopy">
+      말하듯 물어보면 동선 · 이동시간 · 날씨까지 반영해 하루 단위로 짜 드립니다.
+    </p>
+    <div class="auth-brand-feature">
+      <span class="auth-brand-feature-icon">{_AUTH_ICON_CHAT}</span>
+      <span class="auth-brand-feature-text">대화로 만드는 일정</span>
+    </div>
+    <div class="auth-brand-feature">
+      <span class="auth-brand-feature-icon">{_AUTH_ICON_ROUTE}</span>
+      <span class="auth-brand-feature-text">동선과 이동시간까지 계산</span>
+    </div>
+    <div class="auth-brand-feature">
+      <span class="auth-brand-feature-icon">{_AUTH_ICON_COMPASS}</span>
+      <span class="auth-brand-feature-text">컨디션에 맞춘 강도 조절</span>
+    </div>
+  </div>
+</div>
+"""
+
+
+def set_auth_mode(mode: str) -> None:
+    """인증 화면을 바꾸면서 이전 화면의 오류 표시를 지운다.
+
+    화면을 옮겼는데 앞 화면의 빨간 글씨가 남아 있으면, 사용자는 방금 연 화면이
+    이미 틀렸다고 읽는다.
+    """
+
+    st.session_state.auth_mode = mode
+    st.session_state.auth_errors = {}
+    st.session_state.auth_banner = None
+    st.rerun()
+
+
+def _auth_error_style(field_keys: dict[str, str]) -> None:
+    """오류가 난 입력칸의 테두리만 설계서의 빨간색으로 바꾼다.
+
+    Streamlit 입력 위젯에는 오류 상태가 없다. key 로 붙는 ``st-key-*`` 컨테이너를
+    짚어 그 칸에만 규칙을 건다.
+
+    앞에 열 선택자를 한 번 더 붙이는 이유는 구체성 때문이다. 평상시 테두리색을
+    정하는 규칙이 이미 `[data-testid=stColumn]:has(...) [stTextInputRootElement]`
+    라서, 여기서 `.st-key-* [stTextInputRootElement]` 만 쓰면 !important 를 붙여도
+    구체성에서 밀려 빨간색이 먹히지 않는다.
+    """
+
+    errors = st.session_state.get("auth_errors") or {}
+    selectors = [
+        '[data-testid="stColumn"]:has(.auth-form-anchor) '
+        f'.st-key-{widget_key} [data-testid="stTextInputRootElement"]'
+        for field, widget_key in field_keys.items()
+        if errors.get(field)
+    ]
+    if selectors:
+        st.markdown(
+            "<style>"
+            + ",".join(selectors)
+            + "{border-color:#e9b9b7 !important;}</style>",
+            unsafe_allow_html=True,
+        )
+
+
+def _render_auth_banners() -> None:
+    """폼 위쪽의 안내 문구와 요약 오류를 그린다."""
+
+    if st.session_state.notice:
+        st.markdown(
+            f'<div class="auth-notice-banner">ℹ {escape(str(st.session_state.notice))}</div>',
+            unsafe_allow_html=True,
+        )
+        st.session_state.notice = None
+
+    banner = st.session_state.get("auth_banner")
+    if banner:
+        st.markdown(
+            f'<div class="auth-error-banner">⚠ {escape(str(banner))}</div>',
+            unsafe_allow_html=True,
+        )
+
+
+def _render_field_label(text: str) -> None:
+    st.markdown(f'<p class="auth-field-label">{escape(text)}</p>', unsafe_allow_html=True)
+
+
+def _render_field_error(field: str) -> None:
+    """설계서 SCR-001v 대로 문제가 생긴 칸 바로 아래에 사유를 붙인다."""
+
+    message = (st.session_state.get("auth_errors") or {}).get(field)
+    if message:
+        st.markdown(
+            f'<div class="auth-field-error">⚠ {escape(message)}</div>',
+            unsafe_allow_html=True,
+        )
+
+
+def _looks_like_email(value: str) -> bool:
+    """백엔드 EmailStr 이 422 로 되돌려보내기 전에 화면에서 먼저 걸러 낸다."""
+
+    return bool(re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", value.strip()))
+
+
+def _password_strength(password: str) -> tuple[int, str, str]:
+    """비밀번호 강도를 (채움 비율, 라벨, 색)으로 돌려준다.
+
+    **가입을 막지 않는 안내다.** 실제로 통과 여부를 정하는 것은 백엔드
+    ``SignupRequest.password`` 의 6자 이상뿐이라, 여기서 8자를 강제하면 서버가
+    받아 주는 비밀번호를 화면이 거절하게 된다.
+    """
+
+    if not password:
+        return 0, "", "#e7ecf5"
+
+    has_letter = bool(re.search(r"[A-Za-z]", password))
+    has_digit = bool(re.search(r"\d", password))
+    has_symbol = bool(re.search(r"[^A-Za-z0-9]", password))
+
+    if len(password) >= 10 and has_letter and has_digit and has_symbol:
+        return 100, "안전 — 영문 · 숫자 · 기호를 모두 썼습니다", "#1a7f4b"
+    if len(password) >= 8 and has_letter and has_digit:
+        return 60, "보통 — 영문 · 숫자 포함 8자 이상", "#e0a100"
+    return 30, "약함 — 영문과 숫자를 섞어 8자 이상을 권합니다", "#b33b36"
+
+
+def _render_password_strength(password: str) -> None:
+    ratio, label, color = _password_strength(password)
+    if not label:
+        return
+    st.markdown(
+        f'<div class="auth-strength-track">'
+        f'<div class="auth-strength-fill" style="width:{ratio}%;background:{color};"></div>'
+        f"</div>"
+        f'<div class="auth-strength-label" style="color:{color};">{escape(label)}</div>',
+        unsafe_allow_html=True,
     )
 
+
+def _store_session_from_token(result: dict, signup_name: str | None = None) -> None:
+    """로그인·가입 성공 응답을 세션에 옮기고 첫 화면으로 보낸다."""
+
+    st.session_state.access_token = result["access_token"]
+    st.session_state.user_email = result["email"]
+    # 새 회원가입은 입력한 이름을 이미 알고 있고, 일반 로그인은 사이드바를
+    # 처음 그릴 때 저장된 프로필 이름을 불러온다.
+    st.session_state.user_name = signup_name
+    st.session_state.mate_type = None
+    st.session_state.notice = None
+    st.session_state.auth_errors = {}
+    st.session_state.auth_banner = None
+    request_main_scroll_to_top()
+    st.rerun()
+
+
+def render_sign_in_or_up() -> None:
+    """예전 호출부를 위한 진입점이다. 실제 화면은 아래 두 함수가 그린다."""
+
+    if st.session_state.auth_mode == "signup":
+        render_sign_up()
+    else:
+        render_sign_in()
+
+
+def render_sign_in() -> None:
+    """SCR-001 로그인 · SCR-001v 인라인 오류를 그린다.
+
+    오류 문구는 어떤 칸이 비었는지까지만 말한다. 서버가 401 로 돌려주는 문구도
+    "이메일 또는 비밀번호"라 계정이 있는지 없는지는 드러나지 않는다.
+    """
+
+    st.markdown('<p class="auth-title">만나서 반가워요!</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="auth-subtitle">로그인하고 여행 계획을 만들어 보세요.</p>',
+        unsafe_allow_html=True,
+    )
+
+    _auth_error_style({"email": "login_email", "password": "login_password"})
+    _render_auth_banners()
+
     with st.form("auth_form"):
-        username = ""
-        if is_signup:
-            username = st.text_input("사용자 이름", placeholder="예: 홍길동")
-        email = st.text_input("이메일", placeholder="you@example.com")
-        password = st.text_input("비밀번호", type="password")
+        _render_field_label("이메일")
+        email = st.text_input(
+            "이메일", key="login_email", placeholder="you@example.com"
+        )
+        _render_field_error("email")
+
+        st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        _render_field_label("비밀번호")
+        password = st.text_input("비밀번호", key="login_password", type="password")
+        _render_field_error("password")
+
+        st.markdown(
+            "<div style='height:clamp(.8rem,1.042vw,1.25rem)'></div>",
+            unsafe_allow_html=True,
+        )
         submitted = st.form_submit_button(
-            "가입하고 여행 시작하기" if is_signup else "로그인",
-            use_container_width=True,
-            type="primary",
+            "로그인", use_container_width=True, type="primary"
         )
 
     if submitted:
-        if not email or not password or (is_signup and not username.strip()):
-            st.error(
-                "이름, 이메일, 비밀번호를 모두 입력하세요."
-                if is_signup
-                else "이메일과 비밀번호를 입력하세요."
+        errors: dict[str, str] = {}
+        if not email.strip():
+            errors["email"] = "이메일을 입력해 주세요."
+        elif not _looks_like_email(email):
+            errors["email"] = "이메일 형식이 아닙니다."
+        if not password:
+            errors["password"] = "비밀번호를 입력해 주세요."
+
+        if errors:
+            st.session_state.auth_errors = errors
+            st.session_state.auth_banner = None
+            st.rerun()
+
+        try:
+            result = api(
+                "POST",
+                "/auth/login",
+                json={"email": email.strip(), "password": password},
             )
+        except ApiError as error:
+            st.session_state.auth_errors = {}
+            st.session_state.auth_banner = str(error)
+            st.rerun()
         else:
-            payload = {"email": email, "password": password}
-            if is_signup:
-                payload["username"] = username.strip()
-            try:
-                result = api(
-                    "POST", "/auth/signup" if is_signup else "/auth/login", json=payload
-                )
-            except ApiError as error:
-                st.error(str(error))
-            else:
-                if not result.get("access_token"):
-                    st.info("회원가입이 완료되었습니다. 이메일 인증 후 로그인해 주세요.")
-                else:
-                    st.session_state.access_token = result["access_token"]
-                    st.session_state.user_email = result["email"]
-                    # 새 회원가입은 입력한 이름을 이미 알고 있고, 일반 로그인은
-                    # 사이드바를 처음 그릴 때 저장된 프로필 이름을 불러온다.
-                    st.session_state.user_name = username.strip() if is_signup else None
-                    st.session_state.mate_type = None
-                    st.session_state.notice = None
-                    request_main_scroll_to_top()
-                    st.rerun()
+            _store_session_from_token(result)
 
-    if st.button(
-        "이미 계정이 있어요 · 로그인" if is_signup else "계정이 없어요 · 회원가입",
-        use_container_width=True,
-    ):
-        st.session_state.auth_mode = "login" if is_signup else "signup"
-        st.rerun()
+    # 설계서 3번: Primary 는 [로그인] 하나뿐이고 보조 경로는 텍스트 링크로 둔다.
+    st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+    # 가운뎃점은 칸을 따로 두지 않고 왼쪽 링크 칸의 ::after 로 그린다. 별도
+    # 칸으로 두면 마크다운 상자 높이가 버튼과 달라 점만 몇 px 아래로 내려간다.
+    find_column, signup_column = st.columns([1, 1], vertical_alignment="center")
+    with find_column:
+        if st.button("계정 찾기", key="go_password_reset", type="tertiary"):
+            set_auth_mode("password_reset")
+    with signup_column:
+        if st.button("회원가입", key="go_signup", type="tertiary"):
+            set_auth_mode("signup")
 
-    if st.button("비밀번호를 잊으셨나요?", use_container_width=True):
-        st.session_state.auth_mode = "password_reset"
-        st.rerun()
 
-def render_password_reset() -> None:
-    """실습용 본인 확인 비밀번호 재설정 양식과 이동 버튼을 그린다."""
-    st.subheader("비밀번호 재설정")
-    st.caption("가입할 때 입력한 사용자 이름과 이메일이 일치하면 새 비밀번호를 저장합니다.")
-    st.info("실습용 기능입니다. 실제 서비스에서는 이메일 인증으로 본인 확인이 필요합니다.")
+def render_sign_up() -> None:
+    """SCR-002 회원가입을 그린다. 이름 · 이메일 · 비밀번호 세 칸뿐이다."""
 
-    with st.form("password_reset_form"):
-        username = st.text_input("사용자 이름", placeholder="가입할 때 입력한 사용자 이름")
-        email = st.text_input("이메일 (아이디)", placeholder="you@example.com")
-        new_password = st.text_input("새 비밀번호", type="password")
-        confirm_password = st.text_input("새 비밀번호 확인", type="password")
-        submitted = st.form_submit_button("새 비밀번호 저장", use_container_width=True, type="primary")
+    st.markdown('<p class="auth-title">3초 만에 시작하기</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="auth-subtitle">이름 · 이메일 · 비밀번호만 입력하면 됩니다.</p>',
+        unsafe_allow_html=True,
+    )
+
+    _auth_error_style(
+        {
+            "username": "signup_username",
+            "email": "signup_email",
+            "password": "signup_password",
+        }
+    )
+    _render_auth_banners()
+
+    with st.form("signup_form"):
+        _render_field_label("이름")
+        username = st.text_input("이름", key="signup_username", placeholder="홍길동")
+        _render_field_error("username")
+
+        st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        _render_field_label("이메일")
+        email = st.text_input(
+            "이메일", key="signup_email", placeholder="hong@mail.com"
+        )
+        _render_field_error("email")
+
+        st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        _render_field_label("비밀번호")
+        password = st.text_input("비밀번호", key="signup_password", type="password")
+        _render_field_error("password")
+        # 강도 막대는 이번 실행에 남아 있는 값으로 그린다. 폼 안에서는 입력할
+        # 때마다 다시 실행되지 않으므로, 제출한 뒤부터 반영된다.
+        _render_password_strength(password)
+
+        st.markdown(
+            "<div style='height:clamp(.8rem,1.042vw,1.25rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        submitted = st.form_submit_button(
+            "가입하기", use_container_width=True, type="primary"
+        )
 
     if submitted:
-        if not username.strip() or not email or not new_password or not confirm_password:
-            st.error("사용자 이름, 이메일, 새 비밀번호를 모두 입력하세요.")
-        elif new_password != confirm_password:
-            st.error("새 비밀번호가 서로 다릅니다.")
-        else:
-            try:
-                result = api(
-                    "POST",
-                    "/auth/password-reset/demo",
-                    json={
-                        "username": username.strip(),
-                        "email": email,
-                        "new_password": new_password,
-                    },
-                )
-            except ApiError as error:
-                st.error(str(error))
-            else:
-                st.session_state.auth_mode = "login"
-                st.session_state.notice = result["message"]
-                st.rerun()
+        errors = {}
+        if not username.strip():
+            errors["username"] = "이름을 입력해 주세요."
+        if not email.strip():
+            errors["email"] = "이메일을 입력해 주세요."
+        elif not _looks_like_email(email):
+            errors["email"] = "이메일 형식이 아닙니다."
+        # 6자는 백엔드 SignupRequest.password 의 min_length 와 같은 값이다.
+        if not password:
+            errors["password"] = "비밀번호를 입력해 주세요."
+        elif len(password) < 6:
+            errors["password"] = "비밀번호는 6자 이상이어야 합니다."
 
-    if st.button("로그인으로 돌아가기", use_container_width=True):
-        st.session_state.auth_mode = "login"
-        st.rerun()
+        if errors:
+            st.session_state.auth_errors = errors
+            st.session_state.auth_banner = None
+            st.rerun()
+
+        try:
+            result = api(
+                "POST",
+                "/auth/signup",
+                json={
+                    "username": username.strip(),
+                    "email": email.strip(),
+                    "password": password,
+                },
+            )
+        except ApiError as error:
+            # 설계서 SCR-002 는 중복 가입을 이메일 칸 아래에 붙인다. 백엔드는
+            # Supabase 예외 문구를 그대로 400 으로 흘려 보내므로 영문이 온다.
+            # 아는 문구만 이메일 칸으로 돌리고, 나머지는 위쪽 배너에 그대로 둔다.
+            # (백엔드가 구분 가능한 코드를 주면 이 문자열 대조는 지운다.)
+            message = str(error)
+            if "already registered" in message.lower() or "already been registered" in message.lower():
+                st.session_state.auth_errors = {"email": "이미 가입된 이메일입니다."}
+                st.session_state.auth_banner = None
+            else:
+                st.session_state.auth_errors = {}
+                st.session_state.auth_banner = message
+            st.rerun()
+        else:
+            if not result.get("access_token"):
+                # Supabase 가 이메일 확인을 요구하면 세션 없이 사용자만 만들어진다.
+                st.session_state.auth_mode = "login"
+                st.session_state.auth_errors = {}
+                st.session_state.auth_banner = None
+                st.session_state.notice = "회원가입이 완료되었습니다. 이메일 인증 후 로그인해 주세요."
+                st.rerun()
+            _store_session_from_token(result, signup_name=username.strip())
+
+    st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+    if st.button("이미 계정이 있어요 · 로그인", key="back_to_login_from_signup", type="tertiary"):
+        set_auth_mode("login")
+
+
+def render_password_reset() -> None:
+    """SCR-003 계정 찾기. 구현된 경로는 비밀번호 재설정 하나다.
+
+    설계서는 [아이디 찾기 · 비밀번호 재설정] 두 탭을 두지만, 아이디(이메일)를
+    찾아 주는 API 가 없다. 없는 탭을 그려 두면 눌렀을 때 아무 일도 일어나지
+    않으므로 재설정만 남긴다.
+    """
+
+    st.markdown('<p class="auth-title">계정 찾기</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="auth-subtitle">가입할 때 쓴 이름과 이메일이 맞으면 새 비밀번호를 저장합니다.</p>',
+        unsafe_allow_html=True,
+    )
+
+    _auth_error_style(
+        {
+            "username": "reset_username",
+            "email": "reset_email",
+            "new_password": "reset_new_password",
+            "confirm_password": "reset_confirm_password",
+        }
+    )
+    _render_auth_banners()
+
+    with st.form("password_reset_form"):
+        _render_field_label("가입 시 등록한 이름")
+        username = st.text_input("이름", key="reset_username", placeholder="홍길동")
+        _render_field_error("username")
+
+        st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        _render_field_label("이메일 (아이디)")
+        email = st.text_input("이메일", key="reset_email", placeholder="you@example.com")
+        _render_field_error("email")
+
+        st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        _render_field_label("새 비밀번호")
+        new_password = st.text_input("새 비밀번호", key="reset_new_password", type="password")
+        _render_field_error("new_password")
+        _render_password_strength(new_password)
+
+        st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        _render_field_label("새 비밀번호 확인")
+        confirm_password = st.text_input(
+            "새 비밀번호 확인", key="reset_confirm_password", type="password"
+        )
+        _render_field_error("confirm_password")
+
+        st.markdown(
+            "<div style='height:clamp(.8rem,1.042vw,1.25rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        submitted = st.form_submit_button(
+            "새 비밀번호 저장", use_container_width=True, type="primary"
+        )
+
+    if submitted:
+        errors = {}
+        if not username.strip():
+            errors["username"] = "이름을 입력해 주세요."
+        if not email.strip():
+            errors["email"] = "이메일을 입력해 주세요."
+        elif not _looks_like_email(email):
+            errors["email"] = "이메일 형식이 아닙니다."
+        if not new_password:
+            errors["new_password"] = "새 비밀번호를 입력해 주세요."
+        elif len(new_password) < 6:
+            errors["new_password"] = "비밀번호는 6자 이상이어야 합니다."
+        if not confirm_password:
+            errors["confirm_password"] = "새 비밀번호를 한 번 더 입력해 주세요."
+        elif new_password and new_password != confirm_password:
+            errors["confirm_password"] = "새 비밀번호가 서로 다릅니다."
+
+        if errors:
+            st.session_state.auth_errors = errors
+            st.session_state.auth_banner = None
+            st.rerun()
+
+        try:
+            result = api(
+                "POST",
+                "/auth/password-reset/demo",
+                json={
+                    "username": username.strip(),
+                    "email": email.strip(),
+                    "new_password": new_password,
+                },
+            )
+        except ApiError as error:
+            st.session_state.auth_errors = {}
+            st.session_state.auth_banner = str(error)
+            st.rerun()
+        else:
+            st.session_state.auth_mode = "login"
+            st.session_state.auth_errors = {}
+            st.session_state.auth_banner = None
+            st.session_state.notice = result["message"]
+            st.rerun()
+
+    st.markdown(
+        '<div class="auth-hint-card">실습용 기능입니다. 실제 서비스에서는'
+        " 메일로 보낸 링크로 본인을 확인한 뒤 비밀번호를 바꿉니다.</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+    if st.button("로그인으로 돌아가기", key="back_to_login_from_reset", type="tertiary"):
+        set_auth_mode("login")
+
 
 def render_travel_preference_sliders(
     key_prefix: str, intensity: int = 3, budget: int = 3
@@ -2088,9 +3832,24 @@ def render_admin_sidebar_profile(display_name: str, email: str) -> None:
     initial = escape(display_name[:1].upper() or "?")
     safe_name = escape(display_name)
     safe_email = escape(email)
+    profile_initial_css = json.dumps(
+        display_name[:1].upper() or "여", ensure_ascii=False
+    ).replace("</", "<\\/")
+    profile_email_css = json.dumps(email or "", ensure_ascii=False).replace(
+        "</", "<\\/"
+    )
+    st.markdown(
+        "<style>"
+        "[data-testid=\"stSidebar\"] .st-key-admin-sidebar-profile {"
+        f"--sidebar-profile-initial: {profile_initial_css};"
+        f"--sidebar-profile-email: {profile_email_css};"
+        "--sidebar-profile-avatar-bg: #2563eb;"
+        "}</style>",
+        unsafe_allow_html=True,
+    )
     with st.container(key="admin-sidebar-profile", border=False):
         with st.popover(
-            f"{display_name} · 내 프로필",
+            display_name,
             key="admin_sidebar_profile_popover",
             use_container_width=True,
         ):
@@ -2126,7 +3885,9 @@ def render_admin_console_navigation(current_view: str) -> None:
     console_views = {"admin_console", "admin_feedback", "admin_system"}
 
     st.markdown(
-        '<div class="admin-console-brand">운영 콘솔<small>TripMate Admin</small></div>',
+        '<div class="sidebar-brand admin-sidebar-brand">'
+        '<span class="sidebar-brand-mark">◉</span>운영 콘솔</div>'
+        '<div class="admin-sidebar-subtitle">TripMate Admin</div>',
         unsafe_allow_html=True,
     )
     if st.button(
@@ -2147,14 +3908,9 @@ def render_admin_console_navigation(current_view: str) -> None:
         st.session_state.current_view = "admin_console"
         request_main_scroll_to_top()
         st.rerun()
-    st.markdown(
-        '<div class="admin-console-description"><strong>절대 규칙</strong>'
-        '대시보드는 어떤 권한으로도 열람할 수 없습니다. 이 콘솔은 집계와 메타데이터만 다룹니다.</div>',
-        unsafe_allow_html=True,
-    )
 
 
-def render_admin_console_tabs(current_view: str) -> None:
+def _render_admin_console_tabs_legacy(current_view: str) -> None:
     """피그마 ADM-002·003·004의 본문 상단 가로 탭을 렌더링한다."""
 
     tab_specs = [
@@ -4877,7 +6633,7 @@ def _admin_dashboard_metric_value(value: int | float | None, suffix: str = "") -
     return f"{value or 0}{suffix}"
 
 
-def _render_admin_dashboard_figma(summary: dict, error_items: list[dict]) -> None:
+def _render_admin_dashboard_figma_legacy(summary: dict, error_items: list[dict]) -> None:
     """피그마의 KPI·차트·오류 모니터링 구성을 Streamlit 기본 기능으로 표현한다."""
 
     kpis = summary.get("kpis", {})
@@ -4996,7 +6752,7 @@ def render_admin_access_denied() -> None:
             st.rerun()
 
 
-def render_admin_dashboard() -> None:
+def _render_admin_dashboard_legacy() -> None:
     """로그인한 관리자 세션 안에서 운영 대시보드를 렌더링한다."""
 
     st.title("운영 대시보드")
@@ -5054,7 +6810,7 @@ def render_admin_dashboard() -> None:
         st.success("선택한 기간에 오류 로그가 없습니다.")
 
 
-def _render_admin_console_figma() -> None:
+def _render_admin_console_figma_legacy() -> None:
     """피그마 ADM-002의 사용자 목록·상세 2열 구성을 렌더링한다."""
 
     render_admin_console_tabs("admin_console")
@@ -5166,7 +6922,7 @@ def _render_admin_console_figma() -> None:
                 st.info("API 요청 로그가 없습니다.")
 
 
-def render_admin_feedback() -> None:
+def _render_admin_feedback_legacy() -> None:
     """피그마 ADM-003의 피드백·페이스 집계 전용 화면을 렌더링한다."""
 
     render_admin_console_tabs("admin_feedback")
@@ -5237,7 +6993,7 @@ def render_admin_feedback() -> None:
     st.caption("원문과 개인 식별 정보는 표시하지 않고 집계 결과만 제공합니다.")
 
 
-def render_admin_system_status() -> None:
+def _render_admin_system_status_legacy() -> None:
     """피그마 ADM-004의 최근 1시간 시스템 상태 화면을 렌더링한다."""
 
     render_admin_console_tabs("admin_system")
@@ -5414,16 +7170,619 @@ def render_admin_console() -> None:
         st.info("API 요청 로그가 없습니다.")
 
 
+def render_admin_console_tabs(current_view: str) -> None:
+    """관리자 본문 상단의 공통 탭을 렌더링한다."""
+
+    tab_specs = [
+        ("사용자 관리", "admin_console", "admin-tab-users"),
+        ("피드백·페이스", "admin_feedback", "admin-tab-feedback"),
+        ("시스템 상태", "admin_system", "admin-tab-system"),
+    ]
+    with st.container(key="admin-console-header", border=False):
+        st.markdown(
+            '<div class="admin-console-page-title">사용자 피드백 시스템</div>',
+            unsafe_allow_html=True,
+        )
+        tab_columns = st.columns(3, gap="small")
+        for column, (label, target_view, key) in zip(tab_columns, tab_specs):
+            with column:
+                if st.button(
+                    label,
+                    type="primary" if current_view == target_view else "secondary",
+                    use_container_width=True,
+                    key=key,
+                ) and current_view != target_view:
+                    st.session_state.current_view = target_view
+                    request_main_scroll_to_top()
+                    st.rerun()
+
+
+def _admin_dashboard_metric_value(
+    value: int | float | str | None,
+    suffix: str = "",
+) -> str:
+    if isinstance(value, bool):
+        rendered = str(value)
+    elif isinstance(value, int):
+        rendered = f"{value:,}"
+    elif isinstance(value, float):
+        rendered = f"{value:,.2f}".rstrip("0").rstrip(".")
+    else:
+        rendered = str(value or 0)
+    return f"{rendered}{suffix}"
+
+
+def _render_admin_dashboard_kpi_card(
+    *,
+    key: str,
+    label: str,
+    value: str,
+    icon: str,
+    note: str,
+    tone: str = "",
+) -> None:
+    icon_class = f" admin-kpi-icon-{tone}" if tone else ""
+    value_class = " admin-kpi-value-danger" if tone == "danger" else ""
+    with st.container(key=key, border=True):
+        st.markdown(
+            f'<div class="admin-kpi-card">'
+            f'<div class="admin-kpi-card-header">'
+            f'<span class="admin-kpi-icon{icon_class}">{escape(icon)}</span>'
+            f'<span>{escape(label)}</span>'
+            f'</div>'
+            f'<div class="admin-kpi-value{value_class}">{escape(value)}</div>'
+            f'<div class="admin-kpi-footnote">{escape(note)}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+
+def _render_admin_hourly_chart(hourly: list[dict]) -> None:
+    rows: list[dict[str, int | str]] = []
+    for item in hourly:
+        total = int(item.get("request_count", 0) or 0)
+        success = int(item.get("success_count", 0) or 0)
+        failure = int(item.get("failure_count", 0) or 0)
+        if total <= 0:
+            total = success + failure
+        raw_hour = str(item.get("hour") or "")
+        rows.append(
+            {
+                "label": raw_hour.split("T", 1)[-1][:2] if raw_hour else "-",
+                "total": max(total, 0),
+                "success": max(success, 0),
+                "failure": max(failure, 0),
+            }
+        )
+
+    if not rows:
+        st.info("선택한 기간의 요청 로그가 없습니다.")
+        return
+
+    width, height = 760, 245
+    left, right, top, bottom = 42, 12, 18, 34
+    chart_width = width - left - right
+    chart_height = height - top - bottom
+    max_value = max(max(int(row["total"]) for row in rows), 1)
+    step = chart_width / max(len(rows), 1)
+    bar_width = max(min(step * .58, 42), 8)
+    svg_parts = [f'<svg viewBox="0 0 {width} {height}" role="img" aria-label="시간대 요청 수">']
+
+    for ratio in (0, .5, 1):
+        y = top + chart_height * (1 - ratio)
+        value = round(max_value * ratio)
+        svg_parts.extend(
+            [
+                f'<line x1="{left}" y1="{y:.2f}" x2="{width - right}" y2="{y:.2f}" stroke="#eeeaf6" stroke-width="1" />',
+                f'<text x="{left - 8}" y="{y + 4:.2f}" text-anchor="end" fill="#a9b2c4" font-size="11" font-family="Pretendard, Noto Sans KR, Malgun Gothic, sans-serif">{value:,}</text>',
+            ]
+        )
+
+    for index, row in enumerate(rows):
+        total = int(row["total"])
+        success = min(int(row["success"]), total)
+        failure = min(int(row["failure"]), max(total - success, 0))
+        x = left + step * index + (step - bar_width) / 2
+        success_height = chart_height * success / max_value
+        failure_height = chart_height * failure / max_value
+        success_y = top + chart_height - success_height
+        failure_y = success_y - failure_height
+        svg_parts.append(
+            f'<rect x="{x:.2f}" y="{success_y:.2f}" width="{bar_width:.2f}" height="{max(success_height, 0):.2f}" rx="4" fill="#6d3fd1" />'
+        )
+        if failure_height > 0:
+            svg_parts.append(
+                f'<rect x="{x:.2f}" y="{failure_y:.2f}" width="{bar_width:.2f}" height="{failure_height:.2f}" rx="4" fill="#d9c9f6" />'
+            )
+        if len(rows) <= 12 or index in {0, len(rows) - 1} or index % 3 == 0:
+            svg_parts.append(
+                f'<text x="{x + bar_width / 2:.2f}" y="{height - 10}" text-anchor="middle" fill="#a9b2c4" font-size="11" font-family="Pretendard, Noto Sans KR, Malgun Gothic, sans-serif">{escape(str(row["label"]))}</text>'
+            )
+
+    svg_parts.append("</svg>")
+    st.markdown(
+        f'<div class="admin-chart-shell">{"".join(svg_parts)}</div>'
+        '<div class="admin-chart-legend"><span>성공</span><span>실패</span></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _render_admin_success_failure_donut(success_count: int, failure_count: int) -> None:
+    """성공·실패 요청의 비율을 SVG 도넛으로 표시한다."""
+
+    import math
+
+    success = max(int(success_count or 0), 0)
+    failure = max(int(failure_count or 0), 0)
+    total = success + failure
+    success_ratio = success / total if total else 0
+    failure_ratio = failure / total if total else 0
+    size, radius = 220, 72
+    center = size / 2
+    circumference = 2 * math.pi * radius
+    success_length = circumference * success_ratio
+    failure_length = circumference * failure_ratio
+    percent = success_ratio * 100
+    svg_markup = (
+        f'<svg viewBox="0 0 {size} {size}" role="img" aria-label="성공 {success:,}건, 실패 {failure:,}건">'
+        f'<circle cx="{center}" cy="{center}" r="{radius}" fill="none" stroke="#edeaf6" stroke-width="20" />'
+        f'<circle cx="{center}" cy="{center}" r="{radius}" fill="none" stroke="#6d3fd1" stroke-width="20" stroke-linecap="round" stroke-dasharray="{success_length:.2f} {circumference:.2f}" transform="rotate(-90 110 110)" />'
+        f'<circle cx="{center}" cy="{center}" r="{radius}" fill="none" stroke="#d9c9f6" stroke-width="20" stroke-linecap="round" stroke-dasharray="{failure_length:.2f} {circumference:.2f}" stroke-dashoffset="{-success_length:.2f}" transform="rotate(-90 110 110)" />'
+        f'<text x="{center}" y="{center - 3}" text-anchor="middle" fill="#111827" font-size="28" font-weight="800" font-family="Pretendard, Noto Sans KR, Malgun Gothic, sans-serif">{percent:.1f}%</text>'
+        f'<text x="{center}" y="{center + 21}" text-anchor="middle" fill="#8a93a6" font-size="11" font-weight="600" font-family="Pretendard, Noto Sans KR, Malgun Gothic, sans-serif">성공률</text></svg>'
+    )
+    st.markdown(
+        f'<div class="admin-donut-shell"><div class="admin-donut-chart">{svg_markup}</div>'
+        '<div class="admin-donut-legend">'
+        f'<div><span class="admin-donut-dot success"></span><strong>성공</strong><b>{success:,}</b>건</div>'
+        f'<div><span class="admin-donut-dot failure"></span><strong>실패</strong><b>{failure:,}</b>건</div>'
+        '</div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _render_admin_dashboard_figma(summary: dict, error_items: list[dict]) -> None:
+    """운영 대시보드의 KPI, 요청 추이, 오류 모니터링을 렌더링한다."""
+
+    kpis = summary.get("kpis", {})
+    signup_count = int(kpis.get("user_signup_count", 0) or 0)
+    total_count = int(kpis.get("total_requests", 0) or 0)
+    success_count = int(kpis.get("success_count", 0) or 0)
+    failure_count = int(kpis.get("failure_count", 0) or 0)
+    error_rate = _admin_dashboard_metric_value(kpis.get("error_rate_percent", 0), "%")
+    average_latency = _admin_dashboard_metric_value(kpis.get("average_latency_ms", 0), " ms")
+
+    with st.container(key="admin-dashboard-kpi-panel", border=False):
+        st.markdown('<div class="admin-panel-title">운영 현황</div>', unsafe_allow_html=True)
+        cards = st.columns(5, gap="small")
+        card_specs = [
+            ("admin-dashboard-kpi-user-signups", "사용자 가입", f"{signup_count:,}", "+", "선택 기간 기준", ""),
+            ("admin-dashboard-kpi-total-requests", "전체 요청", f"{total_count:,}", "·", "선택 기간 기준", ""),
+            ("admin-dashboard-kpi-success-failure", "성공 / 실패", f"{success_count:,} / {failure_count:,}", "·", "성공 / 실패 요청", ""),
+            ("admin-dashboard-kpi-error-rate", "오류율", error_rate, "!", "실패 요청 비율", "danger"),
+            ("admin-dashboard-kpi-latency", "평균 응답 시간", average_latency, "·", "전체 요청 평균", "warn"),
+        ]
+        for column, spec in zip(cards, card_specs):
+            with column:
+                _render_admin_dashboard_kpi_card(
+                    key=spec[0],
+                    label=spec[1],
+                    value=spec[2],
+                    icon=spec[3],
+                    note=spec[4],
+                    tone=spec[5],
+                )
+
+    hourly = summary.get("hourly_requests", [])
+    chart_column, status_column = st.columns([1.55, 1], gap="medium")
+    with chart_column:
+        with st.container(key="admin-dashboard-hourly-panel", border=True):
+            st.markdown('<div class="admin-panel-title">시간대 요청 수</div>', unsafe_allow_html=True)
+            _render_admin_hourly_chart(hourly)
+    with status_column:
+        with st.container(key="admin-dashboard-status-panel", border=True):
+            st.markdown('<div class="admin-panel-title">성공 · 실패 현황</div>', unsafe_allow_html=True)
+            _render_admin_success_failure_donut(success_count, failure_count)
+            st.markdown(
+                '<div class="admin-status-note">요청 상태 코드 200~399를 성공으로 집계합니다.</div>',
+                unsafe_allow_html=True,
+            )
+
+    error_counts: dict[str, int] = {}
+    for item in error_items:
+        label = str(item.get("error_type") or item.get("endpoint") or "알 수 없는 오류")
+        error_counts[label] = error_counts.get(label, 0) + 1
+    top_errors = sorted(error_counts.items(), key=lambda pair: (-pair[1], pair[0]))[:3]
+    with st.container(key="admin-dashboard-error-panel", border=True):
+        st.markdown('<div class="admin-panel-title">오류 TOP 3</div>', unsafe_allow_html=True)
+        if top_errors:
+            total_errors = max(sum(count for _, count in top_errors), 1)
+            rows = []
+            for rank, (label, count) in enumerate(top_errors, start=1):
+                ratio = count / total_errors * 100
+                rows.append(
+                    f'<div class="admin-error-row"><span class="admin-error-rank">{rank}</span>'
+                    f'<span>{escape(label)}</span><span class="admin-error-count">{count:,}건 · {ratio:.0f}%</span></div>'
+                )
+            st.markdown('<div class="admin-error-list">' + "".join(rows) + '</div>', unsafe_allow_html=True)
+        else:
+            st.success("오류가 없습니다.")
+
+    llm_summary = summary.get("llm_summary", [])
+    with st.container(key="admin-dashboard-llm-panel", border=True):
+        st.markdown('<div class="admin-panel-title">LLM 요청 요약</div>', unsafe_allow_html=True)
+        if llm_summary:
+            st.dataframe(
+                [
+                    {
+                        "모델": item.get("model"),
+                        "요청": item.get("request_count", 0),
+                        "실패": item.get("failure_count", 0),
+                        "오류율(%)": item.get("error_rate_percent", 0),
+                        "평균 응답(ms)": item.get("average_latency_ms", 0),
+                    }
+                    for item in llm_summary
+                ],
+                use_container_width=True,
+                hide_index=True,
+            )
+        else:
+            st.info("선택한 기간의 LLM 요청 로그가 없습니다.")
+
+
+def render_admin_dashboard() -> None:
+    """로그인한 관리자 세션에서 운영 대시보드를 렌더링한다."""
+
+    st.title("운영 대시보드")
+    st.markdown(
+        '<div class="admin-main-description">서비스 로그와 API 운영 지표를 한눈에 확인하세요.</div>',
+        unsafe_allow_html=True,
+    )
+    render_admin_dashboard_filters()
+    start_date = st.session_state.get("admin_dashboard_start_date", date.today())
+    end_date = st.session_state.get("admin_dashboard_end_date", date.today())
+    if start_date > end_date:
+        st.error("시작일은 종료일보다 늦을 수 없습니다.")
+        return
+
+    params = _admin_dashboard_period_params(start_date, end_date)
+    try:
+        headers = auth_headers()
+        summary = api("GET", "/admin/dashboard/summary", params=params, headers=headers, timeout=30)
+        errors = api(
+            "GET",
+            "/admin/dashboard/errors",
+            params={**params, "limit": "100"},
+            headers=headers,
+            timeout=30,
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+
+    period = summary.get("period", {})
+    st.caption(f"조회 기간: {period.get('start_at', '')} ~ {period.get('end_at', '')}")
+    error_items = errors.get("items", []) if isinstance(errors, dict) else []
+    _render_admin_dashboard_figma(summary, error_items)
+
+    st.subheader("최근 오류 로그")
+    if error_items:
+        st.dataframe(
+            [
+                {
+                    "발생 시각": item.get("occurred_at"),
+                    "요청 ID": item.get("request_id"),
+                    "메서드": item.get("method"),
+                    "엔드포인트": item.get("endpoint"),
+                    "상태 코드": item.get("status_code"),
+                    "응답 시간(ms)": item.get("latency_ms"),
+                    "오류 유형": item.get("error_type"),
+                    "모델": item.get("model"),
+                }
+                for item in error_items
+            ],
+            use_container_width=True,
+            hide_index=True,
+        )
+    else:
+        st.success("선택한 기간에 오류 로그가 없습니다.")
+
+
+def _render_admin_console_figma() -> None:
+    """사용자 목록과 선택한 사용자의 상세 정보를 두 열로 렌더링한다."""
+
+    render_admin_console_tabs("admin_console")
+    with st.container(key="admin-user-search-panel", border=True):
+        st.markdown('<div class="admin-panel-title">사용자 찾기</div>', unsafe_allow_html=True)
+        search = st.text_input(
+            "사용자 검색",
+            placeholder="이름 또는 이메일을 입력하세요",
+            key="admin_console_search",
+            label_visibility="collapsed",
+        ).strip()
+    try:
+        result = api(
+            "GET",
+            "/admin/console/users",
+            params={"search": search, "limit": 100},
+            headers=auth_headers(),
+            timeout=30,
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+
+    users = result.get("items", []) if isinstance(result, dict) else []
+    st.caption(f"전체 사용자 {result.get('total', 0) if isinstance(result, dict) else 0}명")
+    if not users:
+        st.info("조건에 맞는 사용자가 없습니다.")
+        return
+
+    user_options = {str(item.get("id")): item for item in users if item.get("id")}
+    if not user_options:
+        st.info("상세 정보를 조회할 수 있는 사용자가 없습니다.")
+        return
+
+    list_column, detail_column = st.columns([1, 1.35], gap="medium")
+    with list_column:
+        with st.container(key="admin-user-list-panel", border=True):
+            st.markdown('<div class="admin-panel-title">사용자 목록</div>', unsafe_allow_html=True)
+            st.dataframe(
+                [
+                    {
+                        "사용자": item.get("username") or "-",
+                        "이메일": item.get("email") or "-",
+                        "가입일": item.get("created_at") or "-",
+                    }
+                    for item in users
+                ],
+                use_container_width=True,
+                hide_index=True,
+            )
+            selected_user_id = st.selectbox(
+                "상세 조회 사용자",
+                options=list(user_options),
+                format_func=lambda user_id: (
+                    f"{user_options[user_id].get('username') or '-'} · "
+                    f"{user_options[user_id].get('email') or '-'}"
+                ),
+                key="admin_console_selected_user",
+            )
+
+    try:
+        detail = api(
+            "GET",
+            f"/admin/console/users/{selected_user_id}",
+            headers=auth_headers(),
+            timeout=30,
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+
+    with detail_column:
+        with st.container(key="admin-user-detail-panel", border=True):
+            st.markdown('<div class="admin-panel-title">사용자 상세</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="admin-user-detail-heading">{escape(str(detail.get("username") or "-"))}'
+                f'<small>{escape(str(detail.get("email") or "-"))}</small></div>',
+                unsafe_allow_html=True,
+            )
+            detail_values = [
+                ("여행 수", detail.get("trip_count", 0)),
+                ("API 요청", detail.get("request_count", 0)),
+                ("활동 로그", detail.get("activity_count", 0)),
+            ]
+            stat_columns = st.columns(3, gap="small")
+            for index, (label, value) in enumerate(detail_values):
+                with stat_columns[index]:
+                    with st.container(key=f"admin-user-detail-stat-{index}", border=True):
+                        st.markdown(
+                            f'<div class="admin-user-detail-stat-label">{escape(label)}</div>'
+                            f'<div class="admin-user-detail-stat-value">{escape(str(value))}</div>',
+                            unsafe_allow_html=True,
+                        )
+
+            trips = detail.get("trips", [])
+            st.markdown("#### 여행 목록")
+            if trips:
+                st.dataframe(
+                    [
+                        {
+                            "여행": item.get("title") or item.get("destination") or "-",
+                            "기간": f"{item.get('start_date') or '-'} ~ {item.get('end_date') or '-'}",
+                            "상태": item.get("status") or "-",
+                        }
+                        for item in trips
+                    ],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            else:
+                st.info("여행 기록이 없습니다.")
+
+            st.markdown("#### 최근 활동")
+            activities = detail.get("recent_activities", [])
+            if activities:
+                st.dataframe(activities[:8], use_container_width=True, hide_index=True)
+            else:
+                st.info("활동 로그가 없습니다.")
+
+            st.markdown("#### 최근 API 요청")
+            requests = detail.get("recent_requests", [])
+            if requests:
+                st.dataframe(requests[:8], use_container_width=True, hide_index=True)
+            else:
+                st.info("API 요청 로그가 없습니다.")
+
+
+def _render_admin_breakdown_bars(items: list[dict], label_key: str) -> None:
+    """피드백·페이스 집계를 관리자 콘솔 톤의 막대로 렌더링한다."""
+
+    rows = [
+        (str(item.get(label_key) or "기타"), max(int(item.get("count", 0) or 0), 0))
+        for item in items
+    ]
+    if not rows:
+        st.info("집계 데이터가 없습니다.")
+        return
+
+    max_count = max(max(count for _, count in rows), 1)
+    markup = []
+    for label, count in rows:
+        width = count / max_count * 100
+        markup.append(
+            '<div class="admin-breakdown-row">'
+            f'<div class="admin-breakdown-row-head"><span>{escape(label)}</span><strong>{count:,}</strong></div>'
+            f'<div class="admin-breakdown-track"><span style="width:{width:.2f}%"></span></div>'
+            '</div>'
+        )
+    st.markdown(
+        '<div class="admin-breakdown-list">' + "".join(markup) + '</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def render_admin_feedback() -> None:
+    """피드백과 페이스 집계를 카드·막대 구성으로 렌더링한다."""
+
+    render_admin_console_tabs("admin_feedback")
+    try:
+        summary = api(
+            "GET",
+            "/admin/console/feedback",
+            headers=auth_headers(),
+            timeout=30,
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+
+    cards = st.columns(4, gap="small")
+    card_specs = [
+        ("admin-feedback-kpi-total", "전체 피드백", summary.get("feedback_count", 0), "·", "전체 수집 건수", ""),
+        ("admin-feedback-kpi-positive", "긍정 피드백", summary.get("positive_count", 0), "+", "긍정 응답", ""),
+        ("admin-feedback-kpi-negative", "부정 피드백", summary.get("negative_count", 0), "!", "개선 필요 응답", "danger"),
+        ("admin-feedback-kpi-pace", "페이스 기록", summary.get("pace_count", 0), "·", "사용자 페이스 집계", ""),
+    ]
+    for column, (key, label, value, icon, note, tone) in zip(cards, card_specs):
+        with column:
+            _render_admin_dashboard_kpi_card(
+                key=key,
+                label=label,
+                value=f"{int(value or 0):,}",
+                icon=icon,
+                note=note,
+                tone=tone,
+            )
+
+    feedback_breakdown = summary.get("feedback_breakdown", [])
+    pace_breakdown = summary.get("pace_breakdown", [])
+    feedback_column, pace_column = st.columns(2, gap="medium")
+    with feedback_column:
+        with st.container(key="admin-feedback-breakdown-panel", border=True):
+            st.markdown('<div class="admin-panel-title">피드백 집계</div>', unsafe_allow_html=True)
+            if feedback_breakdown:
+                _render_admin_breakdown_bars(feedback_breakdown, "label")
+            else:
+                st.info("수집된 피드백 로그가 없습니다.")
+    with pace_column:
+        with st.container(key="admin-pace-breakdown-panel", border=True):
+            st.markdown('<div class="admin-panel-title">페이스 집계</div>', unsafe_allow_html=True)
+            if pace_breakdown:
+                _render_admin_breakdown_bars(pace_breakdown, "label")
+            else:
+                st.info("수집된 페이스 로그가 없습니다.")
+
+    st.caption("설문 응답의 개인 식별 정보는 표시하지 않고 집계 결과만 제공합니다.")
+
+
+def render_admin_system_status() -> None:
+    """최근 1시간 시스템 상태를 카드 중심으로 렌더링한다."""
+
+    render_admin_console_tabs("admin_system")
+    try:
+        status = api(
+            "GET",
+            "/admin/console/system-status",
+            headers=auth_headers(),
+            timeout=30,
+        )
+    except ApiError as error:
+        st.error(str(error))
+        return
+
+    overview_columns = st.columns(4, gap="small")
+    overview_specs = [
+        ("admin-system-kpi-total", "전체 요청", status.get("total_requests", 0), "·", "최근 1시간", ""),
+        ("admin-system-kpi-failure", "실패 요청", status.get("failure_count", 0), "!", "실패 요청 수", "danger"),
+        ("admin-system-kpi-rate", "오류율", f'{status.get("error_rate_percent", 0)}%', "%", "전체 요청 대비", "danger"),
+        ("admin-system-kpi-range", "조회 범위", "최근 1시간", "·", "api_request_logs 기준", ""),
+    ]
+    for column, (key, label, value, icon, note, tone) in zip(overview_columns, overview_specs):
+        with column:
+            _render_admin_dashboard_kpi_card(
+                key=key,
+                label=label,
+                value=str(value),
+                icon=icon,
+                note=note,
+                tone=tone,
+            )
+
+    services = status.get("services", [])
+    if not services:
+        st.info("시스템 상태 데이터가 없습니다.")
+        return
+
+    service_columns = st.columns(2, gap="medium")
+    healthy_statuses = {"healthy", "ok", "up", "active", "정상", "정상 운영"}
+    for index, service in enumerate(services):
+        with service_columns[index % 2]:
+            with st.container(key=f"admin-system-service-{index}", border=True):
+                service_name = service.get("service") or "서비스"
+                status_text = str(service.get("status") or "상태 미확인")
+                status_class = "" if status_text.lower() in healthy_statuses else " is-warning"
+                st.markdown(
+                    f'<div class="admin-panel-title">{escape(str(service_name))}</div>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    f'<div class="admin-service-status-line"><span>서비스 상태</span>'
+                    f'<span class="admin-service-status-badge{status_class}">{escape(status_text)}</span></div>',
+                    unsafe_allow_html=True,
+                )
+                metrics = st.columns(3)
+                metric_values = [
+                    ("요청", service.get("request_count", 0)),
+                    ("실패율", f'{service.get("failure_rate_percent", 0)}%'),
+                    ("P95 응답", f'{service.get("p95_latency_ms", 0)} ms'),
+                ]
+                for metric_column, (label, value) in zip(metrics, metric_values):
+                    with metric_column:
+                        st.markdown(
+                            f'<div class="admin-service-metric">'
+                            f'<div class="admin-service-metric-label">{escape(label)}</div>'
+                            f'<div class="admin-service-metric-value">{escape(str(value))}</div>'
+                            '</div>',
+                            unsafe_allow_html=True,
+                        )
+
+    st.caption("api_request_logs 기준으로 최근 1시간 서비스 요청 상태를 집계합니다.")
+
+
 def render_signed_in() -> None:
     """현재 사용자의 여행을 불러오고 알맞은 로그인 상태 화면을 그린다."""
-    trips = api("GET", "/me/trips", headers=auth_headers())
-    if trips and st.session_state.selected_trip_id not in {trip["id"] for trip in trips}:
+    admin_views = {"admin_dashboard", "admin_console", "admin_feedback", "admin_system"}
+    current_view = st.session_state.get("current_view")
+    is_admin_view = current_view in admin_views
+    trips = [] if is_admin_view else api("GET", "/me/trips", headers=auth_headers())
+    if not is_admin_view and trips and st.session_state.selected_trip_id not in {trip["id"] for trip in trips}:
         st.session_state.selected_trip_id = trips[0]["id"]
         request_main_scroll_to_top()
 
     render_sidebar(trips)
 
-    admin_views = {"admin_dashboard", "admin_console", "admin_feedback", "admin_system"}
     if st.session_state.get("current_view") in admin_views and not st.session_state.get("is_dashboard_admin"):
         render_admin_access_denied()
         return
