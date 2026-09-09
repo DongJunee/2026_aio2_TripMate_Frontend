@@ -3414,11 +3414,6 @@ def render_admin_console_navigation(current_view: str) -> None:
         st.session_state.current_view = "admin_console"
         request_main_scroll_to_top()
         st.rerun()
-    st.markdown(
-        '<div class="admin-console-description"><strong>절대 규칙</strong>'
-        '대시보드는 어떤 권한으로도 열람할 수 없습니다. 이 콘솔은 집계와 메타데이터만 다룹니다.</div>',
-        unsafe_allow_html=True,
-    )
 
 
 def _render_admin_console_tabs_legacy(current_view: str) -> None:
