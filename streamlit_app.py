@@ -623,6 +623,28 @@ st.markdown(
         > [data-testid="stColumn"]:first-child {
           position: relative;
         }
+        /* 상단 3:1 네비게이션의 두 컬럼 사이에만 구분선을 그린다.
+           중첩된 일정·버튼 컬럼에는 적용하지 않아 긴 세로선이 생기지 않는다. */
+        .st-key-trip_dashboard_shell
+        > [data-testid="stLayoutWrapper"]
+        > [data-testid="stHorizontalBlock"]
+        > [data-testid="stColumn"]:nth-child(2) {
+          position: relative;
+        }
+        .st-key-trip_dashboard_shell
+        > [data-testid="stLayoutWrapper"]
+        > [data-testid="stHorizontalBlock"]
+        > [data-testid="stColumn"]:nth-child(2)::before {
+          content: "";
+          position: absolute;
+          top: -8px;
+          height: 40px;
+          left: -.5rem;
+          width: 1px;
+          background: #cbd5e5;
+          z-index: 10;
+          pointer-events: none;
+        }
         /* Windows 화면 배율이나 브라우저 줌에 따라 CSS 픽셀 높이가 달라져도
            실제 화면에서 일정·지도·채팅이 비슷한 비율을 차지하게 한다. */
         /* 일정 목록의 실제 높이와 스크롤은 render_compact_schedule()의
@@ -631,30 +653,76 @@ st.markdown(
            두 번 생기지 않도록 이 스크롤 영역 안에서만 세로 간격을 줄인다. */
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_schedule_"][data-testid="stVerticalBlock"],
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_schedule_"] > [data-testid="stVerticalBlock"] {
+          background: #f6f8fc !important;
           gap: 10px !important;
           row-gap: 5px !important;
         }
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_schedule_"] [data-testid="stHorizontalBlock"] {
           gap: .45rem !important;
         }
+        /* 일정 스크롤과 지도 사이의 기본 요소 간격도 같은 배경 안에 포함한다. */
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_timeline_map_area_"][data-testid="stVerticalBlock"],
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_timeline_map_area_"] > [data-testid="stVerticalBlock"] {
+          gap:0 !important;
+          row-gap:0 !important;
+          background:#f6f8fc !important;
+        }
         /* 지도 높이 */
         .st-key-trip_dashboard_shell iframe[title="streamlit_components.v1.components.html"] {
           height: 35dvh !important;
           min-height: 165px !important;
-          max-height: 400px !important;
+          max-height: 300px !important;
+        }
+        /* 지도 영역 바깥은 일정 스크롤뷰와 같은 배경으로 두고, 카드 사방에 1rem 여백을 둔다. */
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_map_area_"][data-testid="stVerticalBlock"],
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_map_area_"] > [data-testid="stVerticalBlock"] {
+          gap:0 !important;
+          row-gap:0 !important;
+          padding:1rem !important;
+          background:#f6f8fc !important;
+        }
+        /* 지도 헤더와 iframe을 하나의 카드로 붙인다. */
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_map_panel_"][data-testid="stVerticalBlock"],
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_map_panel_"] > [data-testid="stVerticalBlock"] {
+          gap:0 !important;
+          row-gap:0 !important;
+          background:#fff;
+          overflow:hidden;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_map_panel_"][data-testid="stVerticalBlock"] {
+          border:1px solid #e1e7f0;
+          border-radius:12px;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_map_panel_"] [data-testid="stElementContainer"] {
+          margin:0 !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_map_panel_"] iframe[title="streamlit_components.v1.components.html"] {
+          display:block;
+          border:0 !important;
+          border-radius:0 !important;
         }
         /* 오른쪽 채팅 높이 */
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_chat_"] {
           height: 100dvh !important;
           min-height: 430px !important;
-          max-height: 900px !important;
+          max-height: 500px !important;
           overflow-y: auto !important;
         }
-        /* 3:1 바깥 컬럼은 유지하고, 날짜 네비게이션 묶음만 조금 짧게 만든다. */
+        /* 3:1.5 바깥 컬럼 안에서 날짜 네비게이션의 오른쪽 빈 공간만 작게 둔다. */
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_navigation_"] {
-          width: 90% !important;
-          max-width: 90% !important;
+          width: 100% !important;
+          max-width: 100% !important;
           margin-right: auto !important;
+        }
+        /* 버튼 크기는 건드리지 않고, 네비게이션 행 아래의 세로 간격만 제거해
+           날짜 요약과 일정 스크롤뷰가 더 위에서 시작되게 한다. */
+        .st-key-trip_dashboard_shell
+        > [data-testid="stLayoutWrapper"]
+        > [data-testid="stHorizontalBlock"]
+        > [data-testid="stColumn"]:first-child
+        [data-testid="stHorizontalBlock"]:has([class*="st-key-dashboard_day_navigation_"]) {
+          margin-bottom: -25px !important;
+          transform: translateY(-15px);
         }
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_"] button,
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_previous_"] button,
@@ -666,46 +734,75 @@ st.markdown(
         }
         /* 상단 날짜 탭은 피그마처럼 DAY와 날짜를 두 줄로 보여 준다. */
         .st-key-trip_dashboard_shell
-        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button {
+        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_navigation_"]):not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button {
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
-          height: 48px !important;
-          min-height: 48px !important;
-          width: 70px !important;
-          max-width: 70px !important;
+          height: 40px !important;
+          min-height: 40px !important;
+          width: 75px !important;
+          max-width: 75px !important;
           padding: .3rem .35rem !important;
           border-radius: 10px !important;
           border-color: #e9edf4 !important;
           background: #f1f3f7 !important;
           color: #7c8799 !important;
           box-shadow: none !important;
+          transform: translateX(5px);
         }
         .st-key-trip_dashboard_shell
-        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button[data-testid="stBaseButton-primary"] {
+        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_navigation_"]):not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button[data-testid="stBaseButton-primary"] {
           border-color: #2f6fe9 !important;
           background: #2f6fe9 !important;
           color: #fff !important;
         }
         .st-key-trip_dashboard_shell
-        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button p {
+        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_navigation_"]):not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button p {
           display: block !important;
           margin: 0 !important;
           color: inherit !important;
-          font-size: .73rem !important;
+          font-size: .65rem !important;
           font-weight: 700 !important;
-          line-height: 1.15 !important;
+          line-height: 1 !important;
           white-space: pre-line !important;
           text-align: center !important;
         }
         .st-key-trip_dashboard_shell
-        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button:hover {
+        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_navigation_"]):not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button p strong {
+          position: relative;
+          top: 4px;
+          font-weight: 500 !important;
+        }
+        .st-key-trip_dashboard_shell
+        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_navigation_"]):not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button p em {
+          display: inline !important;
+          font-size: .95rem !important;
+          font-style: normal !important;
+          line-height: 1 !important;
+          position: relative;
+          top: -5px;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_"] button p code {
+          display: inline !important;
+          padding: 0 !important;
+          border: 0 !important;
+          background: transparent !important;
+          color: inherit !important;
+          font-family: inherit !important;
+          font-size: .8rem !important;
+          font-weight: inherit !important;
+          line-height: 1 !important;
+          position: relative;
+          top: -5px;
+        }
+        .st-key-trip_dashboard_shell
+        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_navigation_"]):not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button:hover {
           border-color: #9eb8ef !important;
           background: #e7efff !important;
           color: #3d66b4 !important;
         }
         .st-key-trip_dashboard_shell
-        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button[data-testid="stBaseButton-primary"]:hover {
+        [class*="st-key-dashboard_day_"]:not([class*="dashboard_day_navigation_"]):not([class*="dashboard_day_previous_"]):not([class*="dashboard_day_next_"]):not([class*="dashboard_day_action_placeholder_"]) button[data-testid="stBaseButton-primary"]:hover {
           border-color: #255fcd !important;
           background: #255fcd !important;
           color: #fff !important;
@@ -722,7 +819,11 @@ st.markdown(
           background: #fff !important;
           color: #71809a !important;
           box-shadow: none !important;
-          font-size: 1rem !important;
+          align-items: center !important;
+          justify-content: center !important;
+          font-size: 3rem !important;
+          position: relative;
+          top: 5px;
         }
         /* 컬럼은 flush로 두고, 양 끝 버튼에만 바깥 여백을 준다. */
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_previous_"] button {
@@ -742,52 +843,89 @@ st.markdown(
         }
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_previous_"] button p,
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_next_"] button p {
-          display: inline !important;
+          display: inline-flex !important;
+          align-items: center !important;
           margin: 0 !important;
           color: inherit !important;
-          font-size: 1rem !important;
-          line-height: 1 !important;
+          font-size: 1.5rem !important;
+          font-weight: 400 !important;
+          line-height: .9 !important;
+          transform: translateY(-2px) !important;
         }
-        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_action_placeholder_"] button {
-          height: clamp(32px, 4.5dvh, 42px) !important;
+        .st-key-trip_dashboard_shell [class*="st-key-clear_schedule_"] button {
+          height: 30px !important;
           min-height: 0 !important;
-          padding: 0 !important;
-          border-color: #e2e8f2 !important;
+          padding: 0 .2rem !important;
+          border-color: #f0cdca !important;
           background: #ffffff !important;
+          color: #c53b35 !important;
+          font-size: .7rem !important;
+          font-weight: 700 !important;
+          white-space: nowrap !important;
+          position: relative;
+          top: 4px;
         }
-        .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_action_placeholder_1_"] button {
+        .st-key-trip_dashboard_shell [class*="st-key-clear_schedule_"] button p {
+          margin: 0 !important;
+          color: inherit !important;
+          font-size: .75rem !important;
+          font-weight: 700 !important;
+          line-height: 1.1 !important;
+          white-space: nowrap !important;
+          position: relative;
+          top: -4px;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-clear_schedule_"] button {
           width: calc(100% - .35rem) !important;
-          margin-left: .35rem !important;
+          margin-left: .85rem !important;
         }
         .st-key-trip_dashboard_shell [class*="st-key-open_export_"] button {
-          height: clamp(32px, 4.5dvh, 42px) !important;
+          height: 30px !important;
           min-height: 0 !important;
           padding: 0 .35rem !important;
           border-color: #d9e4fa !important;
           background: #fff !important;
           color: #386bd2 !important;
-          font-size: .72rem !important;
+          font-size: .75rem !important;
           font-weight: 700 !important;
           white-space: nowrap !important;
+          position: relative;
+          top: 4px;
         }
         .st-key-trip_dashboard_shell [class*="st-key-open_export_"] button {
           width: calc(100% - .35rem) !important;
-          margin-right: .35rem !important;
+          margin-right: .85rem !important;
         }
         .st-key-trip_dashboard_shell [class*="st-key-open_export_"] button p {
           margin: 0 !important;
           color: inherit !important;
-          font-size: .68rem !important;
+          font-size: .75rem !important;
           font-weight: 700 !important;
           line-height: 1.1 !important;
           white-space: nowrap !important;
+          position: relative;
+          top: -4px;
         }
         .dashboard-panel { height: 100%; border: 1px solid #e1e7f0; border-radius: 16px; background: var(--secondary-background-color); }
-        .dashboard-date-summary { display:flex; align-items:center; justify-content:space-between; gap:.75rem; min-height:clamp(36px, 5.5dvh, 52px); box-sizing:border-box; padding:.45rem 0; border-top:1px solid #e6ebf3; border-bottom:1px solid #e6ebf3; margin:.45rem 0 .4rem; }
+        .dashboard-date-summary { display:flex; align-items:center; justify-content:space-between; gap:.68rem; min-height:clamp(36px, 5.5dvh, 52px); box-sizing:border-box; padding:.45rem 0 .45rem 1rem; border-top:1px solid #e6ebf3; border-bottom:1px solid #e6ebf3; margin:.45rem 0 0; }
+        .dashboard-date-leading { display:flex; align-items:center; gap:.5rem; min-width:0; }
         .dashboard-date-title { font-size:.98rem; font-weight:800; }
-        .dashboard-badges { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.35rem; }
-        .dashboard-badge { padding:.22rem .55rem; border-radius:999px; background:#edf3ff; color:#315fca; font-size:.76rem; font-weight:700; white-space:nowrap; }
-        .dashboard-schedule-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; margin:.7rem 0 .35rem; color:#7c8aa1; font-size:.72rem; font-weight:700; }
+        .dashboard-date-value { font-size:1.2em; }
+        .dashboard-date-weekday { font-size:.9em; color:#808080; }
+        .dashboard-badges { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.35rem; transform:translateX(-1rem); }
+        .dashboard-badge { padding:.2rem .5rem; border-radius:999px; background:#edf3ff; color:#315fca; font-size:.68rem; font-weight:700; white-space:nowrap; }
+        .dashboard-pace-badge { display:inline-flex; align-items:center; gap:.38rem; padding:.25rem .63rem; background:#f1f4fa; color:#364153; }
+        .dashboard-pace-icon { display:inline-flex; width:.9rem; height:.9rem; color:#2f6fe9; flex:0 0 auto; }
+        .dashboard-pace-icon svg { width:100%; height:100%; display:block; }
+        .dashboard-pace-label { font-size:.7rem; font-weight:700; white-space:nowrap; }
+        .dashboard-pace-dots { display:inline-flex; align-items:center; gap:.2rem; }
+        .dashboard-pace-dot { width:.5rem; height:.5rem; border-radius:999px; background:#d9e2f2; }
+        .dashboard-pace-dot.is-filled { background:#2f6fe9; }
+        .dashboard-day-stats { display:flex; align-items:center; justify-content:flex-end; gap:.9rem; flex:0 0 auto; }
+        .dashboard-day-stat { display:inline-flex; align-items:center; gap:.32rem; color:#55647a; font-size:.74rem; font-weight:750; white-space:nowrap; }
+        .dashboard-day-stat-icon { display:inline-flex; width:.9rem; height:.9rem; color:#7b8aa1; flex:0 0 auto; }
+        .dashboard-day-stat-icon svg { width:100%; height:100%; display:block; }
+        .dashboard-schedule-heading { display:flex; align-items:center; justify-content:space-between; width:100%; box-sizing:border-box; gap:.75rem; margin:0; padding:.7rem 0 .35rem 1rem; background:#f6f8fc; color:#7c8aa1; font-size:.72rem; font-weight:700; }
         .dashboard-schedule-heading-title { color:#8794a9; }
         .dashboard-schedule-heading-legend { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.55rem; color:#9aa6b8; font-size:.68rem; font-weight:600; }
         .dashboard-schedule-heading-legend .is-fixed { color:#4f74de; }
@@ -796,10 +934,11 @@ st.markdown(
         /* 일정 한 줄 전체를 하나의 카드로 감싼다. 정보·삭제 버튼도 카드 안쪽에
            두고, 오른쪽 끝과 버튼 사이에는 20px의 여백을 남긴다. */
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_item_row_"] {
+          width: calc(100% - 1rem) !important;
+          box-sizing: border-box !important;
           padding: 0 .45rem 0 0 !important;
-          margin: .15rem 0 !important;
+          margin: .15rem 0 .15rem 1rem !important;
           border: 1px solid #dfe6f2;
-          border-left: 0 !important;
           border-radius: 12px;
           background: #ffffff;
           overflow: hidden;
@@ -983,9 +1122,10 @@ st.markdown(
         .route-leg {
           display:flex;
           align-items:center;
+          width:calc(100% - 1rem);
           box-sizing:border-box;
           height:1.6rem;
-          margin:0;
+          margin:0 0 0 1rem;
           padding-left:1rem;
           color:#687790;
           font-size:.85rem;
@@ -993,10 +1133,17 @@ st.markdown(
           transform: translateY(-8px);
         }
         .route-leg::before { content:"↓"; margin-right:.35rem; color:#4d78e5;}
-        .dashboard-section-label { margin:.35rem 0 .25rem; font-size:.8rem; font-weight:800; }
-        .route-summary { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.5rem; padding:.6rem .75rem; border:1px solid #e1e7f0; border-radius:12px; }
-        .route-summary span { display:block; color:#748198; font-size:.65rem; }
-        .route-summary b { font-size:.82rem; }
+        .dashboard-map-header { display:flex; align-items:center; justify-content:space-between; gap:.75rem; min-height:44px; box-sizing:border-box; padding:.55rem .8rem; border-bottom:1px solid #e8edf5; background:#fff; color:#42516a; }
+        .dashboard-map-header-leading, .dashboard-map-header-stats { display:flex; align-items:center; min-width:0; }
+        .dashboard-map-header-leading { gap:.5rem; }
+        .dashboard-map-header-stats { justify-content:flex-end; gap:.75rem; flex:0 0 auto; }
+        .dashboard-map-header-icon { display:inline-flex; width:.9rem; height:.9rem; flex:0 0 auto; color:#3169e8; }
+        .dashboard-map-header-icon svg, .dashboard-map-stat-icon svg { display:block; width:100%; height:100%; }
+        .dashboard-map-header-title { color:#2c3b54; font-size:.8rem; font-weight:800; white-space:nowrap; }
+        .dashboard-map-header-caption { overflow:hidden; color:#8d9aae; font-size:.66rem; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+        .dashboard-map-stat { display:inline-flex; align-items:center; gap:.28rem; color:#4d5b71; font-size:.7rem; font-weight:750; white-space:nowrap; }
+        .dashboard-map-stat-icon { display:inline-flex; width:.85rem; height:.85rem; flex:0 0 auto; color:#7c8ba2; }
+        .dashboard-map-mode-count { color:#5d6c83; font-size:.68rem; font-weight:750; }
         .trip-chat-title { margin:0; font-size:1.7rem; font-weight:850; }
         .trip-chip-row { display:flex; flex-wrap:wrap; gap:.35rem; margin:.55rem 0 .7rem; }
         .trip-chip { padding:.25rem .55rem; border-radius:999px; background:#eef3ff; color:#315fca; font-size:.9rem; font-weight:700; }
@@ -1045,6 +1192,8 @@ def initialize_session() -> None:
         # 여행별로 선택한 DAY와 4개씩 보이는 날짜 창의 시작 위치를 유지한다.
         "dashboard_selected_days": {},
         "dashboard_day_windows": {},
+        # 날짜별 일정 전체 삭제 확인 창을 열기 전의 선택 DAY다.
+        "dashboard_pending_clear_day_id": None,
         # [변경 사유] 여행 만들기 화면에서 고른 여행지와 '가고 싶은 장소'다.
         # 여행이 아직 없어 백엔드에 저장할 곳이 없으므로, POST /me/trips 에
         # 실을 때까지만 화면이 들고 있는다.
@@ -2175,6 +2324,50 @@ def render_delete_trip_dialog(trip: dict) -> None:
         st.rerun()
 
 
+@st.dialog("하루 일정 비우기")
+def render_clear_day_schedule_dialog(trip: dict, day: dict) -> None:
+    """선택 DAY의 일정만 모두 삭제하기 전에 확인한다."""
+
+    trip_id = str(trip["id"])
+    day_id = str(day["id"])
+    items = list(day.get("items") or [])
+    day_number = day.get("day_number")
+    label = f"{day_number}일차" if day_number is not None else "선택한 날짜"
+
+    st.markdown(f"### {escape(label)} 일정을 모두 비울까요?")
+    st.markdown(f"총 **{len(items)}개**의 일정이 삭제되며 되돌릴 수 없습니다.")
+    st.caption("여행 정보와 다른 날짜의 일정은 유지됩니다.")
+
+    cancel_column, clear_column = st.columns(2)
+    if cancel_column.button(
+        "취소",
+        key=f"cancel_clear_day_schedule_{trip_id}_{day_id}",
+        use_container_width=True,
+    ):
+        st.session_state.pop("dashboard_pending_clear_day_id", None)
+        st.rerun()
+    if clear_column.button(
+        "🗑 비우기",
+        key=f"confirm_clear_day_schedule_{trip_id}_{day_id}",
+        use_container_width=True,
+    ):
+        try:
+            for item in items:
+                api(
+                    "DELETE",
+                    f"/trips/{trip_id}/itinerary-items/{item['id']}",
+                    headers=auth_headers(),
+                )
+        except SessionExpired:
+            raise
+        except ApiError as error:
+            st.error(f"일정을 비우는 중 오류가 발생했습니다: {error}")
+            return
+
+        st.session_state.pop("dashboard_pending_clear_day_id", None)
+        st.rerun()
+
+
 def render_sidebar(trips: list[dict]) -> None:
     """여행 그룹·여행 총개수·하단 고정 프로필 팝오버를 그린다."""
 
@@ -3082,11 +3275,12 @@ def _dashboard_selected_day(trip: dict, days: list[dict]) -> dict:
     trip_id = str(trip["id"])
     selected_by_trip = st.session_state.dashboard_selected_days
     selected_index = min(max(int(selected_by_trip.get(trip_id, 0)), 0), len(days) - 1)
+    selected_day = days[selected_index]
     window_by_trip = st.session_state.dashboard_day_windows
     window_start = min(max(int(window_by_trip.get(trip_id, 0)), 0), max(0, len(days) - 5))
 
-    # 날짜 탐색 영역은 전체를 3:1로 나누고, 기존 날짜 칼럼은 왼쪽 3에 둔다.
-    navigation_column, action_column = st.columns([3, 1], gap="small")
+    # 날짜 탐색 영역은 전체를 3:1.5로 나누고, 날짜 칼럼은 왼쪽 3에 둔다.
+    navigation_column, action_column = st.columns([3, 1.5], gap="small")
     with navigation_column:
         # 여행 일수에 따라 버튼이 생겼다 사라지지 않도록 화살표 자리는 항상 유지한다.
         # 이동할 날짜가 없는 경우에는 숨기는 대신 비활성화한다.
@@ -3105,7 +3299,7 @@ def _dashboard_selected_day(trip: dict, days: list[dict]) -> dict:
                 index = days.index(day)
                 try:
                     value = date.fromisoformat(str(day["travel_date"]))
-                    label = f"{day['day_number']}일차  \n{value.month}.{value.day} {weekdays[value.weekday()]}"
+                    label = f"**{day['day_number']}일차**  \n*{value.month}.{value.day}* `{weekdays[value.weekday()]}`"
                 except (KeyError, TypeError, ValueError):
                     label = f"DAY {day.get('day_number', index + 1)}"
                 with column:
@@ -3122,20 +3316,28 @@ def _dashboard_selected_day(trip: dict, days: list[dict]) -> dict:
                     st.rerun()
 
     with action_column:
-        action_one, action_two = st.columns([.45, 1.55], gap="small")
+        action_one, action_two = st.columns([1, 1], gap="small")
         with action_one:
-            st.button(" ", key=f"dashboard_day_action_placeholder_1_{trip_id}",
-                      use_container_width=True, disabled=True)
+            if st.button(
+                "🗑️일정 비우기",
+                key=f"clear_schedule_{trip_id}_{selected_day['id']}",
+                help="이 날짜의 일정 전체 삭제",
+                use_container_width=True,
+                disabled=not bool(selected_day.get("items")),
+            ):
+                st.session_state.dashboard_pending_clear_day_id = str(selected_day["id"])
+                st.rerun()
         with action_two:
             if st.button(
-                "일정표 다운로드",
+                "📥일정 다운로드",
                 key=f"open_export_{trip['id']}",
+                help="이 여행의 일정 전체 다운로드",
                 use_container_width=True,
             ):
                 st.session_state.export_dialog_trip_id = str(trip["id"])
                 st.session_state.export_requested_style = None
                 st.rerun()
-    return days[selected_index]
+    return selected_day
 
 
 def _local_datetime(value: object, timezone_name: object) -> datetime | None:
@@ -3221,12 +3423,11 @@ def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
         '<span class="dashboard-schedule-heading-legend">'
         '<span class="is-fixed">♙ 확정</span>'
         '<span class="needs-confirmation">⚠ 확인 필요</span>'
-        '<span>카드에 마우스를 올리면 조작 아이콘</span>'
         '</span></div>',
         unsafe_allow_html=True,
     )
     # CSS가 로드되기 전에도 너무 작게 보이지 않도록 기본 높이도 함께 맞춘다.
-    with st.container(height=330, key=f"dashboard_schedule_{day['id']}", border=False):
+    with st.container(height=280, key=f"dashboard_schedule_{day['id']}", border=False):
         if not items:
             st.info("아직 일정이 없습니다.")
             return
@@ -3423,12 +3624,6 @@ def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
                                 st.error(str(error))
                             else:
                                 st.rerun()
-
-    st.markdown(
-        '<div class="dashboard-schedule-note">일정이 늘어나면 이 목록만 스크롤됩니다 · 탭·히스토리·지도·요약은 고정</div>',
-        unsafe_allow_html=True,
-    )
-
 
 def _recommendation_query_from_message(message: str) -> str:
     """추천 요청 문장에서 Google Places 검색에 적합한 장소·종류 검색어를 만든다."""
@@ -4339,6 +4534,185 @@ def render_export_dialog(trip: dict) -> None:
             )
 
 
+def weather_badge_icon(label: object) -> str:
+    """날씨 문구를 요약 배지 앞에 붙일 이모지로 바꾼다."""
+
+    condition = str(label or "").strip()
+    if not condition or "예보" in condition or "없음" in condition:
+        return "❓"  # ❔보다 테두리가 두껍고 색이 진해 가시성이 좋습니다.
+    if "뇌우" in condition:
+        return "⚡"  # ⛈️는 작게 보면 잘 안 보여서, 번개 마크가 확연한 이모지가 가독성이 높습니다.
+    if "눈" in condition:
+        return "❄️"  # ❄️는 크기가 작아 묻히기 쉬우므로 눈사람을 섞으면 확실히 튑니다.
+    if any(keyword in condition for keyword in ("비", "소나기", "이슬비")):
+        return "☔"  # ☔보다 빗줄기와 구름이 함께 있어 '비 날씨'가 직관적으로 전달됩니다.
+    if any(keyword in condition for keyword in ("약간 흐림", "부분 흐림", "구름 조금")):
+        return "🌤️"  # 🌤️보다 구름 뒤의 해가 더 크게 표현되어 모바일/PC에서 잘 보입니다.
+    if "안개" in condition:
+        return "🌫️"  # 안개는 이모지 특성상 대체재가 적어 유지하되, 필요시 😷(황사/미세먼지 느낌)나 💨를 고려할 수 있습니다.
+    if "흐림" in condition or "구름" in condition:
+        return "☁️"  # 기본 구름을 유지하거나, 완전히 흐린 느낌을 주려면 🩶를 조합할 수 있습니다.
+    if "맑" in condition or "화창" in condition:
+        return "☀️"  # 가장 명확한 태양 아이콘입니다.
+    return "❓"
+
+
+def pace_badge_html(value: object) -> str:
+    """여행 강도를 피그마형 페이스 배지 HTML로 바꾼다."""
+
+    try:
+        pace = int(value or 3)
+    except (TypeError, ValueError):
+        pace = 3
+    pace = min(max(pace, 1), 5)
+    pace_label = {1: "휴식", 2: "여유", 3: "보통", 4: "알참", 5: "강행"}[pace]
+    dots_html = "".join(
+        f'<span class="dashboard-pace-dot{" is-filled" if index <= pace else ""}"></span>'
+        for index in range(1, 6)
+    )
+    return (
+        '<span class="dashboard-badge dashboard-pace-badge">'
+        '<span class="dashboard-pace-icon" aria-hidden="true">'
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round">'
+        '<path d="M4 14a8 8 0 0 1 16 0"></path><path d="m12 14 3-4"></path>'
+        '<circle cx="12" cy="14" r="1"></circle></svg></span>'
+        f'<span class="dashboard-pace-label">페이스 {pace} · {pace_label}</span>'
+        f'<span class="dashboard-pace-dots">{dots_html}</span></span>'
+    )
+
+
+def _dashboard_duration_text(seconds: object) -> str:
+    """요약 지표에 쓸 시간 값을 'N시간 N분' 형태로 표시한다."""
+
+    try:
+        minutes = max(0, round(float(seconds) / 60))
+    except (TypeError, ValueError):
+        return "0분"
+    hours, remainder = divmod(minutes, 60)
+    if hours and remainder:
+        return f"{hours}시간 {remainder}분"
+    if hours:
+        return f"{hours}시간"
+    return f"{minutes}분"
+
+
+def dashboard_day_stats_html(day: dict, route_plan: dict, timezone_name: object) -> str:
+    """선택 DAY의 장소 수·이동시간·활동시간을 상단 요약용 HTML로 만든다."""
+
+    items = list(day.get("items") or [])
+    activity_seconds = 0.0
+    for item in items:
+        start = _local_datetime(item.get("start_at"), timezone_name)
+        end = _local_datetime(item.get("end_at"), timezone_name)
+        if start and end and end >= start:
+            activity_seconds += (end - start).total_seconds()
+
+    travel_text = _dashboard_duration_text(route_plan.get("total_duration_seconds"))
+    activity_text = _dashboard_duration_text(activity_seconds)
+    return (
+        '<div class="dashboard-day-stats">'
+        '<span class="dashboard-day-stat"><span class="dashboard-day-stat-icon" aria-hidden="true">'
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 0 1 16 0Z"></path>'
+        '<circle cx="12" cy="10" r="2.5"></circle></svg></span>'
+        f'<span>{len(items)}곳</span></span>'
+        '<span class="dashboard-day-stat"><span class="dashboard-day-stat-icon" aria-hidden="true">'
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"></circle>'
+        '<circle cx="18" cy="18" r="2"></circle><path d="M8 6h3l2 4h3"></path><path d="M16 18h-3l-2-4H8"></path>'
+        '</svg></span>'
+        f'<span>이동 {travel_text}</span></span>'
+        '<span class="dashboard-day-stat"><span class="dashboard-day-stat-icon" aria-hidden="true">'
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle>'
+        '<path d="M12 7v5l3 2"></path></svg></span>'
+        f'<span>활동 {activity_text}</span></span></div>'
+    )
+
+
+def dashboard_map_header_html(day: dict, route_plan: dict) -> str:
+    """선택 DAY의 지도 위에 표시할 동선 요약 헤더 HTML을 만든다."""
+
+    markers = list(route_plan.get("markers") or [])
+    legs = list(route_plan.get("legs") or [])
+    try:
+        total_seconds = max(0.0, float(route_plan.get("total_duration_seconds") or 0))
+    except (TypeError, ValueError):
+        total_seconds = 0.0
+    try:
+        total_distance = max(0.0, float(route_plan.get("total_distance_meters") or 0)) / 1000
+    except (TypeError, ValueError):
+        total_distance = 0.0
+    try:
+        unknown_count = max(0, int(route_plan.get("unknown_leg_count") or 0))
+    except (TypeError, ValueError):
+        unknown_count = 0
+
+    mode_counts: dict[str, int] = {}
+    for leg in legs:
+        mode = str(leg.get("travel_mode") or "").strip()
+        if mode in {"transit", "walk", "drive", "bicycle"}:
+            mode_counts[mode] = mode_counts.get(mode, 0) + 1
+
+    mode_icons = {
+        "transit": (
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+            'stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="15" rx="3"></rect>'
+            '<path d="M8 21l2-3m4 0 2 3M8 7h8M9 14h.01M15 14h.01"></path></svg>'
+        ),
+        "walk": (
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+            'stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"></circle>'
+            '<path d="m10 21 1-6 3 2 2 4M11 8l-2 4 3 2 2-4 3 2"></path></svg>'
+        ),
+        "drive": (
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+            'stroke-linecap="round" stroke-linejoin="round"><path d="m5 11 1-4h12l1 4"></path>'
+            '<path d="M4 11h16v6H4zM7 17v2m10-2v2M7 14h.01M17 14h.01"></path></svg>'
+        ),
+        "bicycle": (
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+            'stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3"></circle>'
+            '<circle cx="18" cy="17" r="3"></circle><path d="m6 17 5-9 3 9m-6-5h7l-2-4h3"></path></svg>'
+        ),
+    }
+    mode_html = "".join(
+        '<span class="dashboard-map-stat dashboard-map-mode-count">'
+        f'<span class="dashboard-map-stat-icon" aria-hidden="true">{mode_icons[mode]}</span>'
+        f'<span>{count}</span></span>'
+        for mode, count in ((mode, mode_counts.get(mode, 0)) for mode in ("transit", "walk", "drive", "bicycle"))
+        if count
+    )
+    day_number = escape(str(day.get("day_number") or ""))
+    caption = f"{len(markers)}개 지점"
+    if unknown_count:
+        caption += f" · {unknown_count}구간 확인 필요"
+
+    return (
+        '<div class="dashboard-map-header">'
+        '<div class="dashboard-map-header-leading">'
+        '<span class="dashboard-map-header-icon" aria-hidden="true">'
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"></circle>'
+        '<circle cx="18" cy="18" r="2"></circle><path d="M8 6h3l2 4h3"></path>'
+        '<path d="M16 18h-3l-2-4H8"></path></svg></span>'
+        f'<span class="dashboard-map-header-title">{day_number}일차 동선</span>'
+        f'<span class="dashboard-map-header-caption">{escape(caption)}</span></div>'
+        '<div class="dashboard-map-header-stats">'
+        '<span class="dashboard-map-stat"><span class="dashboard-map-stat-icon" aria-hidden="true">'
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle>'
+        '<path d="M12 7v5l3 2"></path></svg></span>'
+        f'<span>총 {_dashboard_duration_text(total_seconds)}</span></span>'
+        '<span class="dashboard-map-stat"><span class="dashboard-map-stat-icon" aria-hidden="true">'
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 10 11l4 3 6-7"></path>'
+        '<path d="M16 7h4v4"></path></svg></span>'
+        f'<span>{total_distance:.1f} km</span></span>{mode_html}</div></div>'
+    )
+
+
 def render_dashboard(trip_id: str) -> None:
     """선택 여행을 일정·지도 왼쪽과 채팅 오른쪽의 고정 화면으로 그린다."""
     dashboard = api("GET", f"/trips/{trip_id}/dashboard", headers=auth_headers())
@@ -4363,54 +4737,73 @@ def render_dashboard(trip_id: str) -> None:
 
             try:
                 selected_date = date.fromisoformat(str(selected_day["travel_date"]))
-                date_label = f"{selected_date.month}.{selected_date.day} ({'월화수목금토일'[selected_date.weekday()]})"
+                weekday_label = "월화수목금토일"[selected_date.weekday()]
+                date_title_html = (
+                    f'<span class="dashboard-date-value">{selected_date.month}.{selected_date.day}</span> '
+                    f'<span class="dashboard-date-weekday">({weekday_label})</span>'
+                )
             except (KeyError, TypeError, ValueError):
-                date_label = f"DAY {selected_day.get('day_number', '')}"
+                fallback_date_label = f"DAY {selected_day.get('day_number', '')}"
+                date_title_html = (
+                    '<span class="dashboard-date-value">'
+                    f"{escape(fallback_date_label)}</span>"
+                )
             weather = route_plan.get("weather") or {"label": "예보 확인 안 됨"}
-            weather_text = str(weather.get("label") or "예보 확인 안 됨")
+            weather_label = str(weather.get("label") or "예보 확인 안 됨")
+            weather_text = weather_label
             if weather.get("status") == "ok" and weather.get("min_celsius") is not None:
                 weather_text += f" {float(weather['min_celsius']):.0f}–{float(weather['max_celsius']):.0f}℃"
                 if weather.get("precipitation_percent") is not None:
                     weather_text += f" · 비 {float(weather['precipitation_percent']):.0f}%"
+            weather_text = f"{weather_badge_icon(weather_label)} {weather_text}"
+            pace_badge = pace_badge_html(trip.get("travel_intensity"))
+            day_stats = dashboard_day_stats_html(
+                selected_day, route_plan, trip.get("timezone")
+            )
             st.markdown(
-                f'<div class="dashboard-date-summary"><div class="dashboard-date-title">{escape(date_label)}</div>'
-                '<div class="dashboard-badges">'
-                f'<span class="dashboard-badge">{escape(weather_text)}</span>'
-                f'<span class="dashboard-badge">여행 강도 {int(trip.get("travel_intensity") or 3)}/5</span>'
-                f'<span class="dashboard-badge">여행 경비 {int(trip.get("budget_level") or 3)}/5</span>'
-                '</div></div>',
+                f'<div class="dashboard-date-summary"><div class="dashboard-date-leading"><div class="dashboard-date-title">{date_title_html}</div>'
+                f'<span class="dashboard-badge">{escape(weather_text)}</span>{pace_badge}</div>'
+                f'{day_stats}</div>',
                 unsafe_allow_html=True,
             )
-            render_compact_schedule(trip, selected_day, route_plan)
-            st.markdown('<div class="dashboard-section-label">동선 지도</div>', unsafe_allow_html=True)
-            if route_plan.get("markers"):
-                render_interactive_google_map(
-                    route_plan,
-                    height=280,
-                    missing_key_message="frontend의 GOOGLE_MAPS_API_KEY를 설정하면 지도가 표시됩니다.",
-                )
-            else:
-                st.info(route_plan.get("route_error") or "지도에 표시할 장소 좌표가 없습니다.")
-
-            total_seconds = float(route_plan.get("total_duration_seconds") or 0)
-            total_distance = float(route_plan.get("total_distance_meters") or 0) / 1000
-            unknown = int(route_plan.get("unknown_leg_count") or 0)
-            summary_mode = "자동 선택"
-            if unknown:
-                summary_mode += f" · {unknown}구간 확인 안 됨"
-            st.markdown(
-                '<div class="route-summary">'
-                f'<div><span>총 이동</span><b>{escape(_route_duration_text(total_seconds)) if total_seconds else "0분"}</b></div>'
-                f'<div><span>거리</span><b>{total_distance:.1f}km</b></div>'
-                f'<div><span>수단</span><b>{escape(summary_mode)}</b></div>'
-                '</div>',
-                unsafe_allow_html=True,
-            )
+            with st.container(
+                key=f"dashboard_timeline_map_area_{selected_day['id']}", border=False
+            ):
+                render_compact_schedule(trip, selected_day, route_plan)
+                with st.container(key=f"dashboard_map_area_{selected_day['id']}", border=False):
+                    with st.container(
+                        key=f"dashboard_map_panel_{selected_day['id']}", border=False
+                    ):
+                        st.markdown(
+                            dashboard_map_header_html(selected_day, route_plan),
+                            unsafe_allow_html=True,
+                        )
+                        if route_plan.get("markers"):
+                            render_interactive_google_map(
+                                route_plan,
+                                height=260,
+                                missing_key_message="frontend의 GOOGLE_MAPS_API_KEY를 설정하면 지도가 표시됩니다.",
+                            )
+                        else:
+                            st.info(route_plan.get("route_error") or "지도에 표시할 장소 좌표가 없습니다.")
         with right:
             render_dashboard_chat(trip, days, selected_day)
 
     # dialog 는 컬럼 바깥에서 열어 본문을 덮는 모달처럼 보이게 한다
     # (사이드바가 이미 쓰는 규칙 - streamlit_app.py:1997 주석 참고).
+    pending_clear_day_id = str(
+        st.session_state.get("dashboard_pending_clear_day_id") or ""
+    )
+    if pending_clear_day_id:
+        pending_day = next(
+            (day for day in days if str(day.get("id")) == pending_clear_day_id),
+            None,
+        )
+        if pending_day:
+            render_clear_day_schedule_dialog(trip, pending_day)
+        else:
+            st.session_state.pop("dashboard_pending_clear_day_id", None)
+
     if str(st.session_state.get("export_dialog_trip_id") or "") == str(trip["id"]):
         render_export_dialog(trip)
 
