@@ -2037,6 +2037,489 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# 운영 대시보드와 사용자 관리 화면은 여행 화면과 별도의 관리자 콘솔 톤을 사용한다.
+# 아래 규칙은 해당 화면의 key가 렌더링될 때만 적용된다.
+st.markdown(
+    """
+    <style>
+        [data-testid="stAppViewContainer"]:has(.st-key-admin-dashboard-kpi-panel),
+        [data-testid="stAppViewContainer"]:has(.st-key-admin-user-list-panel),
+        [data-testid="stAppViewContainer"]:has(.st-key-admin-user-search-panel) {
+            background: #faf9fe !important;
+        }
+        [data-testid="stMain"]:has(.st-key-admin-dashboard-kpi-panel) [data-testid="stMainBlockContainer"],
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) [data-testid="stMainBlockContainer"],
+        [data-testid="stMain"]:has(.st-key-admin-user-search-panel) [data-testid="stMainBlockContainer"] {
+            box-sizing: border-box !important;
+            width: 100% !important;
+            max-width: 1400px !important;
+            padding: 2rem 2.5rem 3rem !important;
+        }
+        [data-testid="stMain"]:has(.st-key-admin-dashboard-kpi-panel) h1 {
+            margin: .2rem 0 .35rem !important;
+            color: #111827 !important;
+            font-size: 2rem !important;
+            font-weight: 800 !important;
+            letter-spacing: -.07rem !important;
+        }
+        .admin-main-description {
+            margin: 0 0 1rem;
+            color: #8a93a6;
+            font-size: .84rem;
+            font-weight: 600;
+        }
+        .admin-console-page-title {
+            margin: 0 0 .95rem;
+            color: #111827;
+            font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+            font-weight: 800;
+            letter-spacing: -.075rem;
+            line-height: 1.2;
+        }
+        .st-key-admin-console-header {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 50 !important;
+            margin: -1rem 0 1.25rem !important;
+            padding: 1rem 0 .9rem !important;
+            border-bottom: 1px solid #e9e1f5 !important;
+            background: #faf9fe !important;
+        }
+        [data-testid="stMain"] [class*="st-key-admin-tab-"] button {
+            height: 2.7rem !important;
+            min-height: 2.7rem !important;
+            padding: .35rem .4rem !important;
+            border: 0 !important;
+            border-bottom: 2px solid transparent !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            color: #8a93a6 !important;
+            box-shadow: none !important;
+            font-size: .85rem !important;
+            font-weight: 800 !important;
+            justify-content: flex-start !important;
+        }
+        [data-testid="stMain"] [class*="st-key-admin-tab-"] button:hover {
+            border-bottom-color: #c9b9ee !important;
+            background: transparent !important;
+            color: #6d3fd1 !important;
+        }
+        [data-testid="stMain"] [class*="st-key-admin-tab-"] button[data-testid="stBaseButton-primary"] {
+            border-bottom-color: #6d3fd1 !important;
+            background: transparent !important;
+            color: #4b2e8f !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button {
+            width: 100% !important;
+            height: 2.3rem !important;
+            min-height: 2.3rem !important;
+            padding: .45rem .75rem !important;
+            border: 1px solid transparent !important;
+            border-radius: .65rem !important;
+            background: transparent !important;
+            color: #cdb8fa !important;
+            box-shadow: none !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+            text-align: left !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button[data-testid="stBaseButton-primary"] {
+            border-color: #6d3fd1 !important;
+            background: #6d3fd1 !important;
+            color: #fff !important;
+        }
+        .st-key-admin-dashboard-kpi-panel {
+            margin-top: 1rem;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+        }
+        .st-key-admin-dashboard-kpi-user-signups,
+        .st-key-admin-dashboard-kpi-total-requests,
+        .st-key-admin-dashboard-kpi-success-failure,
+        .st-key-admin-dashboard-kpi-error-rate,
+        .st-key-admin-dashboard-kpi-latency {
+            min-height: 9.25rem;
+            box-sizing: border-box;
+            padding: 0 !important;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02) !important;
+        }
+        .st-key-admin-dashboard-hourly-panel,
+        .st-key-admin-dashboard-status-panel,
+        .st-key-admin-dashboard-error-panel,
+        .st-key-admin-dashboard-llm-panel,
+        .st-key-admin-user-list-panel,
+        .st-key-admin-user-detail-panel {
+            box-sizing: border-box;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            padding: 1.05rem 1.1rem !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02), 0 8px 22px rgba(31, 24, 61, .035) !important;
+        }
+        .admin-panel-title {
+            margin: .1rem 0 .95rem;
+            color: #111827;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -.035rem;
+            line-height: 1.35;
+        }
+        .admin-kpi-card {
+            min-height: 9.25rem;
+            box-sizing: border-box;
+            padding: 1.05rem 1.1rem .9rem;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+        }
+        .admin-kpi-card-header {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            color: #8a93a6;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+        .admin-kpi-icon {
+            display: inline-flex;
+            width: 1.65rem;
+            height: 1.65rem;
+            align-items: center;
+            justify-content: center;
+            border-radius: .5rem;
+            background: #f1ebfe;
+            color: #6d3fd1;
+            font-size: 0;
+        }
+        .admin-kpi-icon::before {
+            width: .48rem;
+            height: .48rem;
+            border-radius: 50%;
+            background: currentColor;
+            content: "";
+        }
+        .admin-kpi-icon-danger { background: #fdecec; color: #b03a35; }
+        .admin-kpi-icon-warn { background: #fff5df; color: #b4740a; }
+        .admin-kpi-value {
+            margin-top: 1.15rem;
+            color: #111827;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -.065rem;
+            line-height: 1.05;
+            font-variant-numeric: tabular-nums;
+        }
+        .admin-kpi-value-danger { color: #b03a35; }
+        .admin-kpi-footnote { margin-top: .9rem; color: #a9b2c4; font-size: .72rem; font-weight: 500; }
+        .admin-chart-shell { width: 100%; overflow: hidden; border-radius: 10px; background: #fff; }
+        .admin-chart-shell svg { display: block; width: 100%; height: 15rem; }
+        .admin-chart-legend { display: flex; gap: 1rem; margin-top: .5rem; color: #8a93a6; font-size: .72rem; font-weight: 700; }
+        .admin-chart-legend span::before {
+            display: inline-block;
+            width: .55rem;
+            height: .55rem;
+            margin-right: .3rem;
+            border-radius: 50%;
+            background: #6d3fd1;
+            content: "";
+        }
+        .admin-chart-legend span:last-child::before { background: #d9c9f6; }
+        .admin-donut-shell { display: flex; align-items: center; justify-content: center; gap: 1.15rem; min-height: 15rem; }
+        .admin-donut-chart { flex: 0 0 12.5rem; width: 12.5rem; height: 12.5rem; }
+        .admin-donut-chart svg { display: block; width: 100%; height: 100%; }
+        .admin-donut-legend { display: grid; gap: .8rem; min-width: 8rem; color: #8a93a6; font-size: .78rem; }
+        .admin-donut-legend div { display: grid; grid-template-columns: .65rem auto auto; align-items: center; gap: .45rem; }
+        .admin-donut-legend strong { color: #374151; }
+        .admin-donut-legend b { color: #111827; font-size: .95rem; }
+        .admin-donut-dot { width: .6rem; height: .6rem; border-radius: 50%; }
+        .admin-donut-dot.success { background: #6d3fd1; }
+        .admin-donut-dot.failure { background: #d9c9f6; }
+        .admin-status-note { margin-top: .75rem; color: #8a93a6; font-size: .76rem; font-weight: 600; }
+        .admin-error-list { display: grid; gap: .2rem; }
+        .admin-error-row {
+            display: grid;
+            grid-template-columns: 1.65rem 1fr auto;
+            gap: .5rem;
+            align-items: center;
+            padding: .65rem .1rem;
+            border-bottom: 1px solid #f1eef7;
+            color: #374151;
+            font-size: .8rem;
+            font-weight: 700;
+        }
+        .admin-error-row:last-child { border-bottom: 0; }
+        .admin-error-rank { display: inline-flex; width: 1.45rem; height: 1.45rem; align-items: center; justify-content: center; border-radius: .4rem; background: #f1ebfe; color: #6d3fd1; font-size: .72rem; }
+        .admin-error-count { color: #111827; }
+        [data-testid="stMain"]:has(.st-key-admin-dashboard-kpi-panel) [data-testid="stDataFrame"],
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) [data-testid="stDataFrame"] {
+            overflow: hidden !important;
+            border: 1px solid #edeaf6 !important;
+            border-radius: 10px !important;
+            background: #fff !important;
+        }
+        .st-key-admin-user-search-panel {
+            margin: .25rem 0 1.15rem !important;
+            padding: 1rem 1.1rem .8rem !important;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02), 0 8px 22px rgba(31, 24, 61, .035) !important;
+        }
+        [data-testid="stMain"]:has(.st-key-admin-user-search-panel) [data-testid="stTextInput"] > div,
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) [data-testid="stSelectbox"] > div {
+            border: 1px solid #e1d9f5 !important;
+            border-radius: 10px !important;
+            background: #faf9fe !important;
+        }
+        [data-testid="stMain"]:has(.st-key-admin-user-search-panel) [data-testid="stTextInput"] > div:focus-within {
+            border-color: #9d7be8 !important;
+            box-shadow: 0 0 0 .16rem rgba(109, 63, 209, .1) !important;
+        }
+        .admin-user-detail-heading { margin: .1rem 0 1rem; color: #111827; font-size: 1.1rem; font-weight: 800; }
+        .admin-user-detail-heading small { display: block; margin-top: .35rem; color: #8a93a6; font-size: .78rem; font-weight: 600; }
+        /* 사용자 관리 상세 패널의 섹션 제목은 본문 흐름에 맞게 한 단계 작게 표시한다. */
+        [data-testid="stMain"] .st-key-admin-user-detail-panel [data-testid="stMarkdownContainer"] h4 {
+            margin-top: 1rem !important;
+            margin-bottom: .55rem !important;
+            font-size: 1.25rem !important;
+            line-height: 1.25 !important;
+        }
+        [class*="st-key-admin-user-detail-stat-"] { min-height: 5.5rem; padding: .8rem !important; border: 1px solid #edeaf6 !important; border-radius: 10px !important; background: #fbfaff !important; }
+        .admin-user-detail-stat-label { color: #8a93a6; font-size: .72rem; font-weight: 800; }
+        .admin-user-detail-stat-value { margin-top: .55rem; color: #111827; font-size: 1.25rem; font-weight: 800; }
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) .admin-panel-title { display: flex; align-items: center; gap: .5rem; }
+        [data-testid="stMain"]:has(.st-key-admin-user-list-panel) .admin-panel-title::before { width: .24rem; height: 1rem; border-radius: 999px; background: #6d3fd1; content: ""; }
+        @media (max-width: 900px) {
+            [data-testid="stMain"]:has(.st-key-admin-dashboard-kpi-panel) [data-testid="stMainBlockContainer"],
+            [data-testid="stMain"]:has(.st-key-admin-user-list-panel) [data-testid="stMainBlockContainer"],
+            [data-testid="stMain"]:has(.st-key-admin-user-search-panel) [data-testid="stMainBlockContainer"] { padding-right: 1rem !important; padding-left: 1rem !important; }
+            .admin-donut-shell { flex-direction: column; }
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <style>
+        [data-testid="stAppViewContainer"]:has([class*="st-key-admin-feedback-kpi-"]),
+        [data-testid="stAppViewContainer"]:has([class*="st-key-admin-system-kpi-"]) {
+            background: #faf9fe !important;
+        }
+        [data-testid="stMain"]:has([class*="st-key-admin-feedback-kpi-"]) [data-testid="stMainBlockContainer"],
+        [data-testid="stMain"]:has([class*="st-key-admin-system-kpi-"]) [data-testid="stMainBlockContainer"] {
+            box-sizing: border-box !important;
+            width: 100% !important;
+            max-width: 1400px !important;
+            padding: 2rem 2.5rem 3rem !important;
+        }
+        [class*="st-key-admin-feedback-kpi-"],
+        [class*="st-key-admin-system-kpi-"] {
+            min-height: 9.25rem;
+            box-sizing: border-box;
+            padding: 0 !important;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02) !important;
+        }
+        .st-key-admin-feedback-breakdown-panel,
+        .st-key-admin-pace-breakdown-panel,
+        [class*="st-key-admin-system-service-"] {
+            box-sizing: border-box;
+            border: 1px solid #e9e1f5 !important;
+            border-radius: 15px !important;
+            background: #fff !important;
+            padding: 1.05rem 1.1rem !important;
+            box-shadow: 0 1px 0 rgba(109, 63, 209, .02), 0 8px 22px rgba(31, 24, 61, .035) !important;
+        }
+        .admin-breakdown-list { display: grid; gap: .9rem; }
+        .admin-breakdown-row-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .8rem;
+            margin-bottom: .35rem;
+            color: #5e6880;
+            font-size: .78rem;
+            font-weight: 700;
+        }
+        .admin-breakdown-row-head strong { color: #111827; font-size: .82rem; }
+        .admin-breakdown-track { height: .55rem; overflow: hidden; border-radius: 999px; background: #f0ecf8; }
+        .admin-breakdown-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #6d3fd1, #9d7be8); }
+        .admin-service-status-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            margin: -.2rem 0 1rem;
+            color: #8a93a6;
+            font-size: .78rem;
+            font-weight: 700;
+        }
+        .admin-service-status-badge { padding: .25rem .55rem; border-radius: 999px; background: #efe9ff; color: #5e35b1; font-size: .72rem; font-weight: 800; }
+        .admin-service-status-badge.is-warning { background: #fff4dc; color: #a56a00; }
+        .admin-service-metric { padding: .65rem .7rem; border: 1px solid #f0ecf8; border-radius: 10px; background: #fbfaff; }
+        .admin-service-metric-label { color: #8a93a6; font-size: .7rem; font-weight: 700; }
+        .admin-service-metric-value { margin-top: .35rem; color: #111827; font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+        @media (max-width: 900px) {
+            [data-testid="stMain"]:has([class*="st-key-admin-feedback-kpi-"]) [data-testid="stMainBlockContainer"],
+            [data-testid="stMain"]:has([class*="st-key-admin-system-kpi-"]) [data-testid="stMainBlockContainer"] { padding-right: 1rem !important; padding-left: 1rem !important; }
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# 운영 화면도 여행 화면과 동일한 사이드바 컴포넌트를 사용한다.
+st.markdown(
+    """
+    <style>
+        [data-testid="stSidebar"] .admin-sidebar-subtitle {
+            margin: .18rem 0 1rem 2.65rem;
+            color: #8a97b8;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            height: 2.3rem !important;
+            min-height: 2.3rem !important;
+            padding: .45rem .75rem !important;
+            border: 1px solid transparent !important;
+            border-radius: .55rem !important;
+            background: transparent !important;
+            color: #c7d2e9 !important;
+            box-shadow: none !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+            text-align: left !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button:hover {
+            background: rgba(49, 51, 63, .18) !important;
+            color: #fff !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-admin-nav-"] button[data-testid="stBaseButton-primary"] {
+            border-color: #2563eb !important;
+            background: #2563eb !important;
+            color: #fff !important;
+        }
+        /* 여행 화면의 "운영 대시보드"와 관리자 화면의 "여행 화면"은
+           서로 이동 대상만 반대인 같은 전환 버튼이다. 두 화면에서 크기와
+           톤이 달라지지 않도록 하나의 규칙으로 묶는다. */
+        [data-testid="stSidebar"] [class*="st-key-sidebar_admin_dashboard"] button,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer [class*="st-key-admin_dashboard_to_trip"] button,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer [class*="st-key-admin_to_trip"] button,
+        [data-testid="stSidebar"] .st-key-admin-console-sidebar-footer [class*="st-key-console_to_trip"] button {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            height: 2.5rem !important;
+            min-height: 2.5rem !important;
+            padding: .45rem .75rem !important;
+            border: 1px solid #6957aa !important;
+            border-radius: .55rem !important;
+            background: #2d266c !important;
+            color: #cdb8fa !important;
+            box-shadow: none !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+        }
+        [data-testid="stSidebar"] [class*="st-key-sidebar_admin_dashboard"] button:hover,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer [class*="st-key-admin_dashboard_to_trip"] button:hover,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-footer [class*="st-key-admin_to_trip"] button:hover,
+        [data-testid="stSidebar"] .st-key-admin-console-sidebar-footer [class*="st-key-console_to_trip"] button:hover {
+            border-color: #806bc9 !important;
+            background: #3b3282 !important;
+            color: #fff !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            margin-top: auto !important;
+            border-top: 1px solid rgba(112, 128, 157, .28);
+            padding-top: 0 !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"] {
+            position: relative;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            height: 2.5rem !important;
+            min-height: 2.5rem !important;
+            max-height: 2.5rem !important;
+            padding: 0 .5rem 0 2.8rem !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"]:hover,
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"]:focus-visible {
+            border: 0 !important;
+            background: rgba(49, 51, 63, .06) !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"]::before {
+            content: var(--sidebar-profile-initial, "여");
+            position: absolute;
+            top: 50%;
+            left: .5rem;
+            display: inline-flex;
+            width: 2rem;
+            height: 2rem;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-50%);
+            border-radius: 50%;
+            background: var(--sidebar-profile-avatar-bg, #2563eb);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"] p {
+            width: 100% !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+            color: #fff !important;
+            font-size: .8rem !important;
+            font-weight: 700 !important;
+            line-height: 1.2 !important;
+            text-align: left !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"] p::after {
+            content: var(--sidebar-profile-email, "");
+            display: block;
+            margin-top: .12rem;
+            overflow: hidden;
+            color: #8a97b8 !important;
+            font-size: .78rem;
+            font-weight: 500;
+            line-height: 1.2;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        [data-testid="stSidebar"] .st-key-admin-sidebar-profile [data-testid="stPopoverButton"] > div > div:last-child {
+            display: none !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 def initialize_session() -> None:
     """인증과 여행 화면에 필요한 세션 상태 기본값을 설정한다."""
     defaults = {
