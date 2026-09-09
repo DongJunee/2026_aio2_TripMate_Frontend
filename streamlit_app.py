@@ -721,6 +721,43 @@ st.markdown(
         .st-key-create_trip_submit [data-testid="stButton"] button:hover {
           background: #1d4ed8 !important;
         }
+        /* 여행 생성 요청은 하단 스피너 대신 중앙 다이얼로그에서 기다린다. */
+        div[data-baseweb="modal"]:has(.trip-create-progress) {
+          backdrop-filter: blur(5px);
+          -webkit-backdrop-filter: blur(5px);
+        }
+        div[data-baseweb="modal"]:has(.trip-create-progress) [data-testid="stDialog"] {
+          border: 1px solid #dbe7ff;
+          border-radius: 1rem;
+          box-shadow: 0 1.1rem 3rem rgba(20, 41, 82, .22);
+        }
+        .trip-create-progress {
+          padding: .4rem .1rem .15rem;
+          color: #1e2b43;
+          text-align: center;
+        }
+        .trip-create-progress-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 2.55rem;
+          height: 2.55rem;
+          margin-bottom: .75rem;
+          border-radius: .8rem;
+          background: #2563eb;
+          box-shadow: 0 .5rem 1rem rgba(37, 99, 235, .24);
+          color: #fff;
+          font-size: 1.2rem;
+        }
+        .trip-create-progress strong {
+          display: block;
+          font-size: 1.08rem;
+        }
+        .trip-create-progress p {
+          margin: .42rem 0 .95rem;
+          color: #7b899f;
+          font-size: .82rem;
+        }
         .create-trip-submit-note {
           margin-top: .26rem;
           color: #9aa6ba;
@@ -3878,6 +3915,54 @@ def render_must_visit_picker(form_key: str) -> None:
                 ]
                 st.rerun()
 
+
+@st.dialog("AI가 일정을 만들고 있어요", dismissible=False, width="small")
+def render_trip_creation_loading_dialog(payload: dict) -> None:
+    """여행 생성 요청이 끝날 때까지 중앙 진행 팝업을 보여 준다."""
+
+    st.markdown(
+        """
+        <div class="trip-create-progress">
+          <div class="trip-create-progress-icon">✦</div>
+          <strong>여행 일정을 준비하고 있어요</strong>
+          <p>DAY별 실제 장소와 이동 동선을 확인하는 중이에요.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    try:
+        # 다이얼로그 안에서 요청을 시작해야 생성 중에도 배경은 흐려지고,
+        # 진행 문구는 화면 하단이 아닌 중앙 팝업에 계속 남는다.
+        with st.spinner("AI가 DAY별 실제 장소 일정을 만들고 있어요..."):
+            created = api(
+                "POST",
+                "/me/trips",
+                # 강도가 높은 여러 날의 일정은 실제 장소 검색도 많아 생성 요청만
+                # 일반 화면 조회보다 오래 기다린다.
+                timeout=180,
+                json=payload,
+                headers=auth_headers(),
+            )
+    except ApiError as error:
+        st.error(str(error))
+        if st.button("확인", key="trip_creation_error_confirm", use_container_width=True):
+            st.rerun()
+        return
+
+    st.session_state.selected_trip_id = created["trip"]["id"]
+    st.session_state.show_create_trip = False
+    # 위젯이 아닌 세션 값이라 show_create_trip 을 내려도 남는다.
+    # 안 지우면 다음에 여행을 만들 때 지난번 선택이 그대로 보인다.
+    st.session_state.create_trip_destination = None
+    st.session_state.create_trip_destination_results = None
+    st.session_state.create_trip_must_visit = []
+    st.session_state.create_trip_place_results = None
+    request_main_scroll_to_top()
+    count = int(created.get("initial_itinerary_count") or 0)
+    st.success(f"새 여행과 식사·활동·휴식을 포함한 일정 {count}개를 만들었어요.")
+    st.rerun()
+
+
 def render_create_trip_form(form_key: str) -> None:
     """여행과 첫 AI 일정 초안을 만드는 양식을 그리고 제출한다."""
     # [변경 사유] 검색은 st.form 밖에서만 동작한다. 양식 안의 위젯은 제출 전까지
@@ -3951,50 +4036,24 @@ def render_create_trip_form(form_key: str) -> None:
         st.error("시작일과 종료일을 모두 선택하세요.")
         return
 
-    try:
-        # 백엔드는 Gemini 초안을 만든 뒤 Google Places의 실제 장소까지 확인한다.
-        # 둘 중 하나라도 실패하면 여행이 생성되지 않으므로, 성공 응답을 받은 뒤에만
-        # 선택된 여행 ID와 화면 상태를 바꾼다.
-        with st.spinner("AI가 DAY별 실제 장소 일정을 만들고 있어요..."):
-            created = api(
-                "POST",
-                "/me/trips",
-                # 강도가 높은 여러 날의 일정은 실제 장소 검색도 많아 생성 요청만
-                # 일반 화면 조회보다 오래 기다린다.
-                timeout=180,
-                json={
-                    "title": title.strip(),
-                    # [변경 사유] 검색 결과가 준 문자열을 그대로 보낸다.
-                    # 백엔드가 이 표기로 도시를 다시 찾으므로 화면에서 가공하지 않는다.
-                    "destination": picked_city["destination"],
-                    # 현지 시간대는 백엔드가 여행지를 기준으로 결정한다.
-                    "start_date": selected_dates[0].isoformat(),
-                    "end_date": selected_dates[1].isoformat(),
-                    "travel_party": travel_party,
-                    "travel_intensity": travel_intensity,
-                    "budget_level": budget_level,
-                    # [변경 사유] 비어 있어도 그대로 보낸다. 백엔드는
-                    # default_factory=list 라 빈 배열을 정상으로 받는다.
-                    "must_visit": st.session_state.create_trip_must_visit,
-                },
-                headers=auth_headers(),
-            )
-    except ApiError as error:
-        st.error(str(error))
-        return
-
-    st.session_state.selected_trip_id = created["trip"]["id"]
-    st.session_state.show_create_trip = False
-    # [변경 사유] 위젯이 아닌 세션 값이라 show_create_trip 을 내려도 남는다.
-    # 안 지우면 다음에 여행을 만들 때 지난번 선택이 그대로 보인다.
-    st.session_state.create_trip_destination = None
-    st.session_state.create_trip_destination_results = None
-    st.session_state.create_trip_must_visit = []
-    st.session_state.create_trip_place_results = None
-    request_main_scroll_to_top()
-    count = int(created.get("initial_itinerary_count") or 0)
-    st.success(f"새 여행과 식사·활동·휴식을 포함한 일정 {count}개를 만들었어요.")
-    st.rerun()
+    # 백엔드는 Gemini 초안을 만든 뒤 Google Places의 실제 장소까지 확인한다.
+    # 선택 도시는 검색 결과의 문자열을 그대로 보내야 백엔드가 같은 도시로 다시
+    # 좁힐 수 있다. 요청 자체는 중앙 진행 다이얼로그에서 실행한다.
+    render_trip_creation_loading_dialog(
+        {
+            "title": title.strip(),
+            "destination": picked_city["destination"],
+            # 현지 시간대는 백엔드가 여행지를 기준으로 결정한다.
+            "start_date": selected_dates[0].isoformat(),
+            "end_date": selected_dates[1].isoformat(),
+            "travel_party": travel_party,
+            "travel_intensity": travel_intensity,
+            "budget_level": budget_level,
+            # 비어 있어도 그대로 보낸다. 백엔드는 default_factory=list 라 빈 배열을
+            # 정상으로 받는다.
+            "must_visit": st.session_state.create_trip_must_visit,
+        }
+    )
 
 def save_sidebar_trip_title(trip_id: str, title_key: str) -> None:
     """입력창에서 확정한 여행 이름을 백엔드에 저장한다."""
