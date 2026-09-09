@@ -2945,41 +2945,6 @@ def scroll_main_to_top_if_requested() -> None:
     )
 
 
-def debug_auto_login() -> None:
-    """디버그 모드가 켜져 있으면 로컬 Streamlit 세션당 한 번 로그인한다."""
-
-    # ``common``은 import될 때 먼저 .env를 읽는다. 새로 추가한 로컬 DEBUG_* 값이
-    # 다음 Streamlit 재실행에서 적용되도록 여기서 한 번 더 읽는다.
-    _load_env()
-
-    if (
-        st.session_state.access_token
-        or st.session_state.get("debug_auto_login_attempted")
-        or os.getenv("DEBUG_AUTO_LOGIN", "").lower() != "true"
-    ):
-        return
-
-    # 로컬 로그인 정보가 틀렸을 때 모든 Streamlit 재실행마다 다시 시도하지 않는다.
-    st.session_state.debug_auto_login_attempted = True
-    email = os.getenv("DEBUG_EMAIL", "").strip()
-    password = os.getenv("DEBUG_PASSWORD", "")
-    if not email or not password:
-        st.session_state.notice = "디버그 자동 로그인 정보를 .env에서 찾지 못했습니다."
-        return
-
-    time_module.sleep(1)  # 개발 중 로그인 화면을 잠깐 확인하고 싶을 때만 유지한다.
-    try:
-        result = api("POST", "/auth/login", json={"email": email, "password": password})
-    except ApiError as error:
-        st.session_state.notice = f"디버그 자동 로그인 실패: {error}"
-        return
-
-    st.session_state.access_token = result["access_token"]
-    st.session_state.user_email = result["email"]
-    st.session_state.user_name = None
-    st.session_state.mate_type = None
-    request_main_scroll_to_top()
-
 
 def sign_out(notice: str | None = None) -> None:
     """현재 계정 상태를 비우고 필요하면 안내 문구를 남긴 뒤 다시 실행한다."""
@@ -7456,7 +7421,6 @@ def render_signed_in() -> None:
 
 # 어떤 화면을 그릴지 결정하기 전에 유지되는 UI 상태를 초기화한다.
 initialize_session()
-debug_auto_login()
 
 # 세션 상태에 따라 화면을 분기하고 API 실패를 사용자용 메시지로 바꾼다.
 try:
