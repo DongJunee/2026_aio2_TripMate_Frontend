@@ -1156,6 +1156,396 @@ st.markdown(
           .login-wrap { margin: 4vh auto; }
           .login-card { padding: 2rem 1.4rem; }
         }
+
+        /* ------------------------------------------------------------------
+           SCR-001 / 001v / 002 / 003 · 인증 화면
+           설계서(브랜드 스플릿 + 우측 폼)를 그대로 옮긴 스타일이다. 여기 있는
+           규칙은 .auth-brand-panel 이 그려진 화면에서만 살아 있어야 한다.
+           로그인 뒤 화면까지 여백이 사라지면 대시보드 레이아웃이 무너진다.
+           ------------------------------------------------------------------ */
+        .stApp:has(.auth-brand-panel) .block-container {
+            max-width: 100% !important;
+            padding: 0 !important;
+        }
+        .stApp:has(.auth-brand-panel) [data-testid="stMainBlockContainer"] { padding: 0 !important; }
+        /* 최상위 세로 블록의 gap 16px 이 화면을 16px 밀어내려, 100vh 패널이
+           그만큼 넘쳐 로그인 화면에도 세로 스크롤이 생겼다. 인증 화면에서만 없앤다. */
+        .stApp:has(.auth-brand-panel) [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] {
+            gap: 0 !important;
+        }
+        .stApp:has(.auth-brand-panel) [data-testid="stHorizontalBlock"] { gap: 0 !important; }
+        [data-testid="stColumn"]:has(.auth-brand-panel) {
+            padding: 0 !important;
+            background: #0f1b3d;
+            display: flex;
+            flex-direction: column;
+        }
+        [data-testid="stColumn"]:has(.auth-brand-panel) > [data-testid="stVerticalBlock"] {
+            flex: 1 1 auto;
+        }
+        /* 여기 gap 16px 도 패널을 16px 넘치게 만든다. 브랜드 열은 요소가 하나뿐이라 필요 없다. */
+        [data-testid="stColumn"]:has(.auth-brand-panel) [data-testid="stVerticalBlock"] { gap: 0 !important; }
+        /* height:100% 는 부모 높이가 확정되지 않아 무시된다. flex-grow 로 늘린다. */
+        [data-testid="stColumn"]:has(.auth-brand-panel) [data-testid="stElementContainer"],
+        [data-testid="stColumn"]:has(.auth-brand-panel) [data-testid="stMarkdown"],
+        [data-testid="stColumn"]:has(.auth-brand-panel) [data-testid="stMarkdownContainer"],
+        /* stMarkdown 과 stMarkdownContainer 사이에 testid 없는 래퍼가 하나 더 있고,
+           그것만 flex:0 1 auto 라 여기서 늘어남이 끊긴다. 클래스가 Streamlit 버전마다
+           바뀌는 해시라 구조(직계 자식)로 짚는다. */
+        [data-testid="stColumn"]:has(.auth-brand-panel) [data-testid="stMarkdown"] > div {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+        }
+        /* Streamlit 이 stMarkdownContainer 에 margin-bottom:-16px 를 준다. 세로 flex
+           안에서 음수 마진은 그만큼 더 늘어나는 것으로 계산돼, 패널이 열보다 16px
+           높아지고 로그인 화면에 세로 스크롤이 생긴다. */
+        [data-testid="stColumn"]:has(.auth-brand-panel) [data-testid="stMarkdownContainer"] {
+            margin-bottom: 0 !important;
+        }
+        [data-testid="stColumn"]:has(.auth-brand-panel) .auth-brand-panel { flex: 1 1 auto; }
+
+        .auth-brand-panel {
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            /* min-height:100vh 는 두지 않는다. 열이 이미 행 높이(오른쪽 폼의
+               100vh)만큼 늘어나고 패널은 flex 로 그 열을 채우므로, 여기에 100vh 를
+               또 걸면 래퍼 여백만큼 넘쳐 로그인 화면에 세로 스크롤이 생긴다. */
+            height: 100%;
+            /* 설계서 여백 72px = 3.75vw */
+            padding: clamp(1.8rem, 3.75vw, 4.5rem);
+            background: #0f1b3d;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        /* 설계서의 두 원. 장식일 뿐이라 내용 위로 올라오지 않게 뒤로 보낸다. */
+        .auth-brand-panel::before,
+        .auth-brand-panel::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .auth-brand-panel::before {
+            top: -170px; right: -160px;
+            width: 320px; height: 320px;
+            background: rgba(37, 99, 235, .28);
+        }
+        .auth-brand-panel::after {
+            bottom: -130px; left: 46%;
+            width: 260px; height: 260px;
+            background: rgba(255, 255, 255, .06);
+        }
+        .auth-brand-panel > * { position: relative; z-index: 1; }
+        /* 문구 덩어리는 바닥에 딱 붙이지 않고 조금 띄운다.
+           margin 으로 밀면 패널 내용 높이가 그만큼 늘어 100vh 를 넘겨 세로
+           스크롤이 생긴다. 자리만 옮기고 높이는 건드리지 않도록 relative 로 띄운다.
+           (부모 .auth-brand-panel > * 에 position:relative 가 이미 걸려 있다.) */
+        .auth-brand-copy { bottom: clamp(1rem, 2.5vw, 3rem); }
+
+        .auth-brand-logo { display: flex; align-items: center; gap: clamp(.5rem, .833vw, .8rem); }
+        .auth-brand-logo-mark {
+            display: inline-flex; align-items: center; justify-content: center;
+            flex: 0 0 auto;
+            /* 설계서 38px = 1.98vw */
+            width: clamp(1.6rem, 1.98vw, 2.4rem);
+            height: clamp(1.6rem, 1.98vw, 2.4rem);
+            border-radius: .75rem;
+            background: #2563eb;
+        }
+        .auth-brand-logo-name {
+            color: #fff;
+            /* 설계서 25px = 1.302vw */
+            font-size: clamp(1.15rem, 1.302vw, 1.5625rem) !important;
+            font-weight: 800 !important;
+            letter-spacing: -.02em;
+        }
+        .auth-brand-headline {
+            margin: 0 0 1.1rem;
+            color: #fff;
+            /* 설계서는 59px(3.073vw)이지만 한 단계 줄여 52px = 2.708vw 로 쓴다. */
+            font-size: clamp(1.7rem, 2.708vw, 3.25rem) !important;
+            font-weight: 800 !important;
+            letter-spacing: -.035em;
+            line-height: 1.2 !important;
+            word-break: keep-all;
+        }
+        .auth-brand-subcopy {
+            margin: 0 0 2.4rem;
+            max-width: 100%;
+            /* 한국어는 기본값(break-all 유사)으로 두면 "드립니 / 다." 처럼
+               낱말 한가운데가 갈린다. 어절 단위로 넘긴다. */
+            word-break: keep-all;
+            color: #c7d2e9;
+            font-size: clamp(1rem, .964vw, 1.156rem) !important;   /* 설계서 18.5px */
+            line-height: 1.55 !important;
+        }
+        .auth-brand-feature {
+            display: flex; align-items: center; gap: clamp(.6rem, .833vw, .95rem);
+            /* 설계서 항목 간격 16px = .833vw */
+            margin-bottom: clamp(.6rem, .833vw, 1.05rem);
+        }
+        .auth-brand-feature:last-child { margin-bottom: 0; }
+        .auth-brand-feature-icon {
+            display: inline-flex; align-items: center; justify-content: center;
+            flex: 0 0 auto;
+            /* 설계서 40px = 2.083vw */
+            width: clamp(1.75rem, 2.083vw, 2.5rem);
+            height: clamp(1.75rem, 2.083vw, 2.5rem);
+            border-radius: .75rem;
+            background: rgba(37, 99, 235, .38);
+        }
+        .auth-brand-feature-text {
+            color: #fff;
+            font-size: clamp(.95rem, .911vw, 1.094rem) !important;   /* 설계서 17.5px */
+            font-weight: 700 !important;
+        }
+
+        /* 우측 폼 영역 ----------------------------------------------------
+           설계서 SCR-001 의 우측 패널은 x 1020.89~1920.89 (900), 폼은
+           x 1211.33~1730.44 (519). 좌우 여백이 190 으로 같고, 세로도 패널
+           중앙(588)에 내용 중앙(≈593)이 맞는다. 즉 가로·세로 모두 가운데다.
+           ------------------------------------------------------------------ */
+        [data-testid="stColumn"]:has(.auth-form-anchor) {
+            background: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2.5rem 0 !important;
+        }
+        /* 열의 자식 세로 블록은 height:100% 라서, 열에 건 justify-content 로는
+           내용이 위에 붙은 채 그대로다. 블록 자신을 가운데 정렬 컨테이너로 만든다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) > [data-testid="stVerticalBlock"] {
+            justify-content: center;
+        }
+
+        .auth-title {
+            margin: 0 0 .35rem;
+            color: #111827;
+            /* 설계서는 39px 이지만 로그인 후 화면(.brand 32px)에 맞춘다. 1.667vw */
+            font-size: clamp(1.5rem, 1.667vw, 2rem) !important;
+            font-weight: 800 !important;
+            letter-spacing: -.025em;
+            line-height: 1.25 !important;
+        }
+        .auth-subtitle {
+            margin: 0 0 2.4rem;
+            color: #6b7280;
+            /* 설계서 17.5px -> 15px. 로그인 후 화면 본문이 14px 이다. 0.781vw */
+            font-size: clamp(.85rem, .781vw, .9375rem) !important;
+        }
+        .auth-field-label {
+            margin: 0 0 .35rem;
+            color: #4b5563;
+            /* 설계서 14.5px -> 14px. 로그인 후 화면 본문과 같은 크기. 0.729vw */
+            font-size: clamp(.78rem, .729vw, .875rem) !important;
+            font-weight: 700 !important;
+        }
+
+        /* 입력칸: 설계서 높이 61px · 모서리 13.5px · 테두리 #dce3f0 */
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stTextInputRootElement"] {
+            /* 설계서 61px = 3.182vw */
+            min-height: clamp(2.875rem, 3.182vw, 3.8125rem);
+            border-radius: .85rem !important;
+            border-color: #dce3f0 !important;
+            background: #fff !important;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stTextInputRootElement"] input {
+            /* 설계서 17.5px -> 16px (앱 body 기본값). 0.833vw */
+            font-size: clamp(.9rem, .833vw, 1rem);
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stTextInputRootElement"]:focus-within {
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+        }
+        /* 설계서는 라벨을 직접 그린다. 위젯 기본 라벨은 자리만 차지한다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stWidgetLabel"] { display: none; }
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stForm"] {
+            border: 0;
+            padding: 0;
+        }
+        /* Streamlit 은 요소 사이에 16px gap 을 넣는다. 칸 사이 간격은 이미 설계서
+           수치대로 스페이서로 넣고 있어서, gap 이 그 위에 얹히면 23px 자리가 39px,
+           26px 자리가 42px 이 된다. 라벨 · 오류 · 배너 · 힌트 카드는 모두 자기
+           margin 을 갖고 있으므로 gap 을 0 으로 둬도 붙지 않는다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stVerticalBlock"] {
+            gap: 0 !important;
+        }
+        /* 그 16px gap 은 Streamlit 이 stMarkdownContainer 에 주는 margin-bottom:-16px
+           와 짝이다. gap 만 없애면 음수 마진이 그대로 남아 라벨이 입력칸 위로
+           10px 파고든다. 둘을 같이 0 으로 둬야 스페이서 값이 그대로 나온다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stMarkdownContainer"] {
+            margin-bottom: 0 !important;
+        }
+
+        /* SCR-001v · 인라인 에러 ------------------------------------------ */
+        .auth-field-error {
+            display: flex; align-items: center; gap: .35rem;
+            margin: .3rem 0 0;
+            color: #9e332f;
+            font-size: clamp(.75rem, .677vw, .8125rem);   /* 설계서 13px */
+            font-weight: 700;
+        }
+        .auth-error-banner {
+            display: flex; align-items: center; gap: .5rem;
+            margin: 0 0 1.1rem;
+            padding: .7rem .9rem;
+            border-radius: .6rem;
+            background: #fdecec;
+            color: #9e332f;
+            font-size: clamp(.8rem, .729vw, .875rem);   /* 설계서 14px */
+            font-weight: 700;
+        }
+        .auth-notice-banner {
+            display: flex; align-items: center; gap: .5rem;
+            margin: 0 0 1.1rem;
+            padding: .7rem .9rem;
+            border-radius: .6rem;
+            background: #eaf0ff;
+            border: 1px solid #c9d8ff;
+            color: #1d4ed8;
+            font-size: clamp(.8rem, .729vw, .875rem);   /* 설계서 14px */
+            font-weight: 700;
+        }
+        .auth-hint-card {
+            margin: 1.1rem 0 0;
+            padding: .8rem .95rem;
+            border: 1px solid #e4e9f2;
+            border-radius: .8rem;
+            color: #6b7280;
+            font-size: clamp(.72rem, .651vw, .781rem);   /* 설계서 12.5px */
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        /* SCR-002 · 비밀번호 강도 ----------------------------------------- */
+        .auth-strength-track {
+            height: .3rem;
+            margin: .55rem 0 .4rem;
+            border-radius: .3rem;
+            background: #e7ecf5;
+            overflow: hidden;
+        }
+        .auth-strength-fill { height: 100%; border-radius: .3rem; }
+        .auth-strength-label { font-size: clamp(.72rem, .651vw, .781rem); font-weight: 700; }
+
+        /* Primary 버튼 -----------------------------------------------------
+           이 앱은 config.toml 에 primaryColor 를 두지 않아 Streamlit 기본값인
+           빨강(#FF4B4B)이 나온다. 설계서의 파랑(#2563eb)으로 덮는다.
+           사이드바 버튼들이 이미 쓰는 방식과 같다(전역 테마는 §MD 참고).
+           ------------------------------------------------------------------ */
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stFormSubmitButton"] button,
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="primary"],
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="primaryFormSubmit"] {
+            height: clamp(2.875rem, 3.229vw, 3.875rem);   /* 설계서 62px */
+            border-radius: .875rem;
+            background: #2563eb !important;
+            border-color: #2563eb !important;
+            color: #fff !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stFormSubmitButton"] button p,
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="primary"] p,
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="primaryFormSubmit"] p {
+            color: #fff !important;
+            /* 설계서 18.5px -> 16px. 로그인 후 화면 버튼은 12.8~14px 이다. 0.833vw */
+            font-size: clamp(.9rem, .833vw, 1rem) !important;
+            font-weight: 800 !important;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stFormSubmitButton"] button:hover,
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="primary"]:hover,
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="primaryFormSubmit"]:hover {
+            background: #1d4ed8 !important;
+            border-color: #1d4ed8 !important;
+        }
+        /* 포커스 링도 기본 빨강으로 돌아오므로 함께 덮는다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stFormSubmitButton"] button:focus,
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stFormSubmitButton"] button:focus-visible,
+        [data-testid="stColumn"]:has(.auth-form-anchor) [data-testid="stFormSubmitButton"] button:active {
+            background: #1d4ed8 !important;
+            border-color: #1d4ed8 !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, .25) !important;
+            outline: none !important;
+        }
+
+        /* 보조 경로는 버튼이 아니라 텍스트 링크로 둔다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="tertiary"] {
+            padding: 0 !important;
+            min-height: 0 !important;
+            /* Streamlit 버튼은 기본이 width:100% 라, 이걸 풀지 않으면 링크가 칸을
+               가득 채워서 가운데로 모으는 정렬이 아무 효과가 없다. */
+            width: auto !important;
+            background: transparent !important;
+            border: 0 !important;
+            color: #2563eb !important;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) button[kind="tertiary"] p {
+            color: #2563eb !important;
+            /* 설계서 16px -> 15px. 0.781vw */
+            font-size: clamp(.85rem, .781vw, .9375rem) !important;
+            font-weight: 700 !important;
+        }
+        /* 설계서에서 [계정 찾기 · 회원가입]은 가운데에 붙어 있는 한 덩어리다.
+           각 칸의 가운데가 아니라 가운뎃점 쪽으로 몰아 준다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_password_reset,
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_signup {
+            display: flex;
+            width: 100% !important;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_password_reset,
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_password_reset [data-testid="stButton"] {
+            display: flex;
+            justify-content: flex-end;
+            width: 100% !important;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_signup,
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_signup [data-testid="stButton"] {
+            display: flex;
+            justify-content: flex-start;
+            width: 100% !important;
+        }
+        /* 회원가입 · 계정 찾기 화면의 되돌아가기 링크도 로그인 화면처럼 가운데 둔다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-back_to_login_from_signup,
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-back_to_login_from_signup [data-testid="stButton"],
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-back_to_login_from_reset,
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-back_to_login_from_reset [data-testid="stButton"] {
+            display: flex;
+            justify-content: center;
+            width: 100% !important;
+        }
+        /* 가운뎃점은 왼쪽 링크 칸 안에 ::after 로 그린다. 버튼과 같은 flex
+           줄에 들어가므로 세로 정렬이 저절로 맞는다. */
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_password_reset {
+            align-items: center;
+        }
+        [data-testid="stColumn"]:has(.auth-form-anchor) .st-key-go_password_reset::after {
+            content: "·";
+            padding: 0 .6rem;
+            color: #c3cad8;
+            font-size: clamp(.85rem, .781vw, .9375rem);
+            font-weight: 700;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 900px) {
+            /* 좁은 화면에서는 브랜드 패널이 폼을 밀어내지 않게 접는다. */
+            .auth-brand-panel { min-height: auto; padding: 2.2rem 1.6rem; }
+            .auth-brand-subcopy { margin-bottom: 1.4rem; }
+            [data-testid="stColumn"]:has(.auth-form-anchor) { min-height: auto; padding: 2rem 1.2rem !important; }
+            /* 좌우로 계속 붙어 있으면 폼이 200px 남짓까지 눌려 쓸 수 없다.
+               바깥 두 칸만 세로로 쌓는다. 안쪽 폼·링크 칸은 그대로 둔다. */
+            [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] .auth-brand-panel) {
+                flex-wrap: wrap !important;
+            }
+            [data-testid="stColumn"]:has(.auth-brand-panel),
+            [data-testid="stColumn"]:has(.auth-form-anchor) {
+                flex: 1 1 100% !important;
+                min-width: 100% !important;
+            }
+        }
     </style>
     """,
     unsafe_allow_html=True,
@@ -1176,6 +1566,11 @@ def initialize_session() -> None:
         "show_create_trip": False,
         "notice": None,
         "auth_mode": "login",
+        # SCR-001v 인라인 오류. {필드명: 문구} 로 담아 두고 다음 실행에서
+        # 해당 입력칸 바로 아래에 붙인다. auth_banner 는 어느 칸이라고
+        # 짚을 수 없는 서버 응답(예: 401)을 폼 위에 한 줄로 보여 준다.
+        "auth_errors": {},
+        "auth_banner": None,
         # 로그인·여행 전환 뒤 이전 화면의 맨 아래 스크롤 위치를 이어받지 않도록
         # 다음 렌더링에서 브라우저의 메인 영역을 맨 위로 보낼지 기록한다.
         "scroll_main_to_top": False,
@@ -1333,6 +1728,8 @@ def sign_out(notice: str | None = None) -> None:
     st.session_state.chat_place_recommendations = {}
     st.session_state.chat_accommodation_candidates = {}
     st.session_state.notice = notice
+    st.session_state.auth_errors = {}
+    st.session_state.auth_banner = None
     st.rerun()
 
 
@@ -1446,153 +1843,531 @@ def sidebar_profile() -> tuple[str, str, str]:
 #         st.markdown("</div>", unsafe_allow_html=True)
 
 def render_login() -> None:
-    """비로그인 화면을 왼쪽 이미지 + 오른쪽 로그인 영역으로 표시한다."""
+    """설계서 SCR-001 대로 좌측 브랜드 패널과 우측 인증 영역으로 화면을 나눈다.
 
-    if st.session_state.notice:
-        st.warning(st.session_state.notice)
+    좌우 비율은 설계서의 1020 : 900(약 53 : 47)을 그대로 옮겼다. 왼쪽은
+    "이 서비스가 무엇을 해 주는가"만 말하고, 실제로 누를 수 있는 것은 모두
+    오른쪽에 둔다.
+    """
 
-    # 왼쪽 이미지 40% / 오른쪽 로그인 영역 60%
-    left_column, right_column = st.columns(
-        [2, 3],
-        gap=None,
-        vertical_alignment="top",
-    )
+    brand_column, form_column = st.columns([53, 47], gap=None, vertical_alignment="top")
 
-    # 왼쪽 이미지
-    with left_column:
-        image_path = os.path.join(
-            os.path.dirname(__file__),
-            "assets",
-            "login_image.png",
-        )
+    with brand_column:
+        st.markdown(AUTH_BRAND_PANEL_HTML, unsafe_allow_html=True)
 
-        st.image(
-            image_path,
-            use_container_width=True,
-        )
-
-    # 오른쪽 로그인
-    with right_column:
-
-        # 로그인 폼의 최대 너비를 줄이기 위한 내부 컬럼
-        _, login_column, _ = st.columns(
-            [0.8, 2, 0.8]
-        )
-
-        with login_column:
-            st.markdown(
-                '<div class="brand">만나서 반가워요</div>',
-                unsafe_allow_html=True,
-            )
-
+    with form_column:
+        # 이 앵커가 있어야 인증 화면 전용 CSS가 이 열에만 걸린다.
+        st.markdown('<div class="auth-form-anchor"></div>', unsafe_allow_html=True)
+        # 설계서의 폼 너비는 우측 패널 900 중 519(57.7%)이고 좌우 여백이 같다.
+        _, inner_column, _ = st.columns([21.15, 57.7, 21.15])
+        with inner_column:
             if st.session_state.auth_mode == "password_reset":
                 render_password_reset()
+            elif st.session_state.auth_mode == "signup":
+                render_sign_up()
             else:
-                render_sign_in_or_up()
+                render_sign_in()
 
-def render_sign_in_or_up() -> None:
-    """공용 로그인·회원가입 양식을 그리고 입력한 인증 정보를 제출한다."""
-    is_signup = st.session_state.auth_mode == "signup"
-    st.subheader("회원가입" if is_signup else "여행을 시작해 볼까요?")
-    st.caption(
-        "이름, 여행, 일정은 내 계정에 안전하게 저장됩니다."
-        if is_signup
-        else "로그인하면 나의 여행과 일정이 저장됩니다."
+
+# 좌측 브랜드 패널. 아이콘은 설계서 SVG의 경로를 그대로 옮긴 것이다.
+_AUTH_ICON_ROUTE = (
+    '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff"'
+    ' stroke-width="1.8" stroke-linecap="round">'
+    '<circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="18" r="2.6"/>'
+    '<path d="M8.6 6H14a3 3 0 0 1 0 6h-4a3 3 0 0 0 0 6h5.4"/></svg>'
+)
+_AUTH_ICON_CHAT = (
+    '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff"'
+    ' stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+    '<path d="M4 5.5h16v10H12l-5 4v-4H4z"/></svg>'
+)
+_AUTH_ICON_COMPASS = (
+    '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff"'
+    ' stroke-width="1.8" stroke-linecap="round">'
+    '<path d="M4 18a8 8 0 1 1 16 0"/><path d="m12 17 4-5.5"/></svg>'
+)
+
+AUTH_BRAND_PANEL_HTML = f"""
+<div class="auth-brand-panel">
+  <div class="auth-brand-logo">
+    <span class="auth-brand-logo-mark">{_AUTH_ICON_ROUTE}</span>
+    <span class="auth-brand-logo-name">TripMate</span>
+  </div>
+  <div class="auth-brand-copy">
+    <p class="auth-brand-headline">상황에 맞춰<br>움직이는 여행 계획</p>
+    <p class="auth-brand-subcopy">
+      말하듯 물어보면 동선 · 이동시간 · 날씨까지 반영해 하루 단위로 짜 드립니다.
+    </p>
+    <div class="auth-brand-feature">
+      <span class="auth-brand-feature-icon">{_AUTH_ICON_CHAT}</span>
+      <span class="auth-brand-feature-text">대화로 만드는 일정</span>
+    </div>
+    <div class="auth-brand-feature">
+      <span class="auth-brand-feature-icon">{_AUTH_ICON_ROUTE}</span>
+      <span class="auth-brand-feature-text">동선과 이동시간까지 계산</span>
+    </div>
+    <div class="auth-brand-feature">
+      <span class="auth-brand-feature-icon">{_AUTH_ICON_COMPASS}</span>
+      <span class="auth-brand-feature-text">컨디션에 맞춘 강도 조절</span>
+    </div>
+  </div>
+</div>
+"""
+
+
+def set_auth_mode(mode: str) -> None:
+    """인증 화면을 바꾸면서 이전 화면의 오류 표시를 지운다.
+
+    화면을 옮겼는데 앞 화면의 빨간 글씨가 남아 있으면, 사용자는 방금 연 화면이
+    이미 틀렸다고 읽는다.
+    """
+
+    st.session_state.auth_mode = mode
+    st.session_state.auth_errors = {}
+    st.session_state.auth_banner = None
+    st.rerun()
+
+
+def _auth_error_style(field_keys: dict[str, str]) -> None:
+    """오류가 난 입력칸의 테두리만 설계서의 빨간색으로 바꾼다.
+
+    Streamlit 입력 위젯에는 오류 상태가 없다. key 로 붙는 ``st-key-*`` 컨테이너를
+    짚어 그 칸에만 규칙을 건다.
+
+    앞에 열 선택자를 한 번 더 붙이는 이유는 구체성 때문이다. 평상시 테두리색을
+    정하는 규칙이 이미 `[data-testid=stColumn]:has(...) [stTextInputRootElement]`
+    라서, 여기서 `.st-key-* [stTextInputRootElement]` 만 쓰면 !important 를 붙여도
+    구체성에서 밀려 빨간색이 먹히지 않는다.
+    """
+
+    errors = st.session_state.get("auth_errors") or {}
+    selectors = [
+        '[data-testid="stColumn"]:has(.auth-form-anchor) '
+        f'.st-key-{widget_key} [data-testid="stTextInputRootElement"]'
+        for field, widget_key in field_keys.items()
+        if errors.get(field)
+    ]
+    if selectors:
+        st.markdown(
+            "<style>"
+            + ",".join(selectors)
+            + "{border-color:#e9b9b7 !important;}</style>",
+            unsafe_allow_html=True,
+        )
+
+
+def _render_auth_banners() -> None:
+    """폼 위쪽의 안내 문구와 요약 오류를 그린다."""
+
+    if st.session_state.notice:
+        st.markdown(
+            f'<div class="auth-notice-banner">ℹ {escape(str(st.session_state.notice))}</div>',
+            unsafe_allow_html=True,
+        )
+        st.session_state.notice = None
+
+    banner = st.session_state.get("auth_banner")
+    if banner:
+        st.markdown(
+            f'<div class="auth-error-banner">⚠ {escape(str(banner))}</div>',
+            unsafe_allow_html=True,
+        )
+
+
+def _render_field_label(text: str) -> None:
+    st.markdown(f'<p class="auth-field-label">{escape(text)}</p>', unsafe_allow_html=True)
+
+
+def _render_field_error(field: str) -> None:
+    """설계서 SCR-001v 대로 문제가 생긴 칸 바로 아래에 사유를 붙인다."""
+
+    message = (st.session_state.get("auth_errors") or {}).get(field)
+    if message:
+        st.markdown(
+            f'<div class="auth-field-error">⚠ {escape(message)}</div>',
+            unsafe_allow_html=True,
+        )
+
+
+def _looks_like_email(value: str) -> bool:
+    """백엔드 EmailStr 이 422 로 되돌려보내기 전에 화면에서 먼저 걸러 낸다."""
+
+    return bool(re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", value.strip()))
+
+
+def _password_strength(password: str) -> tuple[int, str, str]:
+    """비밀번호 강도를 (채움 비율, 라벨, 색)으로 돌려준다.
+
+    **가입을 막지 않는 안내다.** 실제로 통과 여부를 정하는 것은 백엔드
+    ``SignupRequest.password`` 의 6자 이상뿐이라, 여기서 8자를 강제하면 서버가
+    받아 주는 비밀번호를 화면이 거절하게 된다.
+    """
+
+    if not password:
+        return 0, "", "#e7ecf5"
+
+    has_letter = bool(re.search(r"[A-Za-z]", password))
+    has_digit = bool(re.search(r"\d", password))
+    has_symbol = bool(re.search(r"[^A-Za-z0-9]", password))
+
+    if len(password) >= 10 and has_letter and has_digit and has_symbol:
+        return 100, "안전 — 영문 · 숫자 · 기호를 모두 썼습니다", "#1a7f4b"
+    if len(password) >= 8 and has_letter and has_digit:
+        return 60, "보통 — 영문 · 숫자 포함 8자 이상", "#e0a100"
+    return 30, "약함 — 영문과 숫자를 섞어 8자 이상을 권합니다", "#b33b36"
+
+
+def _render_password_strength(password: str) -> None:
+    ratio, label, color = _password_strength(password)
+    if not label:
+        return
+    st.markdown(
+        f'<div class="auth-strength-track">'
+        f'<div class="auth-strength-fill" style="width:{ratio}%;background:{color};"></div>'
+        f"</div>"
+        f'<div class="auth-strength-label" style="color:{color};">{escape(label)}</div>',
+        unsafe_allow_html=True,
     )
 
+
+def _store_session_from_token(result: dict, signup_name: str | None = None) -> None:
+    """로그인·가입 성공 응답을 세션에 옮기고 첫 화면으로 보낸다."""
+
+    st.session_state.access_token = result["access_token"]
+    st.session_state.user_email = result["email"]
+    # 새 회원가입은 입력한 이름을 이미 알고 있고, 일반 로그인은 사이드바를
+    # 처음 그릴 때 저장된 프로필 이름을 불러온다.
+    st.session_state.user_name = signup_name
+    st.session_state.mate_type = None
+    st.session_state.notice = None
+    st.session_state.auth_errors = {}
+    st.session_state.auth_banner = None
+    request_main_scroll_to_top()
+    st.rerun()
+
+
+def render_sign_in_or_up() -> None:
+    """예전 호출부를 위한 진입점이다. 실제 화면은 아래 두 함수가 그린다."""
+
+    if st.session_state.auth_mode == "signup":
+        render_sign_up()
+    else:
+        render_sign_in()
+
+
+def render_sign_in() -> None:
+    """SCR-001 로그인 · SCR-001v 인라인 오류를 그린다.
+
+    오류 문구는 어떤 칸이 비었는지까지만 말한다. 서버가 401 로 돌려주는 문구도
+    "이메일 또는 비밀번호"라 계정이 있는지 없는지는 드러나지 않는다.
+    """
+
+    st.markdown('<p class="auth-title">만나서 반가워요!</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="auth-subtitle">로그인하고 여행 계획을 만들어 보세요.</p>',
+        unsafe_allow_html=True,
+    )
+
+    _auth_error_style({"email": "login_email", "password": "login_password"})
+    _render_auth_banners()
+
     with st.form("auth_form"):
-        username = ""
-        if is_signup:
-            username = st.text_input("사용자 이름", placeholder="예: 홍길동")
-        email = st.text_input("이메일", placeholder="you@example.com")
-        password = st.text_input("비밀번호", type="password")
+        _render_field_label("이메일")
+        email = st.text_input(
+            "이메일", key="login_email", placeholder="you@example.com"
+        )
+        _render_field_error("email")
+
+        st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        _render_field_label("비밀번호")
+        password = st.text_input("비밀번호", key="login_password", type="password")
+        _render_field_error("password")
+
+        st.markdown(
+            "<div style='height:clamp(.8rem,1.042vw,1.25rem)'></div>",
+            unsafe_allow_html=True,
+        )
         submitted = st.form_submit_button(
-            "가입하고 여행 시작하기" if is_signup else "로그인",
-            use_container_width=True,
-            type="primary",
+            "로그인", use_container_width=True, type="primary"
         )
 
     if submitted:
-        if not email or not password or (is_signup and not username.strip()):
-            st.error(
-                "이름, 이메일, 비밀번호를 모두 입력하세요."
-                if is_signup
-                else "이메일과 비밀번호를 입력하세요."
+        errors: dict[str, str] = {}
+        if not email.strip():
+            errors["email"] = "이메일을 입력해 주세요."
+        elif not _looks_like_email(email):
+            errors["email"] = "이메일 형식이 아닙니다."
+        if not password:
+            errors["password"] = "비밀번호를 입력해 주세요."
+
+        if errors:
+            st.session_state.auth_errors = errors
+            st.session_state.auth_banner = None
+            st.rerun()
+
+        try:
+            result = api(
+                "POST",
+                "/auth/login",
+                json={"email": email.strip(), "password": password},
             )
+        except ApiError as error:
+            st.session_state.auth_errors = {}
+            st.session_state.auth_banner = str(error)
+            st.rerun()
         else:
-            payload = {"email": email, "password": password}
-            if is_signup:
-                payload["username"] = username.strip()
-            try:
-                result = api(
-                    "POST", "/auth/signup" if is_signup else "/auth/login", json=payload
-                )
-            except ApiError as error:
-                st.error(str(error))
-            else:
-                if not result.get("access_token"):
-                    st.info("회원가입이 완료되었습니다. 이메일 인증 후 로그인해 주세요.")
-                else:
-                    st.session_state.access_token = result["access_token"]
-                    st.session_state.user_email = result["email"]
-                    # 새 회원가입은 입력한 이름을 이미 알고 있고, 일반 로그인은
-                    # 사이드바를 처음 그릴 때 저장된 프로필 이름을 불러온다.
-                    st.session_state.user_name = username.strip() if is_signup else None
-                    st.session_state.mate_type = None
-                    st.session_state.notice = None
-                    request_main_scroll_to_top()
-                    st.rerun()
+            _store_session_from_token(result)
 
-    if st.button(
-        "이미 계정이 있어요 · 로그인" if is_signup else "계정이 없어요 · 회원가입",
-        use_container_width=True,
-    ):
-        st.session_state.auth_mode = "login" if is_signup else "signup"
-        st.rerun()
+    # 설계서 3번: Primary 는 [로그인] 하나뿐이고 보조 경로는 텍스트 링크로 둔다.
+    st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+    # 가운뎃점은 칸을 따로 두지 않고 왼쪽 링크 칸의 ::after 로 그린다. 별도
+    # 칸으로 두면 마크다운 상자 높이가 버튼과 달라 점만 몇 px 아래로 내려간다.
+    find_column, signup_column = st.columns([1, 1], vertical_alignment="center")
+    with find_column:
+        if st.button("계정 찾기", key="go_password_reset", type="tertiary"):
+            set_auth_mode("password_reset")
+    with signup_column:
+        if st.button("회원가입", key="go_signup", type="tertiary"):
+            set_auth_mode("signup")
 
-    if st.button("비밀번호를 잊으셨나요?", use_container_width=True):
-        st.session_state.auth_mode = "password_reset"
-        st.rerun()
 
-def render_password_reset() -> None:
-    """실습용 본인 확인 비밀번호 재설정 양식과 이동 버튼을 그린다."""
-    st.subheader("비밀번호 재설정")
-    st.caption("가입할 때 입력한 사용자 이름과 이메일이 일치하면 새 비밀번호를 저장합니다.")
-    st.info("실습용 기능입니다. 실제 서비스에서는 이메일 인증으로 본인 확인이 필요합니다.")
+def render_sign_up() -> None:
+    """SCR-002 회원가입을 그린다. 이름 · 이메일 · 비밀번호 세 칸뿐이다."""
 
-    with st.form("password_reset_form"):
-        username = st.text_input("사용자 이름", placeholder="가입할 때 입력한 사용자 이름")
-        email = st.text_input("이메일 (아이디)", placeholder="you@example.com")
-        new_password = st.text_input("새 비밀번호", type="password")
-        confirm_password = st.text_input("새 비밀번호 확인", type="password")
-        submitted = st.form_submit_button("새 비밀번호 저장", use_container_width=True, type="primary")
+    st.markdown('<p class="auth-title">3초 만에 시작하기</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="auth-subtitle">이름 · 이메일 · 비밀번호만 입력하면 됩니다.</p>',
+        unsafe_allow_html=True,
+    )
+
+    _auth_error_style(
+        {
+            "username": "signup_username",
+            "email": "signup_email",
+            "password": "signup_password",
+        }
+    )
+    _render_auth_banners()
+
+    with st.form("signup_form"):
+        _render_field_label("이름")
+        username = st.text_input("이름", key="signup_username", placeholder="홍길동")
+        _render_field_error("username")
+
+        st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        _render_field_label("이메일")
+        email = st.text_input(
+            "이메일", key="signup_email", placeholder="hong@mail.com"
+        )
+        _render_field_error("email")
+
+        st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        _render_field_label("비밀번호")
+        password = st.text_input("비밀번호", key="signup_password", type="password")
+        _render_field_error("password")
+        # 강도 막대는 이번 실행에 남아 있는 값으로 그린다. 폼 안에서는 입력할
+        # 때마다 다시 실행되지 않으므로, 제출한 뒤부터 반영된다.
+        _render_password_strength(password)
+
+        st.markdown(
+            "<div style='height:clamp(.8rem,1.042vw,1.25rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        submitted = st.form_submit_button(
+            "가입하기", use_container_width=True, type="primary"
+        )
 
     if submitted:
-        if not username.strip() or not email or not new_password or not confirm_password:
-            st.error("사용자 이름, 이메일, 새 비밀번호를 모두 입력하세요.")
-        elif new_password != confirm_password:
-            st.error("새 비밀번호가 서로 다릅니다.")
-        else:
-            try:
-                result = api(
-                    "POST",
-                    "/auth/password-reset/demo",
-                    json={
-                        "username": username.strip(),
-                        "email": email,
-                        "new_password": new_password,
-                    },
-                )
-            except ApiError as error:
-                st.error(str(error))
-            else:
-                st.session_state.auth_mode = "login"
-                st.session_state.notice = result["message"]
-                st.rerun()
+        errors = {}
+        if not username.strip():
+            errors["username"] = "이름을 입력해 주세요."
+        if not email.strip():
+            errors["email"] = "이메일을 입력해 주세요."
+        elif not _looks_like_email(email):
+            errors["email"] = "이메일 형식이 아닙니다."
+        # 6자는 백엔드 SignupRequest.password 의 min_length 와 같은 값이다.
+        if not password:
+            errors["password"] = "비밀번호를 입력해 주세요."
+        elif len(password) < 6:
+            errors["password"] = "비밀번호는 6자 이상이어야 합니다."
 
-    if st.button("로그인으로 돌아가기", use_container_width=True):
-        st.session_state.auth_mode = "login"
-        st.rerun()
+        if errors:
+            st.session_state.auth_errors = errors
+            st.session_state.auth_banner = None
+            st.rerun()
+
+        try:
+            result = api(
+                "POST",
+                "/auth/signup",
+                json={
+                    "username": username.strip(),
+                    "email": email.strip(),
+                    "password": password,
+                },
+            )
+        except ApiError as error:
+            # 설계서 SCR-002 는 중복 가입을 이메일 칸 아래에 붙인다. 백엔드는
+            # Supabase 예외 문구를 그대로 400 으로 흘려 보내므로 영문이 온다.
+            # 아는 문구만 이메일 칸으로 돌리고, 나머지는 위쪽 배너에 그대로 둔다.
+            # (백엔드가 구분 가능한 코드를 주면 이 문자열 대조는 지운다.)
+            message = str(error)
+            if "already registered" in message.lower() or "already been registered" in message.lower():
+                st.session_state.auth_errors = {"email": "이미 가입된 이메일입니다."}
+                st.session_state.auth_banner = None
+            else:
+                st.session_state.auth_errors = {}
+                st.session_state.auth_banner = message
+            st.rerun()
+        else:
+            if not result.get("access_token"):
+                # Supabase 가 이메일 확인을 요구하면 세션 없이 사용자만 만들어진다.
+                st.session_state.auth_mode = "login"
+                st.session_state.auth_errors = {}
+                st.session_state.auth_banner = None
+                st.session_state.notice = "회원가입이 완료되었습니다. 이메일 인증 후 로그인해 주세요."
+                st.rerun()
+            _store_session_from_token(result, signup_name=username.strip())
+
+    st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+    if st.button("이미 계정이 있어요 · 로그인", key="back_to_login_from_signup", type="tertiary"):
+        set_auth_mode("login")
+
+
+def render_password_reset() -> None:
+    """SCR-003 계정 찾기. 구현된 경로는 비밀번호 재설정 하나다.
+
+    설계서는 [아이디 찾기 · 비밀번호 재설정] 두 탭을 두지만, 아이디(이메일)를
+    찾아 주는 API 가 없다. 없는 탭을 그려 두면 눌렀을 때 아무 일도 일어나지
+    않으므로 재설정만 남긴다.
+    """
+
+    st.markdown('<p class="auth-title">계정 찾기</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="auth-subtitle">가입할 때 쓴 이름과 이메일이 맞으면 새 비밀번호를 저장합니다.</p>',
+        unsafe_allow_html=True,
+    )
+
+    _auth_error_style(
+        {
+            "username": "reset_username",
+            "email": "reset_email",
+            "new_password": "reset_new_password",
+            "confirm_password": "reset_confirm_password",
+        }
+    )
+    _render_auth_banners()
+
+    with st.form("password_reset_form"):
+        _render_field_label("가입 시 등록한 이름")
+        username = st.text_input("이름", key="reset_username", placeholder="홍길동")
+        _render_field_error("username")
+
+        st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        _render_field_label("이메일 (아이디)")
+        email = st.text_input("이메일", key="reset_email", placeholder="you@example.com")
+        _render_field_error("email")
+
+        st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        _render_field_label("새 비밀번호")
+        new_password = st.text_input("새 비밀번호", key="reset_new_password", type="password")
+        _render_field_error("new_password")
+        _render_password_strength(new_password)
+
+        st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        _render_field_label("새 비밀번호 확인")
+        confirm_password = st.text_input(
+            "새 비밀번호 확인", key="reset_confirm_password", type="password"
+        )
+        _render_field_error("confirm_password")
+
+        st.markdown(
+            "<div style='height:clamp(.8rem,1.042vw,1.25rem)'></div>",
+            unsafe_allow_html=True,
+        )
+        submitted = st.form_submit_button(
+            "새 비밀번호 저장", use_container_width=True, type="primary"
+        )
+
+    if submitted:
+        errors = {}
+        if not username.strip():
+            errors["username"] = "이름을 입력해 주세요."
+        if not email.strip():
+            errors["email"] = "이메일을 입력해 주세요."
+        elif not _looks_like_email(email):
+            errors["email"] = "이메일 형식이 아닙니다."
+        if not new_password:
+            errors["new_password"] = "새 비밀번호를 입력해 주세요."
+        elif len(new_password) < 6:
+            errors["new_password"] = "비밀번호는 6자 이상이어야 합니다."
+        if not confirm_password:
+            errors["confirm_password"] = "새 비밀번호를 한 번 더 입력해 주세요."
+        elif new_password and new_password != confirm_password:
+            errors["confirm_password"] = "새 비밀번호가 서로 다릅니다."
+
+        if errors:
+            st.session_state.auth_errors = errors
+            st.session_state.auth_banner = None
+            st.rerun()
+
+        try:
+            result = api(
+                "POST",
+                "/auth/password-reset/demo",
+                json={
+                    "username": username.strip(),
+                    "email": email.strip(),
+                    "new_password": new_password,
+                },
+            )
+        except ApiError as error:
+            st.session_state.auth_errors = {}
+            st.session_state.auth_banner = str(error)
+            st.rerun()
+        else:
+            st.session_state.auth_mode = "login"
+            st.session_state.auth_errors = {}
+            st.session_state.auth_banner = None
+            st.session_state.notice = result["message"]
+            st.rerun()
+
+    st.markdown(
+        '<div class="auth-hint-card">실습용 기능입니다. 실제 서비스에서는'
+        " 메일로 보낸 링크로 본인을 확인한 뒤 비밀번호를 바꿉니다.</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+            "<div style='height:clamp(.6rem,.729vw,.875rem)'></div>",
+            unsafe_allow_html=True,
+        )
+    if st.button("로그인으로 돌아가기", key="back_to_login_from_reset", type="tertiary"):
+        set_auth_mode("login")
+
 
 def render_travel_preference_sliders(
     key_prefix: str, intensity: int = 3, budget: int = 3
