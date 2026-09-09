@@ -591,8 +591,6 @@ st.markdown(
         }
         .login-wrap { max-width: 470px; margin: 8vh auto; }
         .login-card { padding: 2.7rem 2.25rem; border-radius: 24px; background: white; border: 1px solid #e3e9f6; box-shadow: 0 18px 45px rgba(37, 64, 120, .08); }
-        /* 여행이 선택된 화면은 1920×1080에서 페이지 자체가 아니라 일정 목록만
-           스크롤되도록 한 화면 높이에 맞춘다. 로그인·새 여행 화면에는 적용하지 않는다. */
         [data-testid="stMainBlockContainer"]:has(.st-key-trip_dashboard_shell) {
           height: 100dvh !important;
           max-width: none !important;
@@ -623,27 +621,13 @@ st.markdown(
         > [data-testid="stColumn"]:first-child {
           position: relative;
         }
-        /* 상단 3:1 네비게이션의 두 컬럼 사이에만 구분선을 그린다.
-           중첩된 일정·버튼 컬럼에는 적용하지 않아 긴 세로선이 생기지 않는다. */
         .st-key-trip_dashboard_shell
         > [data-testid="stLayoutWrapper"]
         > [data-testid="stHorizontalBlock"]
-        > [data-testid="stColumn"]:nth-child(2) {
-          position: relative;
-        }
-        .st-key-trip_dashboard_shell
-        > [data-testid="stLayoutWrapper"]
-        > [data-testid="stHorizontalBlock"]
-        > [data-testid="stColumn"]:nth-child(2)::before {
-          content: "";
-          position: absolute;
-          top: -8px;
-          height: 40px;
-          left: -.5rem;
-          width: 1px;
-          background: #cbd5e5;
-          z-index: 10;
-          pointer-events: none;
+        > [data-testid="stColumn"]:last-child {
+          height: calc(100dvh - 16px) !important;
+          max-height: calc(100dvh - 16px) !important;
+          overflow: hidden !important;
         }
         /* Windows 화면 배율이나 브라우저 줌에 따라 CSS 픽셀 높이가 달라져도
            실제 화면에서 일정·지도·채팅이 비슷한 비율을 차지하게 한다. */
@@ -654,6 +638,7 @@ st.markdown(
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_schedule_"][data-testid="stVerticalBlock"],
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_schedule_"] > [data-testid="stVerticalBlock"] {
           background: #f6f8fc !important;
+          padding: 1rem 0 !important;
           gap: 10px !important;
           row-gap: 5px !important;
         }
@@ -669,9 +654,9 @@ st.markdown(
         }
         /* 지도 높이 */
         .st-key-trip_dashboard_shell iframe[title="streamlit_components.v1.components.html"] {
-          height: 35dvh !important;
-          min-height: 165px !important;
-          max-height: 300px !important;
+          height: 25dvh !important;
+          min-height: 140px !important;
+          max-height: 220px !important;
         }
         /* 지도 영역 바깥은 일정 스크롤뷰와 같은 배경으로 두고, 카드 사방에 1rem 여백을 둔다. */
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_map_area_"][data-testid="stVerticalBlock"],
@@ -680,6 +665,7 @@ st.markdown(
           row-gap:0 !important;
           padding:1rem !important;
           background:#f6f8fc !important;
+          overflow:hidden !important;
         }
         /* 지도 헤더와 iframe을 하나의 카드로 붙인다. */
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_map_panel_"][data-testid="stVerticalBlock"],
@@ -702,11 +688,34 @@ st.markdown(
           border-radius:0 !important;
         }
         /* 오른쪽 채팅 높이 */
-        .st-key-trip_dashboard_shell [class*="st-key-dashboard_chat_"] {
-          height: 100dvh !important;
-          min-height: 430px !important;
-          max-height: 500px !important;
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_chat_messages_"] {
+          height: 45dvh !important;
+          min-height: 400px !important;
+          max-height: 480px !important;
           overflow-y: auto !important;
+        }
+        .st-key-trip_dashboard_shell [data-testid="stChatMessageContent"],
+        .st-key-trip_dashboard_shell [data-testid="stChatMessageContent"] * {
+          font-size:.75rem !important;
+          line-height:1.5 !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_chat_messages_"] [data-testid="stChatMessage"] {
+          padding-top:.8rem !important;
+          padding-bottom:.8rem !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_chat_messages_"] [data-testid="stChatMessageAvatarUser"] {
+          background: #978ff9 !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_chat_messages_"] [data-testid="stChatMessageAvatarAssistant"] {
+          background: #2563eb !important;
+        }
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_chat_messages_"] [data-testid="stChatMessageContent"] p,
+        .st-key-trip_dashboard_shell [class*="st-key-dashboard_chat_messages_"] [data-testid="stChatMessageContent"] li {
+          font-size:inherit !important;
+        }
+        /* 메시지창 다음에 Streamlit이 추가하는 기본 1rem 간격을 삭제 행에서만 없앤다. */
+        .st-key-trip_dashboard_shell [data-testid="stElementContainer"]:has([class*="st-key-delete_chat_history_"]) {
+          margin-top:-1rem !important;
         }
         /* 3:1.5 바깥 컬럼 안에서 날짜 네비게이션의 오른쪽 빈 공간만 작게 둔다. */
         .st-key-trip_dashboard_shell [class*="st-key-dashboard_day_navigation_"] {
@@ -907,7 +916,7 @@ st.markdown(
           top: -4px;
         }
         .dashboard-panel { height: 100%; border: 1px solid #e1e7f0; border-radius: 16px; background: var(--secondary-background-color); }
-        .dashboard-date-summary { display:flex; align-items:center; justify-content:space-between; gap:.68rem; min-height:clamp(36px, 5.5dvh, 52px); box-sizing:border-box; padding:.45rem 0 .45rem 1rem; border-top:1px solid #e6ebf3; border-bottom:1px solid #e6ebf3; margin:.45rem 0 0; }
+        .dashboard-date-summary { position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:.68rem; min-height:clamp(36px, 5.5dvh, 52px); box-sizing:border-box; padding:.45rem 0 1rem 1rem; border-top:1px solid #e6ebf3; border-bottom:1px solid #e6ebf3; margin:0 !important; background:#fff !important; }
         .dashboard-date-leading { display:flex; align-items:center; gap:.5rem; min-width:0; }
         .dashboard-date-title { font-size:.98rem; font-weight:800; }
         .dashboard-date-value { font-size:1.2em; }
@@ -925,7 +934,7 @@ st.markdown(
         .dashboard-day-stat { display:inline-flex; align-items:center; gap:.32rem; color:#55647a; font-size:.74rem; font-weight:750; white-space:nowrap; }
         .dashboard-day-stat-icon { display:inline-flex; width:.9rem; height:.9rem; color:#7b8aa1; flex:0 0 auto; }
         .dashboard-day-stat-icon svg { width:100%; height:100%; display:block; }
-        .dashboard-schedule-heading { display:flex; align-items:center; justify-content:space-between; width:100%; box-sizing:border-box; gap:.75rem; margin:0; padding:.7rem 0 .35rem 1rem; background:#f6f8fc; color:#7c8aa1; font-size:.72rem; font-weight:700; }
+        .dashboard-schedule-heading { display:flex; align-items:center; justify-content:space-between; width:100%; box-sizing:border-box; gap:.75rem; margin:0 !important; padding:.7rem 0 .35rem 1rem; background:#f6f8fc; color:#7c8aa1; font-size:.72rem; font-weight:700; }
         .dashboard-schedule-heading-title { color:#8794a9; }
         .dashboard-schedule-heading-legend { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.55rem; color:#9aa6b8; font-size:.68rem; font-weight:600; }
         .dashboard-schedule-heading-legend .is-fixed { color:#4f74de; }
@@ -1144,9 +1153,11 @@ st.markdown(
         .dashboard-map-stat { display:inline-flex; align-items:center; gap:.28rem; color:#4d5b71; font-size:.7rem; font-weight:750; white-space:nowrap; }
         .dashboard-map-stat-icon { display:inline-flex; width:.85rem; height:.85rem; flex:0 0 auto; color:#7c8ba2; }
         .dashboard-map-mode-count { color:#5d6c83; font-size:.68rem; font-weight:750; }
-        .trip-chat-title { margin:0; font-size:1.7rem; font-weight:850; }
-        .trip-chip-row { display:flex; flex-wrap:wrap; gap:.35rem; margin:.55rem 0 .7rem; }
-        .trip-chip { padding:.25rem .55rem; border-radius:999px; background:#eef3ff; color:#315fca; font-size:.9rem; font-weight:700; }
+        .trip-chat-title { margin:0; font-size:1.25rem; font-weight:850; }
+        .trip-chip-row { display:flex; flex-wrap:wrap; gap:.3rem; margin:.47rem 0 .6rem; }
+        .trip-chip { display:inline-flex; align-items:center; gap:.32rem; padding:.21rem .47rem; border-radius:9px; background:#f3f6fb; color:#4d5b70; font-size:.77rem; font-weight:700; white-space:nowrap; }
+        .trip-chip-icon { display:inline-flex; width:.78rem; height:.78rem; flex:0 0 auto; color:#7c8ba3; }
+        .trip-chip-icon svg { display:block; width:100%; height:100%; }
         .itinerary-change-status { margin:.15rem 0 .65rem; padding:.65rem .75rem; border:1px solid #d9e6ff; border-radius:12px; background:#f3f7ff; }
         .itinerary-change-status-title { color:#315fca; font-size:.74rem; font-weight:800; }
         .itinerary-change-status-message { margin-top:.16rem; font-size:.8rem; font-weight:700; }
@@ -4161,17 +4172,59 @@ def render_dashboard_chat(trip: dict, days: list[dict], selected_day: dict) -> N
 
     day_count = len(days)
     nights = max(0, day_count - 1)
-    party = TRAVEL_PARTY_LABELS.get(trip.get("travel_party"), "구성 미정")
-    purpose_value = trip.get("travel_purpose") or "맞춤 여행"
-    purpose = ", ".join(map(str, purpose_value)) if isinstance(purpose_value, list) else str(purpose_value)
-    destination = str(trip.get("destination") or "여행지")
+    party_type = str(trip.get("travel_party") or "unspecified")
+    party = {
+        "solo": "혼자 1명",
+        "couple": "커플 2명",
+    }.get(party_type, TRAVEL_PARTY_LABELS.get(party_type, "아직 정하지 않았어요"))
+    purpose = "맞춤 여행"
+    destination = str(trip.get("destination") or "여행지").split(",", 1)[0].strip() or "여행지"
+    try:
+        start_date = date.fromisoformat(str(trip.get("start_date") or "")[:10])
+        end_date = date.fromisoformat(str(trip.get("end_date") or "")[:10])
+        period = (
+            f"{start_date.month}.{start_date.day:02d}"
+            if start_date == end_date
+            else f"{start_date.month}.{start_date.day:02d}~{end_date.month}.{end_date.day:02d}"
+        )
+    except (TypeError, ValueError):
+        period = f"{nights}박 {day_count}일"
+    chip_icons = {
+        "destination": (
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+            'stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 0 1 16 0Z"></path>'
+            '<circle cx="12" cy="10" r="2.5"></circle></svg>'
+        ),
+        "period": (
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+            'stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect>'
+            '<path d="M16 3v4M8 3v4M3 10h18"></path></svg>'
+        ),
+        "party": (
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+            'stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>'
+            '<circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>'
+        ),
+        "purpose": (
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+            'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle>'
+            '<circle cx="12" cy="12" r="3"></circle></svg>'
+        ),
+    }
+
+    def chip_html(kind: str, label: str) -> str:
+        return (
+            '<span class="trip-chip"><span class="trip-chip-icon" aria-hidden="true">'
+            f'{chip_icons[kind]}</span><span>{escape(label)}</span></span>'
+        )
+
     st.markdown(f'<div class="trip-chat-title">{escape(str(trip.get("title") or "나의 여행"))}</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="trip-chip-row">'
-        f'<span class="trip-chip">{escape(destination)}</span>'
-        f'<span class="trip-chip">{nights}박 {day_count}일</span>'
-        f'<span class="trip-chip">{escape(party)}</span>'
-        f'<span class="trip-chip">{escape(purpose)}</span></div>',
+        f'{chip_html("destination", destination)}'
+        f'{chip_html("period", period)}'
+        f'{chip_html("party", party)}'
+        f'{chip_html("purpose", purpose)}</div>',
         unsafe_allow_html=True,
     )
     try:
@@ -4201,7 +4254,7 @@ def render_dashboard_chat(trip: dict, days: list[dict], selected_day: dict) -> N
         timeline.append((str(change.get("created_at") or ""), message_count + index, "change", change))
     timeline.sort(key=lambda event: (event[0], event[1]))
 
-    chat_box = st.container(height=680, key=f"dashboard_chat_{trip['id']}")
+    chat_box = st.container(height=480, key=f"dashboard_chat_messages_{trip['id']}")
     with chat_box:
         if not messages:
             username = str(st.session_state.user_name or "여행자")
