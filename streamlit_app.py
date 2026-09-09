@@ -576,6 +576,284 @@ st.markdown(
           text-align: center !important;
         }
         .empty-card { padding: 2.2rem; text-align: center; border: 1px dashed #c8d4eb; border-radius: 18px; background: white; }
+        /* 여행 추가 화면은 첫 여행 여부와 무관하게 같은 캔버스와 양식을 사용한다. */
+        [data-testid="stAppViewContainer"]:has(.st-key-create_trip_shell) {
+          background: #f5f7fb !important;
+        }
+        [data-testid="stMain"]:has(.st-key-create_trip_shell) [data-testid="stMainBlockContainer"] {
+          min-height: 100dvh !important;
+          max-width: none !important;
+          padding: 2rem 2.25rem 3rem !important;
+        }
+        [data-testid="stMainBlockContainer"]:has(.st-key-create_trip_shell) > [data-testid="stVerticalBlock"] {
+          gap: 0 !important;
+        }
+        .st-key-create_trip_shell {
+          width: min(100%, 1100px) !important;
+          margin: 0 auto !important;
+        }
+        .create-trip-hero {
+          max-width: 44rem;
+          margin: 0 auto 1.55rem;
+          text-align: center;
+        }
+        .create-trip-hero-icon {
+          display: inline-flex;
+          width: 2.5rem;
+          height: 2.5rem;
+          align-items: center;
+          justify-content: center;
+          border-radius: .75rem;
+          background: #2563eb;
+          box-shadow: 0 .45rem 1rem rgba(37, 99, 235, .2);
+          color: #fff;
+          font-size: 1.35rem;
+          font-weight: 800;
+        }
+        .create-trip-hero h1 {
+          margin: .65rem 0 .28rem;
+          color: #17213a;
+          font-size: clamp(1.45rem, 2.2vw, 2rem);
+          font-weight: 800;
+          letter-spacing: -.075rem;
+          line-height: 1.2;
+        }
+        .create-trip-hero p {
+          margin: 0;
+          color: #7b879f;
+          font-size: .82rem;
+          font-weight: 600;
+        }
+        .st-key-create_trip_form {
+          border: 0 !important;
+          padding: 0 !important;
+          background: transparent !important;
+        }
+        .st-key-create_trip_location_section,
+        .st-key-create_trip_primary_fields,
+        .st-key-create_trip_must_visit_section {
+          box-sizing: border-box;
+          border: 1px solid #e5eaf3 !important;
+          border-radius: .85rem !important;
+          background: #fff !important;
+          box-shadow: 0 .35rem 1.1rem rgba(34, 52, 84, .035) !important;
+        }
+        .st-key-create_trip_location_section,
+        .st-key-create_trip_must_visit_section {
+          margin-bottom: .85rem !important;
+          padding: .9rem 1rem !important;
+        }
+        .create-trip-section-heading {
+          display: flex;
+          align-items: baseline;
+          gap: .45rem;
+          margin: 0 0 .65rem;
+          color: #4f5f7c;
+          font-size: .76rem;
+          font-weight: 800;
+        }
+        .create-trip-section-heading small {
+          color: #98a4ba;
+          font-size: .7rem;
+          font-weight: 600;
+        }
+        .st-key-create_trip_location_section [data-testid="stAlert"] {
+          min-height: 0 !important;
+          padding: .5rem .65rem !important;
+          border-color: #d7e4ff !important;
+          border-radius: .55rem !important;
+          background: #f2f6ff !important;
+          color: #2563eb !important;
+        }
+        .st-key-create_trip_primary_fields {
+          margin: 0 0 .75rem !important;
+          padding: 0 !important;
+          overflow: hidden;
+        }
+        .st-key-create_trip_primary_fields [data-testid="stHorizontalBlock"] {
+          gap: 0 !important;
+          align-items: stretch !important;
+        }
+        .st-key-create_trip_primary_fields [data-testid="stColumn"] {
+          min-height: 4.85rem;
+          padding: .7rem 1rem !important;
+        }
+        .st-key-create_trip_primary_fields [data-testid="stColumn"] + [data-testid="stColumn"] {
+          border-left: 1px solid #edf0f6;
+        }
+        .st-key-create_trip_primary_fields [data-testid="stWidgetLabel"] {
+          margin: 0 0 .12rem !important;
+        }
+        .st-key-create_trip_primary_fields [data-testid="stWidgetLabel"] p {
+          color: #8793a9 !important;
+          font-size: .68rem !important;
+          font-weight: 700 !important;
+        }
+        .st-key-create_trip_primary_fields [data-testid="stTextInputRootElement"],
+        .st-key-create_trip_primary_fields [data-testid="stDateInput"] [data-baseweb="input"],
+        .st-key-create_trip_primary_fields [data-testid="stSelectbox"] > div > div {
+          min-height: 1.8rem !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+        }
+        .st-key-create_trip_primary_fields input,
+        .st-key-create_trip_primary_fields [data-testid="stSelectbox"] div {
+          color: #1f2d47 !important;
+          font-size: .82rem !important;
+          font-weight: 700 !important;
+        }
+        .st-key-create_trip_submit [data-testid="stButton"] {
+          margin: 0 !important;
+        }
+        .st-key-create_trip_submit [data-testid="stButton"] button {
+          min-height: 2.9rem !important;
+          margin-top: .1rem !important;
+          border: 0 !important;
+          border-radius: .65rem !important;
+          background: #2563eb !important;
+          box-shadow: 0 .45rem .9rem rgba(37, 99, 235, .2) !important;
+          color: #fff !important;
+          font-size: .78rem !important;
+          font-weight: 800 !important;
+        }
+        .st-key-create_trip_submit [data-testid="stButton"] button:hover {
+          background: #1d4ed8 !important;
+        }
+        .create-trip-submit-note {
+          margin-top: .26rem;
+          color: #9aa6ba;
+          font-size: .62rem;
+          font-weight: 600;
+          text-align: center;
+        }
+        .st-key-create_trip_preferences {
+          margin: 0 0 .85rem !important;
+          padding: .72rem 0 0 !important;
+        }
+        .create-trip-preferences-heading {
+          margin: 0 0 .6rem;
+          color: #8190a9;
+          font-size: .72rem;
+          font-weight: 700;
+          text-align: center;
+        }
+        .st-key-create_trip_preferences [data-testid="stHorizontalBlock"] {
+          gap: .8rem !important;
+        }
+        .st-key-create_trip_pace_card,
+        .st-key-create_trip_budget_card {
+          min-height: 10.4rem;
+          box-sizing: border-box;
+          padding: 1rem 1.15rem .9rem !important;
+          border: 1px solid #e5eaf3 !important;
+          border-radius: .8rem !important;
+          background: #fff !important;
+          box-shadow: 0 .3rem .9rem rgba(34, 52, 84, .03) !important;
+        }
+        .create-trip-preference-card-heading {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: .45rem;
+          color: #1d2a42;
+          font-size: 1rem;
+          font-weight: 800;
+        }
+        .create-trip-preference-card-heading span:first-child {
+          display: inline-flex;
+          align-items: center;
+          gap: .42rem;
+        }
+        .create-trip-preference-icon {
+          color: #2563eb;
+          font-size: 1.15rem;
+          line-height: 1;
+        }
+        .create-trip-preference-value {
+          color: #2563eb;
+          font-size: 1.75rem;
+          font-weight: 800;
+          line-height: 1;
+        }
+        .create-trip-preference-value small {
+          margin-left: .18rem;
+          color: #8c99ae;
+          font-size: .78rem;
+          font-weight: 800;
+        }
+        .st-key-create_trip_pace_card [data-testid="stSlider"],
+        .st-key-create_trip_budget_card [data-testid="stSlider"] {
+          padding: .35rem .2rem 0 !important;
+        }
+        .st-key-create_trip_pace_card [data-rac][data-orientation="horizontal"] > div > div:first-child,
+        .st-key-create_trip_budget_card [data-rac][data-orientation="horizontal"] > div > div:first-child {
+          /* Streamlit이 계산한 진행률 gradient는 유지하고 빨강 계열만 파랑으로 바꾼다. */
+          filter: hue-rotate(205deg) saturate(1.15) !important;
+        }
+        .st-key-create_trip_pace_card [data-rac][data-orientation="horizontal"] > div > div:nth-child(2),
+        .st-key-create_trip_budget_card [data-rac][data-orientation="horizontal"] > div > div:nth-child(2) {
+          width: 1.35rem !important;
+          height: 1.35rem !important;
+          border: .22rem solid #2563eb !important;
+          background: #fff !important;
+          box-shadow: 0 .12rem .28rem rgba(37, 99, 235, .18) !important;
+        }
+        .st-key-create_trip_pace_card [data-testid="stSliderThumbValue"],
+        .st-key-create_trip_budget_card [data-testid="stSliderThumbValue"] {
+          display: none !important;
+        }
+        .st-key-create_trip_pace_card [data-testid="stSliderTickBar"],
+        .st-key-create_trip_budget_card [data-testid="stSliderTickBar"] {
+          display: none !important;
+        }
+        .create-trip-preference-scale {
+          margin-top: .1rem;
+          color: #8490a5;
+          font-weight: 700;
+        }
+        .create-trip-preference-numbers {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          color: #76849b;
+          font-size: .78rem;
+        }
+        .create-trip-preference-numbers span:nth-child(2),
+        .create-trip-preference-numbers span:nth-child(3),
+        .create-trip-preference-numbers span:nth-child(4) { text-align: center; }
+        .create-trip-preference-numbers span:last-child { text-align: right; }
+        .create-trip-preference-labels {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          margin-top: .32rem;
+          color: #6d7a90;
+          font-size: .73rem;
+        }
+        .create-trip-preference-labels span:nth-child(2) { text-align: center; }
+        .create-trip-preference-labels span:last-child { text-align: right; }
+        }
+        .st-key-create_trip_must_visit_section [data-testid="stTextInputRootElement"],
+        .st-key-create_trip_location_section [data-testid="stTextInputRootElement"] {
+          border-color: #dce5f4 !important;
+          border-radius: .55rem !important;
+          background: #fbfcff !important;
+        }
+        .st-key-create_trip_must_visit_section [data-testid="stButton"] button,
+        .st-key-create_trip_location_section [data-testid="stButton"] button {
+          border-radius: .55rem !important;
+          font-size: .74rem !important;
+          font-weight: 750 !important;
+        }
+        @media (max-width: 760px) {
+          [data-testid="stMain"]:has(.st-key-create_trip_shell) [data-testid="stMainBlockContainer"] {
+            padding: 1.25rem 1rem 2rem !important;
+          }
+          .st-key-create_trip_primary_fields [data-testid="stColumn"] + [data-testid="stColumn"] {
+            border-top: 1px solid #edf0f6;
+            border-left: 0;
+          }
+        }
         .admin-access-denied { padding: 3rem 2rem; border: 1px solid #eadff8; border-radius: 20px; background: linear-gradient(135deg, #fbf8ff, #ffffff); text-align: center; }
         .admin-access-denied h1 { margin-bottom: .6rem; color: #432a77; }
         .admin-access-denied p { color: #726987; }
@@ -602,13 +880,23 @@ st.markdown(
         [data-testid="stMainBlockContainer"]:has(.st-key-trip_dashboard_shell) {
           height: 100dvh !important;
           max-width: none !important;
-          padding-top: 15px !important;
+          padding-top: 0 !important;
           padding-right: 0px !important;
           padding-bottom: 15px !important;
           padding-left: 0px !important;
           overflow: visible !important;
         }
-        .st-key-trip_dashboard_shell { height: calc(100dvh - 16px); overflow: visible; }
+        [data-testid="stMainBlockContainer"]:has(.st-key-trip_dashboard_shell) > [data-testid="stVerticalBlock"] {
+          gap: 0 !important;
+        }
+        [data-testid="stMainBlockContainer"]:has(.st-key-admin-dashboard-kpi-panel) > [data-testid="stVerticalBlock"],
+        [data-testid="stMainBlockContainer"]:has(.st-key-admin-user-list-panel) > [data-testid="stVerticalBlock"],
+        [data-testid="stMainBlockContainer"]:has(.st-key-admin-user-search-panel) > [data-testid="stVerticalBlock"],
+        [data-testid="stMainBlockContainer"]:has([class*="st-key-admin-feedback-kpi-"]) > [data-testid="stVerticalBlock"],
+        [data-testid="stMainBlockContainer"]:has([class*="st-key-admin-system-kpi-"]) > [data-testid="stVerticalBlock"] {
+          gap: 0 !important;
+        }
+        .st-key-trip_dashboard_shell { height: calc(100dvh - 25px); margin-top: 25px !important; overflow: visible; }
         .st-key-trip_dashboard_shell > div,
         .st-key-trip_dashboard_shell [data-testid="stHorizontalBlock"] { min-height: 0; }
         .st-key-trip_dashboard_shell [data-testid="stHorizontalBlock"],
@@ -2744,25 +3032,6 @@ def formatted_dates(trip: dict) -> str:
         return "여행 기간 미정"
     return f"{start} ~ {end}"
 
-def compact_trip_dates(trip: dict) -> str:
-    """사이드바에서 여행 제목 옆에 들어갈 짧은 날짜 범위를 반환한다."""
-
-    start, end = trip.get("start_date"), trip.get("end_date")
-    if not start or not end:
-        return "기간 미정"
-    try:
-        start_date = date.fromisoformat(str(start)[:10])
-        end_date = date.fromisoformat(str(end)[:10])
-    except ValueError:
-        return "기간 미정"
-
-    if start_date.year != end_date.year:
-        return f"{start_date:%y.%m.%d}–{end_date:%y.%m.%d}"
-    if start_date == end_date:
-        return f"{start_date.month}/{start_date.day}"
-    return f"{start_date.month}/{start_date.day}–{end_date.month}/{end_date.day}"
-
-
 def trip_activity_sort_key(trip: dict) -> tuple[str, str]:
     """생성 시각을 대체값으로 쓰는 안정적인 최신 활동순 정렬 키를 반환한다."""
 
@@ -3354,43 +3623,75 @@ def render_travel_preference_sliders(
 ) -> tuple[int, int]:
     """여행 강도와 상대적인 경비 수준을 1~5단계로 선택한다."""
 
-    intensity_column, budget_column = st.columns(2)
-    with intensity_column:
-        selected_intensity = st.slider(
-            "여행 강도",
-            min_value=1,
-            max_value=5,
-            value=intensity,
-            step=1,
-            key=f"{key_prefix}_travel_intensity",
-            help=(
-                "일반 날짜에는 관광·활동을 강도와 같은 개수로 배치하고 점심·저녁을 추가해요. "
-                "1단계는 호텔 휴식 2회, 2단계는 호텔 휴식 1회를 포함해요. "
-                "마지막 날은 현지 18시 출국 가정을 우선하여 일정을 줄여요. "
-                "관광·식당은 선택한 도시 안에서 추천하며, 체크인은 숙소 확인이 필요해요."
-            ),
+    def scale_html(left: str, center: str, right: str) -> str:
+        return (
+            '<div class="create-trip-preference-scale">'
+            '<div class="create-trip-preference-numbers">'
+            '<span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>'
+            '</div>'
+            '<div class="create-trip-preference-labels">'
+            f'<span>{escape(left)}</span><span>{escape(center)}</span><span>{escape(right)}</span>'
+            '</div>'
+            '</div>'
         )
-        st.caption(INTENSITY_GUIDE)
-    with budget_column:
-        selected_budget = st.slider(
-            "여행 경비 수준",
-            min_value=1,
-            max_value=5,
-            value=budget,
-            step=1,
-            key=f"{key_prefix}_budget_level",
-            help="실제 총예산 금액이 아닌, 장소와 식당을 추천할 때 참고할 소비 수준이에요.",
-        )
-        st.caption(BUDGET_GUIDE)
 
-    # 양식 안의 슬라이더는 제출 전에는 재실행되지 않으므로, 선택값에 따라 바뀌는
-    # 미리보기 대신 모든 단계에 적용되는 일정 수 규칙을 항상 같은 안내로 보여 준다.
-    st.caption(
-        "일반 날짜 관광·활동: 1~5단계 각각 1·2·3·4·5개 + 점심·저녁. "
-        "호텔 휴식은 1단계 2회, 2단계 1회가 추가돼요. "
-        "1~2단계는 오전에 여유 시간을 두어요. "
-        "새 일정은 선택한 도시 안에서 추천하고, 마지막 날은 현지 18시 출국 기준으로 줄여요."
-    )
+    with st.container(key=f"{key_prefix}_preferences", border=False):
+        st.markdown(
+            '<div class="create-trip-preferences-heading">✧ 세부 조건 (선택) · AI가 일정의 밀도와 소비 수준에 반영해요</div>',
+            unsafe_allow_html=True,
+        )
+        intensity_column, budget_column = st.columns(2, gap="small")
+        with intensity_column:
+            with st.container(key=f"{key_prefix}_pace_card", border=False):
+                current_intensity = int(
+                    st.session_state.get(f"{key_prefix}_travel_intensity", intensity) or intensity
+                )
+                st.markdown(
+                    '<div class="create-trip-preference-card-heading">'
+                    '<span><b class="create-trip-preference-icon">◠</b>페이스</span>'
+                    f'<b class="create-trip-preference-value">{current_intensity}<small>/5</small></b>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+                selected_intensity = st.slider(
+                    "페이스",
+                    min_value=1,
+                    max_value=5,
+                    value=intensity,
+                    step=1,
+                    key=f"{key_prefix}_travel_intensity",
+                    label_visibility="collapsed",
+                    help=(
+                        "일반 날짜에는 관광·활동을 강도와 같은 개수로 배치하고 점심·저녁을 추가해요. "
+                        "1단계는 호텔 휴식 2회, 2단계는 호텔 휴식 1회를 포함해요. "
+                        "마지막 날은 현지 18시 출국 가정을 우선하여 일정을 줄여요. "
+                        "관광·식당은 선택한 도시 안에서 추천하며, 체크인은 숙소 확인이 필요해요."
+                    ),
+                )
+                st.markdown(scale_html("아주 여유", "보통", "아주 힘듦"), unsafe_allow_html=True)
+        with budget_column:
+            with st.container(key=f"{key_prefix}_budget_card", border=False):
+                current_budget = int(
+                    st.session_state.get(f"{key_prefix}_budget_level", budget) or budget
+                )
+                st.markdown(
+                    '<div class="create-trip-preference-card-heading">'
+                    '<span><b class="create-trip-preference-icon">₩</b>예산</span>'
+                    f'<b class="create-trip-preference-value">{current_budget}<small>/5</small></b>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+                selected_budget = st.slider(
+                    "예산",
+                    min_value=1,
+                    max_value=5,
+                    value=budget,
+                    step=1,
+                    key=f"{key_prefix}_budget_level",
+                    label_visibility="collapsed",
+                    help="실제 총예산 금액이 아닌, 장소와 식당을 추천할 때 참고할 소비 수준이에요.",
+                )
+                st.markdown(scale_html("최대한 절약", "보통", "넉넉하게"), unsafe_allow_html=True)
     return selected_intensity, selected_budget
 
 
@@ -3398,13 +3699,12 @@ def open_create_trip_form() -> None:
     """새 여행 화면에 새로 진입할 때만 이전 입력을 비우고 화면을 연다."""
 
     if not st.session_state.get("show_create_trip", False):
-        # 첫 여행 양식과 사이드바로 연 양식은 서로 다른 키를 사용한다. 위젯을
-        # 그리기 전의 진입 시점에만 비워야 생성 처리·실패·일반 재실행 중 값이 유지된다.
-        for form_key in ("create_trip", "first_trip"):
-            for field in (
-                "title", "destination", "dates", "travel_party", "travel_intensity", "budget_level"
-            ):
-                st.session_state.pop(f"{form_key}_{field}", None)        # [변경 사유] 위 for 문은 위젯 키(create_trip_title 등)만 지운다.
+        # 첫 여행과 사이드바에서 연 화면은 같은 양식을 쓴다. 위젯을 그리기 전의
+        # 진입 시점에만 비워야 생성 처리·실패·일반 재실행 중 값이 유지된다.
+        for field in (
+            "title", "destination", "dates", "travel_party", "travel_intensity", "budget_level"
+        ):
+            st.session_state.pop(f"create_trip_{field}", None)
         # 고른 여행지와 장소는 위젯이 아니라 우리가 만든 세션 값이라 따로 지워야
         # 한다. 안 지우면 이전에 만들다 만 여행의 선택이 새 양식에 남는다.
     st.session_state.create_trip_destination = None
@@ -3618,41 +3918,63 @@ def render_create_trip_form(form_key: str) -> None:
     # [변경 사유] 검색은 st.form 밖에서만 동작한다. 양식 안의 위젯은 제출 전까지
     # 재실행을 일으키지 않아 검색 결과를 그릴 수 없고, 양식은 제출 버튼도 하나만
     # 허용한다. 순서도 의미가 있다 — 장소 검색은 여행지가 정해져야 열린다.
-    st.markdown("##### 어디로 가시나요")
-    render_destination_picker(form_key)
-    st.markdown("##### 가고 싶은 장소 (선택)")
-    render_must_visit_picker(form_key)
-    st.divider()
+    # 여행지 선택은 Google Place 검색 결과를 그대로 써야 한다. 사진의 가로 조건
+    # 카드에는 넣지 않고, 그 위의 독립 영역에서만 고르게 한다.
+    with st.container(key="create_trip_location_section", border=False):
+        st.markdown(
+            '<div class="create-trip-section-heading">⌖ 여행지 검색 <small>Google Place에서 도시를 선택해요</small></div>',
+            unsafe_allow_html=True,
+        )
+        render_destination_picker(form_key)
 
-    # 제출 직후에는 입력을 초기화하지 않고 API 완료 후에만 대시보드로 이동한다.
-    with st.form(form_key, clear_on_submit=False):
-        title = st.text_input(
-            "여행 이름", placeholder="예: 봄날의 도쿄 여행", key=f"{form_key}_title"
+    with st.container(key="create_trip_must_visit_section", border=False):
+        st.markdown(
+            '<div class="create-trip-section-heading">✧ 이렇게 시작해 보세요 <small>가고 싶은 장소는 선택 사항이에요</small></div>',
+            unsafe_allow_html=True,
         )
+        render_must_visit_picker(form_key)
+
+    # 일반 컨테이너로 두어 페이스·예산을 움직이면 우측 단계 숫자도 즉시 갱신된다.
+    # 위젯 키가 값을 유지하므로 폼 제출을 쓰지 않아도 입력값은 사라지지 않는다.
+    with st.container(key="create_trip_form", border=False):
         today = date.today()
-        selected_dates = st.date_input(
-            "여행 기간",
-            value=(today, today + timedelta(days=3)),
-            format="YYYY-MM-DD",
-            key=f"{form_key}_dates",
-        )
-        travel_party = st.selectbox(
-            "여행 인원 구성",
-            options=list(TRAVEL_PARTY_LABELS),
-            format_func=TRAVEL_PARTY_LABELS.get,
-            key=f"{form_key}_travel_party",
-        )
+        with st.container(key="create_trip_primary_fields", border=False):
+            title_column, dates_column, party_column, submit_column = st.columns(
+                [1.12, 1.15, 1, .78], gap=None
+            )
+            with title_column:
+                title = st.text_input(
+                    "여행 이름",
+                    placeholder="예: 봄날의 도쿄 여행",
+                    key=f"{form_key}_title",
+                )
+            with dates_column:
+                selected_dates = st.date_input(
+                    "여행 일정",
+                    value=(today, today + timedelta(days=3)),
+                    format="YYYY-MM-DD",
+                    key=f"{form_key}_dates",
+                )
+            with party_column:
+                travel_party = st.selectbox(
+                    "여행 인원",
+                    options=list(TRAVEL_PARTY_LABELS),
+                    format_func=TRAVEL_PARTY_LABELS.get,
+                    key=f"{form_key}_travel_party",
+                )
+            with submit_column:
+                with st.container(key="create_trip_submit", border=False):
+                    submitted = st.button(
+                        "✈ 여행 만들기",
+                        use_container_width=True,
+                        type="primary",
+                        key=f"{form_key}_create_button",
+                    )
         travel_intensity, budget_level = render_travel_preference_sliders(form_key)
-        st.caption("일정은 매일 여행지 현지 시간 오전 9시부터 시작해요.")
         st.caption(
-            "마지막 날은 13시까지 관광·점심 → 13~15시 공항 이동 예비 시간 → "
-            "15~18시 출국 수속 준비로 계획해요. 근교 도시 관광은 포함하지 않아요."
+            "여행지·기간·인원과 선택한 조건을 기준으로 AI 일정 초안을 만들어요."
         )
-        st.caption(
-            "18시 출국은 기본 가정이에요. 공항·항공편은 아직 정해지지 않았고, "
-            "이동 예비 2시간은 실제 경로를 계산한 시간이 아니므로 항공편에 맞춰 확인해 주세요."
-        )
-        submitted = st.form_submit_button("여행 만들기", use_container_width=True, type="primary")
+
     if not submitted:
         return
     # [변경 사유] destination 변수가 없어졌다. 고른 도시는 세션에 있다.
@@ -3908,33 +4230,6 @@ def render_admin_console_navigation(current_view: str) -> None:
         st.session_state.current_view = "admin_console"
         request_main_scroll_to_top()
         st.rerun()
-
-
-def _render_admin_console_tabs_legacy(current_view: str) -> None:
-    """피그마 ADM-002·003·004의 본문 상단 가로 탭을 렌더링한다."""
-
-    tab_specs = [
-        ("ADM-002 사용자 관리", "admin_console", "admin-tab-users"),
-        ("ADM-003 피드백·페이스", "admin_feedback", "admin-tab-feedback"),
-        ("ADM-004 시스템 상태", "admin_system", "admin-tab-system"),
-    ]
-    st.markdown(
-        '<div class="admin-console-breadcrumb">운영 콘솔&nbsp;&nbsp;›&nbsp;&nbsp;'
-        '사용자 관리 · 피드백·페이스 · 시스템 상태</div>',
-        unsafe_allow_html=True,
-    )
-    tab_columns = st.columns(3, gap="small")
-    for column, (label, target_view, key) in zip(tab_columns, tab_specs):
-        with column:
-            if st.button(
-                label,
-                use_container_width=True,
-                type="primary" if current_view == target_view else "secondary",
-                key=key,
-            ) and current_view != target_view:
-                st.session_state.current_view = target_view
-                request_main_scroll_to_top()
-                st.rerun()
 
 
 def render_admin_dashboard_filters() -> None:
@@ -4905,137 +5200,6 @@ def render_google_place_planner(trip: dict, day: dict) -> None:
             )
 
 
-def render_day(trip: dict, day: dict) -> None:
-    """일정 항목과 제어 요소를 포함한 여행 일차 하나를 그린다."""
-    heading = day.get("title") or f"DAY {day['day_number']}"
-    st.markdown(f'<div class="day-title">{escape(heading)}</div>', unsafe_allow_html=True)
-    st.caption(f"{day['travel_date']} · {day.get('area') or '지역 미정'}")
-
-    items = day.get("items", [])
-    if not items:
-        st.info("아직 일정이 없습니다. 아래에서 직접 추가해 보세요.")
-    for item in items:
-        main_col, action_col = st.columns([9, 1], vertical_alignment="center")
-        with main_col:
-            if isinstance(item.get("place"), dict):
-                # 위치 버튼은 별도 열을 차지하지 않고 카드 안쪽에 겹쳐 보인다.
-                with st.container(key=f"itinerary_item_row_{item['id']}", border=False):
-                    render_itinerary_item_card(item, trip.get("timezone"))
-                    with st.container(
-                        key=f"itinerary_place_info_{item['id']}", border=False
-                    ):
-                        place_popover = st.popover(
-                            "정보",
-                            key=f"itinerary_place_popover_{item['id']}",
-                            type="tertiary",
-                            help="Google 장소 정보",
-                            on_change="rerun",
-                        )
-                        if place_popover.open:
-                            with place_popover:
-                                render_cached_google_place_info(item)
-            else:
-                render_itinerary_item_card(item, trip.get("timezone"))
-        with action_col:
-            with st.container(key=f"itinerary_delete_{item['id']}", border=False):
-                if st.button("삭제", key=f"delete_{item['id']}"):
-                    try:
-                        api(
-                            "DELETE",
-                            f"/trips/{trip['id']}/itinerary-items/{item['id']}",
-                            headers=auth_headers(),
-                        )
-                    except ApiError as error:
-                        st.error(str(error))
-                    else:
-                        st.rerun()
-    add_itinerary_item(trip, day)
-    render_google_place_planner(trip, day)
-
-def render_trip_dates_editor(trip: dict) -> None:
-    """대시보드의 기간 카드 안에 여행 기간 선택기를 직접 그린다."""
-
-    start_value = trip.get("start_date")
-    end_value = trip.get("end_date")
-    if start_value and end_value:
-        start_date = date.fromisoformat(start_value)
-        end_date = date.fromisoformat(end_value)
-    else:
-        start_date = date.today()
-        end_date = start_date
-
-    st.markdown('<div class="stat-label">여행 기간</div>', unsafe_allow_html=True)
-    with st.form(f"trip_dates_form_{trip['id']}"):
-        selected_dates = st.date_input(
-            "날짜 선택",
-            value=(start_date, end_date),
-            format="YYYY-MM-DD",
-        )
-        submitted = st.form_submit_button(
-            "날짜 변경",
-            use_container_width=True,
-            type="primary",
-        )
-
-    if not submitted:
-        return
-    if not isinstance(selected_dates, tuple) or len(selected_dates) != 2:
-        st.error("시작일과 종료일을 모두 선택하세요.")
-        return
-
-    try:
-        api(
-            "PATCH",
-            f"/trips/{trip['id']}/dates",
-            json={
-                "start_date": selected_dates[0].isoformat(),
-                "end_date": selected_dates[1].isoformat(),
-            },
-            headers=auth_headers(),
-        )
-    except ApiError as error:
-        st.error(str(error))
-        return
-    st.rerun()
-
-def render_trip_preferences_editor(trip: dict) -> None:
-    """저장된 동행 구성을 표시하고 강도와 경비 수준만 변경하여 저장한다."""
-
-    trip_id = str(trip["id"])
-    party_label = TRAVEL_PARTY_LABELS.get(trip.get("travel_party"), "아직 정하지 않았어요")
-    with st.container(border=True):
-        st.markdown("#### 여행 설정")
-        st.caption(f"여행 인원 구성 · {party_label}")
-        if st.session_state.pop(f"trip_preferences_saved_{trip_id}", False):
-            st.success("여행 설정을 저장했어요.")
-        with st.form(f"trip_preferences_form_{trip_id}"):
-            intensity, budget = render_travel_preference_sliders(
-                f"trip_preferences_{trip_id}",
-                intensity=int(trip.get("travel_intensity") or 3),
-                budget=int(trip.get("budget_level") or 3),
-            )
-            st.caption(
-                "설정을 저장해도 기존 일정은 자동으로 변경되지 않아요. "
-                "바뀐 조건은 이후 AI 채팅의 추천에 반영돼요."
-            )
-            submitted = st.form_submit_button("여행 설정 저장", type="primary")
-    if not submitted:
-        return
-
-    try:
-        api(
-            "PATCH",
-            f"/trips/{trip_id}",
-            json={"travel_intensity": intensity, "budget_level": budget},
-            headers=auth_headers(),
-        )
-    except ApiError as error:
-        st.error(str(error))
-        return
-    st.session_state[f"trip_preferences_saved_{trip_id}"] = True
-    st.rerun()
-
-
 def _dashboard_selected_day(trip: dict, days: list[dict]) -> dict:
     """여행별 DAY 선택값을 확인하고 5개짜리 날짜 탐색 범위 안에 유지한다."""
 
@@ -5300,7 +5464,7 @@ def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
                     )
                     with previous:
                         if st.button(
-                            "↑",
+                            "⬆️",
                             key=f"compact_move_previous_{item['id']}",
                             help="이전 시간 칸의 장소와 교환",
                             disabled=index == 0,
@@ -5318,7 +5482,7 @@ def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
                                 st.rerun()
                     with next_item:
                         if st.button(
-                            "↓",
+                            "⬇️",
                             key=f"compact_move_next_{item['id']}",
                             help="다음 시간 칸의 장소와 교환",
                             disabled=index == len(schedule_rows) - 1,
@@ -5343,7 +5507,7 @@ def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
                             end.replace(tzinfo=None).time() if end else time(10, 0)
                         )
                         with st.popover(
-                            "◷",
+                            "🕒",
                             key=f"compact_time_{item['id']}",
                             help="시작·종료 시간 변경",
                         ):
@@ -5381,10 +5545,10 @@ def render_compact_schedule(trip: dict, day: dict, route_plan: dict) -> None:
                                         st.rerun()
                     with info:
                         if place:
-                            with st.popover("ⓘ", key=f"compact_place_{item['id']}", help="장소 정보"):
+                            with st.popover("🔍", key=f"compact_place_{item['id']}", help="장소 정보"):
                                 render_cached_google_place_info(item)
                     with remove:
-                        if st.button("×", key=f"compact_delete_{item['id']}", help="일정 삭제"):
+                        if st.button("❌", key=f"compact_delete_{item['id']}", help="일정 삭제"):
                             try:
                                 api("DELETE", f"/trips/{trip['id']}/itinerary-items/{item['id']}", headers=auth_headers())
                             except ApiError as error:
@@ -6061,58 +6225,6 @@ def render_dashboard_chat(trip: dict, days: list[dict], selected_day: dict) -> N
     st.rerun()
 
 
-def render_chat(trip: dict) -> None:
-    """여행의 채팅 기록을 표시하고 여행 도우미에게 새 질문을 보낸다."""
-    st.divider()
-    st.subheader("✦ TripMate AI와 여행 이야기하기")
-    st.caption("여행지, 일정 아이디어, 준비물을 물어보세요. AI 답변은 이 여행에만 저장됩니다.")
-    try:
-        messages = api("GET", f"/trips/{trip['id']}/messages", headers=auth_headers())
-    except ApiError as error:
-        st.error(str(error))
-        return
-
-    chat_box = st.container(height=340)
-    with chat_box:
-        if not messages:
-            st.caption("예: ‘도쿄 3박 4일 일정의 첫날에 무엇을 하면 좋을까?’")
-        for message in messages:
-            if message["role"] == "system":
-                continue
-            with st.chat_message(message["role"]):
-                st.write(message["content"])
-
-    render_context_controls(trip, messages)
-    prompt = st.chat_input("TripMate에게 물어보세요")
-    if prompt:
-        # 현재 질문은 위에서 불러온 기록에 아직 없으므로 서버가 AI 답변을 스트리밍하는
-        # 동안 즉시 그려 준다.
-        with chat_box:
-            with st.chat_message("user"):
-                st.write(prompt)
-
-            with st.chat_message("assistant"):
-                try:
-                    st.write_stream(
-                        stream_answer(
-                            f"/trips/{trip['id']}/chat",
-                            {"content": prompt},
-                            headers=auth_headers(),
-                        )
-                    )
-                except SessionExpired:
-                    # 애플리케이션 최상위 처리기가 만료된 세션을 비우도록 한다.
-                    raise
-                except ApiError as error:
-                    st.error(str(error))
-                    return
-
-        # 백엔드는 스트림이 끝난 뒤 완성된 AI 메시지를 저장한다. 저장된 대화가 이
-        # 임시 화면을 대체하도록 그때만 다시 실행한다.
-        st.rerun()
-
-# 서버가 받는 값은 simple / illustrated 두 가지다 (백엔드 style 파라미터).
-# 화면 라벨만 우리말로 붙인다 - 값을 화면에서 새로 만들면 서버가 422 를 준다.
 EXPORT_STYLES = {
     "simple": ("심플형", "흰 배경 · 구분선 · 텍스트 중심", "인쇄하거나 캘린더에 붙이기 좋아요"),
     "illustrated": ("일러스트형", "손그림 다이어리 · 아이콘 · 캐릭터", "SNS나 메신저로 공유하기 좋아요"),
@@ -6633,104 +6745,6 @@ def _admin_dashboard_metric_value(value: int | float | None, suffix: str = "") -
     return f"{value or 0}{suffix}"
 
 
-def _render_admin_dashboard_figma_legacy(summary: dict, error_items: list[dict]) -> None:
-    """피그마의 KPI·차트·오류 모니터링 구성을 Streamlit 기본 기능으로 표현한다."""
-
-    kpis = summary.get("kpis", {})
-    with st.container(border=True):
-        st.markdown('<div class="admin-panel-title">운영 현황</div>', unsafe_allow_html=True)
-        cards = st.columns(5)
-        card_values = [
-            ("신규 가입자", kpis.get("user_signup_count", 0), ""),
-            ("전체 요청", kpis.get("total_requests", 0), ""),
-            ("성공 · 실패", f"{kpis.get('success_count', 0)} · {kpis.get('failure_count', 0)}", ""),
-            ("에러율", kpis.get("error_rate_percent", 0), "%"),
-            ("평균 응답시간", kpis.get("average_latency_ms", 0), " ms"),
-        ]
-        for column, (label, value, suffix) in zip(cards, card_values):
-            with column:
-                st.metric(label, _admin_dashboard_metric_value(value, suffix))
-
-    hourly = summary.get("hourly_requests", [])
-    chart_column, status_column = st.columns([1.55, 1], gap="medium")
-    with chart_column:
-        with st.container(border=True):
-            st.markdown('<div class="admin-panel-title">시간별 요청량</div>', unsafe_allow_html=True)
-            if hourly:
-                st.bar_chart(
-                    {
-                        "성공": [item.get("success_count", 0) for item in hourly],
-                        "실패": [item.get("failure_count", 0) for item in hourly],
-                    },
-                    height=250,
-                )
-            else:
-                st.info("선택한 기간에 요청 로그가 없습니다.")
-    with status_column:
-        with st.container(border=True):
-            st.markdown('<div class="admin-panel-title">성공 · 실패 현황</div>', unsafe_allow_html=True)
-            success_count = int(kpis.get("success_count", 0) or 0)
-            failure_count = int(kpis.get("failure_count", 0) or 0)
-            total_count = success_count + failure_count
-            success_ratio = success_count / total_count if total_count else 0
-            st.metric("성공률", f"{success_ratio * 100:.1f}%")
-            st.progress(success_ratio, text=f"성공 {success_count}건 / 실패 {failure_count}건")
-            st.caption("요청 상태 코드 200~399를 성공으로 집계합니다.")
-
-    error_counts: dict[str, int] = {}
-    for item in error_items:
-        label = str(item.get("error_type") or item.get("endpoint") or "알 수 없는 오류")
-        error_counts[label] = error_counts.get(label, 0) + 1
-    top_errors = sorted(error_counts.items(), key=lambda pair: (-pair[1], pair[0]))[:3]
-    endpoint_column, error_column = st.columns([1.35, 1], gap="medium")
-    with endpoint_column:
-        with st.container(border=True):
-            st.markdown('<div class="admin-panel-title">엔드포인트별 이용량</div>', unsafe_allow_html=True)
-            endpoint_rows = [
-                {
-                    "엔드포인트": item.get("endpoint"),
-                    "요청": item.get("request_count", 0),
-                    "사용자": item.get("unique_user_count", 0),
-                    "평균 응답(ms)": item.get("average_latency_ms", 0),
-                    "에러율(%)": item.get("error_rate_percent", 0),
-                }
-                for item in summary.get("endpoint_usage", [])[:10]
-            ]
-            if endpoint_rows:
-                st.dataframe(endpoint_rows, use_container_width=True, hide_index=True)
-            else:
-                st.info("엔드포인트 사용량이 없습니다.")
-    with error_column:
-        with st.container(border=True):
-            st.markdown('<div class="admin-panel-title">오류 TOP 3</div>', unsafe_allow_html=True)
-            if top_errors:
-                for rank, (label, count) in enumerate(top_errors, start=1):
-                    st.write(f"{rank}. {label}  ·  {count}건")
-            else:
-                st.success("오류가 없습니다.")
-
-    llm_summary = summary.get("llm_summary", [])
-    with st.container(border=True):
-        st.markdown('<div class="admin-panel-title">LLM 요청 요약</div>', unsafe_allow_html=True)
-        if llm_summary:
-            st.dataframe(
-                [
-                    {
-                        "모델": item.get("model"),
-                        "요청": item.get("request_count", 0),
-                        "실패": item.get("failure_count", 0),
-                        "에러율(%)": item.get("error_rate_percent", 0),
-                        "평균 응답(ms)": item.get("average_latency_ms", 0),
-                    }
-                    for item in llm_summary
-                ],
-                use_container_width=True,
-                hide_index=True,
-            )
-        else:
-            st.info("선택한 기간에 LLM 요청 로그가 없습니다.")
-
-
 def render_admin_access_denied() -> None:
     """관리자 인증이 없는 사용자가 직접 접근했을 때의 ADM-005 화면."""
 
@@ -6752,423 +6766,61 @@ def render_admin_access_denied() -> None:
             st.rerun()
 
 
-def _render_admin_dashboard_legacy() -> None:
-    """로그인한 관리자 세션 안에서 운영 대시보드를 렌더링한다."""
-
-    st.title("운영 대시보드")
-    render_admin_dashboard_filters()
-    start_date = st.session_state.get("admin_dashboard_start_date", date.today())
-    end_date = st.session_state.get("admin_dashboard_end_date", date.today())
-
-    if start_date > end_date:
-        st.error("시작일은 종료일보다 늦을 수 없습니다.")
-        return
-
-    params = _admin_dashboard_period_params(start_date, end_date)
-    try:
-        headers = auth_headers()
-        summary = api("GET", "/admin/dashboard/summary", params=params, headers=headers, timeout=30)
-        errors = api(
-            "GET",
-            "/admin/dashboard/errors",
-            params={**params, "limit": "100"},
-            headers=headers,
-            timeout=30,
-        )
-    except ApiError as error:
-        st.error(str(error))
-        return
-
-    period = summary.get("period", {})
-    st.caption(f"조회 기간: {period.get('start_at', '')} ~ {period.get('end_at', '')}")
-    _render_admin_dashboard_figma(
-        summary,
-        errors.get("items", []) if isinstance(errors, dict) else [],
-    )
-
-    st.subheader("최근 오류 로그")
-    error_items = errors.get("items", []) if isinstance(errors, dict) else []
-    if error_items:
-        st.dataframe(
-            [
-                {
-                    "발생 시각": item.get("occurred_at"),
-                    "요청 ID": item.get("request_id"),
-                    "메서드": item.get("method"),
-                    "엔드포인트": item.get("endpoint"),
-                    "상태 코드": item.get("status_code"),
-                    "응답시간(ms)": item.get("latency_ms"),
-                    "오류 유형": item.get("error_type"),
-                    "모델": item.get("model"),
-                }
-                for item in error_items
-            ],
-            use_container_width=True,
-            hide_index=True,
-        )
-    else:
-        st.success("선택한 기간에 오류 로그가 없습니다.")
-
-
-def _render_admin_console_figma_legacy() -> None:
-    """피그마 ADM-002의 사용자 목록·상세 2열 구성을 렌더링한다."""
-
-    render_admin_console_tabs("admin_console")
-    st.title("사용자 관리")
-    st.caption("운영 콘솔 · TripMate Admin")
-    search = st.text_input(
-        "사용자 검색",
-        placeholder="이름 또는 이메일을 입력하세요",
-        key="admin_console_search",
-    ).strip()
-    try:
-        result = api(
-            "GET",
-            "/admin/console/users",
-            params={"search": search, "limit": 100},
-            headers=auth_headers(),
-            timeout=30,
-        )
-    except ApiError as error:
-        st.error(str(error))
-        return
-
-    users = result.get("items", []) if isinstance(result, dict) else []
-    st.caption(f"전체 사용자 {result.get('total', 0) if isinstance(result, dict) else 0}명")
-    if not users:
-        st.info("조건에 맞는 사용자가 없습니다.")
-        return
-
-    list_column, detail_column = st.columns([1, 1.35], gap="medium")
-    with list_column:
-        with st.container(border=True):
-            st.markdown('<div class="admin-panel-title">사용자 목록</div>', unsafe_allow_html=True)
-            st.dataframe(
-                [
-                    {
-                        "사용자": item.get("username") or "-",
-                        "이메일": item.get("email") or "-",
-                        "가입일": item.get("created_at") or "-",
-                    }
-                    for item in users
-                ],
-                use_container_width=True,
-                hide_index=True,
-            )
-            user_options = {str(item.get("id")): item for item in users if item.get("id")}
-            selected_user_id = st.selectbox(
-                "상세 조회 사용자",
-                options=list(user_options),
-                format_func=lambda user_id: (
-                    f"{user_options[user_id].get('username') or '-'} · "
-                    f"{user_options[user_id].get('email') or '-'}"
-                ),
-                key="admin_console_selected_user",
-            )
-
-    try:
-        detail = api(
-            "GET",
-            f"/admin/console/users/{selected_user_id}",
-            headers=auth_headers(),
-            timeout=30,
-        )
-    except ApiError as error:
-        st.error(str(error))
-        return
-
-    with detail_column:
-        with st.container(border=True):
-            st.markdown('<div class="admin-panel-title">사용자 상세</div>', unsafe_allow_html=True)
-            st.markdown(f"**{detail.get('username') or '-'}**")
-            st.caption(detail.get("email") or "-")
-            detail_values = [
-                ("여행 수", detail.get("trip_count", 0)),
-                ("API 요청", detail.get("request_count", 0)),
-                ("활동 로그", detail.get("activity_count", 0)),
-            ]
-            for label, value in detail_values:
-                st.metric(label, value)
-            trips = detail.get("trips", [])
-            if trips:
-                st.markdown("#### 여행 목록")
-                st.dataframe(
-                    [
-                        {
-                            "여행": item.get("title") or item.get("destination") or "-",
-                            "기간": f"{item.get('start_date') or '-'} ~ {item.get('end_date') or '-'}",
-                            "상태": item.get("status") or "-",
-                        }
-                        for item in trips
-                    ],
-                    use_container_width=True,
-                    hide_index=True,
-                )
-            else:
-                st.info("여행 기록이 없습니다.")
-
-            st.markdown("#### 최근 활동")
-            activities = detail.get("recent_activities", [])
-            if activities:
-                st.dataframe(activities[:8], use_container_width=True, hide_index=True)
-            else:
-                st.info("활동 로그가 없습니다.")
-
-            st.markdown("#### 최근 API 요청")
-            requests = detail.get("recent_requests", [])
-            if requests:
-                st.dataframe(requests[:8], use_container_width=True, hide_index=True)
-            else:
-                st.info("API 요청 로그가 없습니다.")
-
-
-def _render_admin_feedback_legacy() -> None:
-    """피그마 ADM-003의 피드백·페이스 집계 전용 화면을 렌더링한다."""
-
-    render_admin_console_tabs("admin_feedback")
-    st.title("피드백 · 페이스")
-    st.caption("ADM-003 · 집계 전용")
-    try:
-        summary = api(
-            "GET",
-            "/admin/console/feedback",
-            headers=auth_headers(),
-            timeout=30,
-        )
-    except ApiError as error:
-        st.error(str(error))
-        return
-
-    cards = st.columns(4)
-    card_values = [
-        ("전체 피드백", summary.get("feedback_count", 0)),
-        ("긍정 피드백", summary.get("positive_count", 0)),
-        ("부정 피드백", summary.get("negative_count", 0)),
-        ("페이스 기록", summary.get("pace_count", 0)),
-    ]
-    for column, (label, value) in zip(cards, card_values):
-        with column:
-            st.metric(label, value)
-
-    feedback_breakdown = summary.get("feedback_breakdown", [])
-    pace_breakdown = summary.get("pace_breakdown", [])
-    feedback_column, pace_column = st.columns(2, gap="medium")
-    with feedback_column:
-        with st.container(border=True):
-            st.markdown('<div class="admin-panel-title">피드백 집계</div>', unsafe_allow_html=True)
-            if feedback_breakdown:
-                st.bar_chart(
-                    {"건수": [int(item.get("count", 0) or 0) for item in feedback_breakdown]},
-                    height=220,
-                )
-                st.dataframe(
-                    [
-                        {"구분": item.get("label") or "기타", "건수": item.get("count", 0)}
-                        for item in feedback_breakdown
-                    ],
-                    use_container_width=True,
-                    hide_index=True,
-                )
-            else:
-                st.info("수집된 피드백 로그가 없습니다.")
-    with pace_column:
-        with st.container(border=True):
-            st.markdown('<div class="admin-panel-title">페이스 집계</div>', unsafe_allow_html=True)
-            if pace_breakdown:
-                st.bar_chart(
-                    {"건수": [int(item.get("count", 0) or 0) for item in pace_breakdown]},
-                    height=220,
-                )
-                st.dataframe(
-                    [
-                        {"페이스": item.get("label") or "기타", "건수": item.get("count", 0)}
-                        for item in pace_breakdown
-                    ],
-                    use_container_width=True,
-                    hide_index=True,
-                )
-            else:
-                st.info("수집된 페이스 로그가 없습니다.")
-
-    st.caption("원문과 개인 식별 정보는 표시하지 않고 집계 결과만 제공합니다.")
-
-
-def _render_admin_system_status_legacy() -> None:
-    """피그마 ADM-004의 최근 1시간 시스템 상태 화면을 렌더링한다."""
-
-    render_admin_console_tabs("admin_system")
-    st.title("시스템 상태")
-    st.caption("ADM-004 · 최근 1시간")
-    try:
-        status = api(
-            "GET",
-            "/admin/console/system-status",
-            headers=auth_headers(),
-            timeout=30,
-        )
-    except ApiError as error:
-        st.error(str(error))
-        return
-
-    overview_columns = st.columns(4)
-    overview_values = [
-        ("전체 요청", status.get("total_requests", 0)),
-        ("실패 요청", status.get("failure_count", 0)),
-        ("에러율", f'{status.get("error_rate_percent", 0)}%'),
-        ("조회 범위", "최근 1시간"),
-    ]
-    for column, (label, value) in zip(overview_columns, overview_values):
-        with column:
-            st.metric(label, value)
-
-    services = status.get("services", [])
-    if not services:
-        st.info("시스템 상태 데이터가 없습니다.")
-        return
-
-    service_columns = st.columns(2, gap="medium")
-    for index, service in enumerate(services):
-        with service_columns[index % 2]:
-            with st.container(border=True):
-                service_name = service.get("service") or "서비스"
-                service_status = service.get("status") or "데이터 없음"
-                st.markdown(
-                    f'<div class="admin-panel-title">{escape(str(service_name))}</div>',
-                    unsafe_allow_html=True,
-                )
-                st.markdown(f"상태: **{service_status}**")
-                metrics = st.columns(3)
-                metric_values = [
-                    ("요청", service.get("request_count", 0)),
-                    ("실패율", f'{service.get("failure_rate_percent", 0)}%'),
-                    ("P95 응답", f'{service.get("p95_latency_ms", 0)} ms'),
-                ]
-                for metric_column, (label, value) in zip(metrics, metric_values):
-                    with metric_column:
-                        st.metric(label, value)
-
-    st.caption("api_request_logs 기준으로 최근 1시간의 서비스 요청 상태를 집계합니다.")
-
-
-def render_admin_console() -> None:
-    """로그인한 관리자 세션 안에서 운영콘솔 사용자 조회 화면을 렌더링한다."""
-
-    st.title("사용자 관리")
-    st.caption("운영 콘솔 · TripMate Admin")
-
-    search = st.text_input(
-        "사용자 검색",
-        placeholder="이름 또는 이메일을 입력하세요",
-        key="admin_console_search",
-    ).strip()
-    try:
-        result = api(
-            "GET",
-            "/admin/console/users",
-            params={"search": search, "limit": 100},
-            headers=auth_headers(),
-            timeout=30,
-        )
-    except ApiError as error:
-        st.error(str(error))
-        return
-
-    users = result.get("items", []) if isinstance(result, dict) else []
-    st.caption(f"전체 사용자 {result.get('total', 0) if isinstance(result, dict) else 0}명")
-    if not users:
-        st.info("조건에 맞는 사용자가 없습니다.")
-        return
-
-    with st.container(border=True):
-        st.markdown('<div class="admin-panel-title">서비스 이용 현황</div>', unsafe_allow_html=True)
-        overview_columns = st.columns(4)
-        overview_values = [
-            ("가입 사용자", result.get("total", 0)),
-            ("전체 여행", sum(int(item.get("trip_count", 0) or 0) for item in users)),
-            ("API 요청", sum(int(item.get("request_count", 0) or 0) for item in users)),
-            ("사용자 활동", sum(int(item.get("activity_count", 0) or 0) for item in users)),
-        ]
-        for column, (label, value) in zip(overview_columns, overview_values):
-            with column:
-                st.metric(label, value)
-
-    st.bar_chart(
-        {
-            "여행 수": [int(item.get("trip_count", 0) or 0) for item in users[:10]],
-            "API 요청 수": [int(item.get("request_count", 0) or 0) for item in users[:10]],
-        },
-        height=180,
-    )
-
-    st.dataframe(
-        [
-            {
-                "사용자명": item.get("username") or "-",
-                "이메일": item.get("email") or "-",
-                "가입일": item.get("created_at") or "-",
-                "여행 수": item.get("trip_count", 0),
-                "요청 수": item.get("request_count", 0),
-                "최근 활동": item.get("last_active_at") or "-",
-            }
-            for item in users
-        ],
-        use_container_width=True,
-        hide_index=True,
-    )
-
-    user_options = {str(item.get("id")): item for item in users if item.get("id")}
-    selected_user_id = st.selectbox(
-        "상세 조회 사용자",
-        options=list(user_options),
-        format_func=lambda user_id: (
-            f"{user_options[user_id].get('username') or '-'} · "
-            f"{user_options[user_id].get('email') or '-'}"
-        ),
-        key="admin_console_selected_user",
-    )
-    try:
-        detail = api(
-            "GET",
-            f"/admin/console/users/{selected_user_id}",
-            headers=auth_headers(),
-            timeout=30,
-        )
-    except ApiError as error:
-        st.error(str(error))
-        return
-
-    st.subheader("사용자 상세")
-    detail_columns = st.columns(5)
-    detail_values = [
-        ("사용자명", detail.get("username") or "-"),
-        ("이메일", detail.get("email") or "-"),
-        ("가입일", detail.get("created_at") or "-"),
-        ("여행 수", detail.get("trip_count", 0)),
-        ("API 요청 수", detail.get("request_count", 0)),
-    ]
-    for column, (label, value) in zip(detail_columns, detail_values):
-        with column:
-            st.metric(label, value)
-
-    left, right = st.columns(2)
-    with left:
-        st.markdown("#### 여행 목록")
-        st.dataframe(detail.get("trips", []), use_container_width=True, hide_index=True)
-    with right:
-        st.markdown("#### 최근 활동 로그")
-        activities = detail.get("recent_activities", [])
-        if activities:
-            st.dataframe(activities, use_container_width=True, hide_index=True)
-        else:
-            st.info("활동 로그가 없습니다.")
-
-    st.markdown("#### 최근 API 요청")
-    requests = detail.get("recent_requests", [])
-    if requests:
-        st.dataframe(requests, use_container_width=True, hide_index=True)
-    else:
-        st.info("API 요청 로그가 없습니다.")
-
+# def _render_admin_system_status_legacy() -> None:
+#     """피그마 ADM-004의 최근 1시간 시스템 상태 화면을 렌더링한다."""
+#
+#     render_admin_console_tabs("admin_system")
+#     st.title("시스템 상태")
+#     st.caption("ADM-004 · 최근 1시간")
+#     try:
+#         status = api(
+#             "GET",
+#             "/admin/console/system-status",
+#             headers=auth_headers(),
+#             timeout=30,
+#         )
+#     except ApiError as error:
+#         st.error(str(error))
+#         return
+#
+#     overview_columns = st.columns(4)
+#     overview_values = [
+#         ("전체 요청", status.get("total_requests", 0)),
+#         ("실패 요청", status.get("failure_count", 0)),
+#         ("에러율", f'{status.get("error_rate_percent", 0)}%'),
+#         ("조회 범위", "최근 1시간"),
+#     ]
+#     for column, (label, value) in zip(overview_columns, overview_values):
+#         with column:
+#             st.metric(label, value)
+#
+#     services = status.get("services", [])
+#     if not services:
+#         st.info("시스템 상태 데이터가 없습니다.")
+#         return
+#
+#     service_columns = st.columns(2, gap="medium")
+#     for index, service in enumerate(services):
+#         with service_columns[index % 2]:
+#             with st.container(border=True):
+#                 service_name = service.get("service") or "서비스"
+#                 service_status = service.get("status") or "데이터 없음"
+#                 st.markdown(
+#                     f'<div class="admin-panel-title">{escape(str(service_name))}</div>',
+#                     unsafe_allow_html=True,
+#                 )
+#                 st.markdown(f"상태: **{service_status}**")
+#                 metrics = st.columns(3)
+#                 metric_values = [
+#                     ("요청", service.get("request_count", 0)),
+#                     ("실패율", f'{service.get("failure_rate_percent", 0)}%'),
+#                     ("P95 응답", f'{service.get("p95_latency_ms", 0)} ms'),
+#                 ]
+#                 for metric_column, (label, value) in zip(metrics, metric_values):
+#                     with metric_column:
+#                         st.metric(label, value)
+#
+#     st.caption("api_request_logs 기준으로 최근 1시간의 서비스 요청 상태를 집계합니다.")
 
 def render_admin_console_tabs(current_view: str) -> None:
     """관리자 본문 상단의 공통 탭을 렌더링한다."""
@@ -7464,28 +7116,6 @@ def render_admin_dashboard() -> None:
     st.caption(f"조회 기간: {period.get('start_at', '')} ~ {period.get('end_at', '')}")
     error_items = errors.get("items", []) if isinstance(errors, dict) else []
     _render_admin_dashboard_figma(summary, error_items)
-
-    st.subheader("최근 오류 로그")
-    if error_items:
-        st.dataframe(
-            [
-                {
-                    "발생 시각": item.get("occurred_at"),
-                    "요청 ID": item.get("request_id"),
-                    "메서드": item.get("method"),
-                    "엔드포인트": item.get("endpoint"),
-                    "상태 코드": item.get("status_code"),
-                    "응답 시간(ms)": item.get("latency_ms"),
-                    "오류 유형": item.get("error_type"),
-                    "모델": item.get("model"),
-                }
-                for item in error_items
-            ],
-            use_container_width=True,
-            hide_index=True,
-        )
-    else:
-        st.success("선택한 기간에 오류 로그가 없습니다.")
 
 
 def _render_admin_console_figma() -> None:
@@ -7803,18 +7433,21 @@ def render_signed_in() -> None:
         render_admin_system_status()
         return
 
-    if st.session_state.show_create_trip:
-        st.markdown('<div class="brand">여행 추가</div>', unsafe_allow_html=True)
-        st.caption("여행 기간을 정하면 DAY별 AI 일정 초안이 자동으로 생성됩니다.")
-        render_create_trip_form("create_trip")
-        return
-
-    if not trips:
-        # st.markdown('<div class="brand">새 여행 추가</div>', unsafe_allow_html=True)
-        # st.caption("여행 기간을 정하면 DAY별 AI 일정 초안이 자동으로 생성됩니다.")
-        st.markdown('<div class="empty-card"><div class="brand">첫 여행을 만들어 보세요.</div><p>여행지와 기간을 정하면 일차별 AI 일정 초안이 준비됩니다.</p></div>', unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        render_create_trip_form("first_trip")
+    if st.session_state.show_create_trip or not trips:
+        # 첫 여행도 사이드바의 '새 여행 만들기'와 완전히 같은 화면·위젯 키를 쓴다.
+        # 그래서 여행 유무에 따라 제목, 입력값 유지 방식, 스타일이 갈리지 않는다.
+        st.markdown(
+            """
+            <div class="create-trip-hero">
+                <div class="create-trip-hero-icon">⌘</div>
+                <h1>조건만 고르면 일정이 만들어져요</h1>
+                <p>여행지와 기간, 인원·페이스를 고르면 맞춤 일정을 준비해요.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        with st.container(key="create_trip_shell", border=False):
+            render_create_trip_form("create_trip")
         return
 
     if st.session_state.selected_trip_id:
